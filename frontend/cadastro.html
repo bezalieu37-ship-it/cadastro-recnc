@@ -3,19 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro RECNC - Login</title>
-  <meta name="description" content="Sistema de cadastro de pessoas - Cadastro RECNC">
-  
-  <!-- Bootstrap 5 CDN -->
+  <title>Cadastro RECNC - Criar Conta</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/minimal-fontawesome.min.css">
-  
-  <!-- Custom styles -->
   <link rel="stylesheet" href="css/style.css">
-  
-  <!-- Favicon -->
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  
   <style>
     .login-page {
       min-height: 100vh;
@@ -24,7 +15,6 @@
       align-items: center;
       justify-content: center;
     }
-
     .login-card {
       background: white;
       padding: 40px;
@@ -34,103 +24,126 @@
       max-width: 400px;
       margin: 20px;
     }
-
     .login-card h2 {
       margin-bottom: 25px;
       color: var(--dark);
       text-align: center;
     }
-
     .login-card .form-label {
       font-weight: 500;
       color: var(--dark);
     }
-
     .login-card .form-control {
       border-radius: 8px;
       border: 1px solid #dee2e6;
       padding: 12px 14px;
       font-size: 1rem;
     }
-
     .login-card .form-control:focus {
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.25);
     }
-
     .login-card .btn {
       border-radius: 8px;
       padding: 12px;
       font-weight: 500;
     }
-
     .logo-text {
       color: var(--primary-color);
       font-weight: bold;
       margin-bottom: 15px;
       display: block;
     }
+    .alert { display: none; }
   </style>
 </head>
 <body>
   <div class="login-page">
     <div class="login-card">
       <h2><span class="logo-text">Cadastro</span> RECNC</h2>
-      
-      <form id="loginForm">
+      <p class="text-muted text-center mb-3">Crie sua conta</p>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="registerForm">
+        <div class="mb-3">
+          <label class="form-label" for="nome">Nome completo</label>
+          <input type="text" class="form-control" id="nome" required>
+        </div>
+
         <div class="mb-3">
           <label class="form-label" for="email">E-mail</label>
           <input type="email" class="form-control" id="email" required>
         </div>
-        
+
         <div class="mb-3">
           <label class="form-label" for="senha">Senha</label>
-          <input type="password" class="form-control" id="senha" required>
+          <input type="password" class="form-control" id="senha" minlength="6" required>
+          <small class="text-muted">Minimo 6 caracteres</small>
         </div>
-        
-        <button type="submit" class="btn btn-primary-custom w-100">Entrar</button>
+
+        <div class="mb-3">
+          <label class="form-label" for="confirmar_senha">Confirmar senha</label>
+          <input type="password" class="form-control" id="confirmar_senha" minlength="6" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary-custom w-100" id="btnCadastrar">Cadastrar</button>
       </form>
-      
+
       <div class="mt-3 text-center">
-        <small>Não tem uma conta? <a href="#" id="linkCadastro">Cadastre-se</a></small>
+        <small>Ja tem uma conta? <a href="index.html">Fazer login</a></small>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Custom JS -->
   <script>
-    // DOM Elements
-    const loginForm = document.getElementById('loginForm');
-    const linkCadastro = document.getElementById('linkCadastro');
-    
-    // Login form submission
-    loginForm.addEventListener('submit', async (e) => {
+    const registerForm = document.getElementById('registerForm');
+    const alertBox = document.getElementById('alertBox');
+    const btnCadastrar = document.getElementById('btnCadastrar');
+
+    function showAlert(message, type) {
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type}`;
+      alertBox.style.display = 'block';
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
+      const nome = document.getElementById('nome').value.trim();
       const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('senha').value.trim();
-      
-      if (!email || !senha) {
-        alert('Por favor, preencha todos os campos.');
+      const senha = document.getElementById('senha').value;
+      const confirmar = document.getElementById('confirmar_senha').value;
+
+      if (!nome || !email || !senha) {
+        showAlert('Preencha todos os campos.', 'warning');
         return;
       }
-      
+
+      if (senha !== confirmar) {
+        showAlert('As senhas nao conferem.', 'danger');
+        return;
+      }
+
+      if (senha.length < 6) {
+        showAlert('A senha deve ter pelo menos 6 caracteres.', 'warning');
+        return;
+      }
+
+      btnCadastrar.disabled = true;
+      btnCadastrar.textContent = 'Cadastrando...';
+
       try {
-        const response = await fetch('api/login', {
+        const response = await fetch('api/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, senha })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, senha })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
-          // Store token and user info
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify({
             id: data.user.id,
@@ -138,26 +151,27 @@
             email: data.user.email,
             perfil: data.user.perfil
           }));
-          
-          // Redirect based on profile
-          if (data.user.perfil === 'admin') {
-            window.location.href = 'dashboard.html';
-          } else {
-            window.location.href = 'lista.html';
-          }
+
+          showAlert('Conta criada com sucesso! Redirecionando...', 'success');
+
+          setTimeout(() => {
+            if (data.user.perfil === 'admin') {
+              window.location.href = 'dashboard.html';
+            } else {
+              window.location.href = 'lista.html';
+            }
+          }, 1500);
         } else {
-          alert(data.error || 'Login falhou. Tente novamente.');
+          showAlert(data.error || 'Erro ao criar conta.', 'danger');
+          btnCadastrar.disabled = false;
+          btnCadastrar.textContent = 'Cadastrar';
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Erro de conexão. Verifique se o backend está rodando.');
+        showAlert('Erro de conexao. Tente novamente.', 'danger');
+        btnCadastrar.disabled = false;
+        btnCadastrar.textContent = 'Cadastrar';
       }
-    });
-    
-    // Link to registration page
-    linkCadastro.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'cadastro.html';
     });
   </script>
 </body>
