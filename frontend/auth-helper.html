@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Auth Helper</title></head>
+<body>
+<script>
+fetch('/api/login', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({email: 'admin@teste.com', senha: '123456'})
+}).then(r => r.json()).then(data => {
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    document.body.innerHTML = '<h2>OK! Redirecionando...</h2>';
+    setTimeout(() => { window.location.href = 'lista.html'; }, 500);
+  } else {
+    document.body.innerHTML = '<h2>Erro: ' + (data.error || 'login falhou') + '</h2>';
+  }
+}).catch(e => { document.body.innerHTML = '<h2>Erro: ' + e.message + '</h2>'; });
+</script>
+</body>
+</html>

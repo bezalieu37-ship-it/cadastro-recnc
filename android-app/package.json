@@ -1,0 +1,19 @@
+{
+  "name": "cadastro-recnc-android",
+  "version": "1.0.0",
+  "description": "Cadastro RECNC - App Android (Capacitor)",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Frontend is static, no build needed'",
+    "cap:init": "npx cap init 'Cadastro RECNC' 'com.recnc.cadastro' --web-dir www",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:build": "cd android && gradlew.bat assembleDebug",
+    "cap:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}

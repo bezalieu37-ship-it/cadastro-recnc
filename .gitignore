@@ -1,0 +1,14 @@
+node_modules/
+.env
+database.db
+*.db-journal
+android-app/node_modules/
+android-app/android/
+android-app/www/
+*.apk
+*.png
+*.log
+.DS_Store
+RESUMO_FINAL.txt
+directory.txt
+backend/response.txt

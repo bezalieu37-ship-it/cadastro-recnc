@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cadastro-recnc
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: ./database.db
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000

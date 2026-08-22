@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro RECNC - Lista de Pessoas</title>
+  <meta name="description" content="Lista de cadastros de pessoas - Cadastro RECNC">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --card-radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-hover: 0 6px 20px rgba(0,0,0,0.14);
+      --transition: all 0.2s ease;
+    }
+
+    body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    /* Navbar */
+    .navbar { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .navbar-brand { font-weight: 600; font-size: 1.1rem; }
+    .nav-link { font-weight: 500; padding: 0.4rem 0.8rem; border-radius: 6px; transition: var(--transition); }
+    .nav-link:hover { background: rgba(255,255,255,0.15); }
+    .nav-link.active { background: rgba(255,255,255,0.2); font-weight: 600; }
+
+    /* Filter bar */
+    .filter-bar {
+      background: white;
+      padding: 16px 20px;
+      border-radius: var(--card-radius);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-bar .form-select,
+    .filter-bar .form-control {
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1px solid #dee2e6;
+      padding: 0.5rem 0.75rem;
+    }
+    .filter-bar .form-select:focus,
+    .filter-bar .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+    }
+
+    /* Export / action buttons in filter bar */
+    .btn-export { font-size: 0.85rem; padding: 0.45rem 1rem; border-radius: 8px; }
+    .btn-relatorio { font-size: 0.85rem; padding: 0.45rem 1rem; border-radius: 8px; }
+
+    /* Cards */
+    .person-card {
+      background: white;
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e9ecef;
+      border-left: 4px solid transparent;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .person-card:hover {
+      border-left-color: var(--primary-color);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+    .person-card.selected {
+      border-left-color: var(--primary-color);
+      background: #f0f6ff;
+    }
+
+    .person-card .form-check-input {
+      width: 1.15em;
+      height: 1.15em;
+      margin-top: 0.15em;
+      flex-shrink: 0;
+      cursor: pointer;
+      z-index: 2;
+      position: relative;
+    }
+
+    .person-card .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e9ecef;
+      flex-shrink: 0;
+    }
+
+    .person-card .card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .person-card .card-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #212529;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .person-card .card-meta {
+      font-size: 0.8rem;
+      color: #6c757d;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Badges */
+    .badge-tipo { font-size: 0.7rem; padding: 3px 9px; font-weight: 500; border-radius: 20px; }
+    .tipo-nascimento { background: rgba(25,135,84,0.1); color: #198754; }
+    .tipo-reconciliacao { background: rgba(255,193,7,0.12); color: #d4a017; }
+
+    /* Card actions */
+    .card-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .card-actions .btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      border: 1px solid #dee2e6;
+      background: white;
+      color: #6c757d;
+      transition: var(--transition);
+    }
+    .card-actions .btn-edit:hover { color: #0d6efd; border-color: #0d6efd; background: #e7f1ff; }
+    .card-actions .btn-delete:hover { color: #dc3545; border-color: #dc3545; background: #fff0f0; }
+
+    /* Pagination */
+    .pagination-custom .page-link {
+      border: 1px solid #dee2e6;
+      margin: 0 2px;
+      border-radius: 8px;
+      min-width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: #495057;
+      transition: var(--transition);
+    }
+    .pagination-custom .page-link:hover { background: #e9ecef; }
+    .pagination-custom .page-item.active .page-link {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+      font-weight: 600;
+    }
+    .pagination-custom .page-item.disabled .page-link { opacity: 0.5; }
+
+    /* Empty state */
+    .empty-state {
+      padding: 50px 20px;
+      text-align: center;
+      color: #6c757d;
+    }
+    .empty-state i { opacity: 0.4; }
+
+    /* Select all */
+    .select-all-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    .select-all-bar label {
+      font-size: 0.85rem;
+      color: #6c757d;
+      cursor: pointer;
+      user-select: none;
+    }
+    .select-all-bar .selected-count {
+      font-size: 0.8rem;
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+
+    /* Detail modal */
+    .detail-photo {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #e9ecef;
+    }
+    .detail-row {
+      display: flex;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 140px;
+      font-size: 0.85rem;
+    }
+    .detail-value {
+      color: #212529;
+      font-size: 0.9rem;
+    }
+
+    /* Report modal */
+    .report-modal .form-control,
+    .report-modal .form-select {
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .report-preview {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 350px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+      .person-card { padding: 12px 14px; gap: 10px; }
+      .person-card .avatar { width: 44px; height: 44px; }
+      .person-card .card-name { font-size: 0.9rem; }
+      .filter-bar { padding: 12px 14px; }
+      .card-actions .btn { width: 30px; height: 30px; font-size: 0.75rem; }
+      .detail-label { min-width: 100px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+      <i class="fas fa-user-tie me-2"></i>Cadastro RECNC
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
+        <li class="nav-item"><a class="nav-link active" href="lista.html">Lista</a></li>
+        <li class="nav-item"><a class="nav-link" href="usuarios.html">Usuarios</a></li>
+        <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatorios</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Lista de Cadastros</h4>
+    <small class="text-secondary">Total: <span id="totalItens" class="fw-semibold">0</span> registros</small>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="row g-2 align-items-end">
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <label class="form-label small text-secondary mb-1">Tipo</label>
+        <select class="form-select" id="filtroTipo">
+          <option value="all">Todos os tipos</option>
+          <option value="novo_nascimento">Novo Nascimento</option>
+          <option value="reconciliacao">Reconciliacao</option>
+        </select>
+      </div>
+      <div class="col-lg-4 col-md-4 col-sm-6">
+        <label class="form-label small text-secondary mb-1">Pesquisar</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0" id="pesquisaNome" placeholder="Buscar por nome...">
+        </div>
+      </div>
+      <div class="col-lg-5 col-md-4 col-sm-12">
+        <div class="d-flex gap-2 flex-wrap justify-content-sm-end">
+          <button class="btn btn-outline-secondary btn-export" onclick="exportarCSV()" title="Exportar CSV">
+            <i class="fas fa-file-csv me-1"></i>CSV
+          </button>
+          <button class="btn btn-outline-secondary btn-export" onclick="exportarPDF()" title="Exportar PDF">
+            <i class="fas fa-file-pdf me-1"></i>PDF
+          </button>
+          <button class="btn btn-relatorio btn-outline-primary d-none" id="btnRelatorio" onclick="abrirModalRelatorio()" title="Relatorio">
+            <i class="fas fa-chart-bar me-1"></i>Relatorio
+          </button>
+          <button class="btn btn-primary" onclick="novoCadastro()">
+            <i class="fas fa-plus me-1"></i>Novo Cadastro
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Select all bar -->
+  <div class="select-all-bar" id="selectAllBar" style="display:none;">
+    <input type="checkbox" class="form-check-input" id="selectAll">
+    <label for="selectAll">Selecionar todos</label>
+    <span class="selected-count" id="selectedCount"></span>
+  </div>
+
+  <!-- Cards container -->
+  <div id="cardsContainer"></div>
+
+  <!-- Pagination -->
+  <nav class="pagination-custom mt-4" id="paginationWrapper">
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+</div>
+
+<!-- Modal: Confirmar Exclusao -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalExcluirLabel"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmar Exclusao</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Tem certeza que deseja excluir este registro?</p>
+        <p class="text-danger fw-semibold" id="nomeExcluir"></p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarExcluir"><i class="fas fa-trash me-1"></i>Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalhes da Pessoa -->
+<div class="modal fade" id="modalDetalhe" tabindex="-1" aria-labelledby="modalDetalheLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalDetalheLabel"><i class="fas fa-user-circle me-2 text-primary"></i>Detalhes do Cadastro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="detalheBody">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="button" class="btn btn-primary" id="btnEditarDetalhe"><i class="fas fa-edit me-1"></i>Editar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Relatorio Admin -->
+<div class="modal fade" id="modalRelatorio" tabindex="-1" aria-labelledby="modalRelatorioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg report-modal">
+    <div class="modal-content" style="border-radius:14px;border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalRelatorioLabel"><i class="fas fa-chart-bar me-2 text-primary"></i>Gerar Relatorio</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Email do destinatario</label>
+            <input type="email" class="form-control" id="reportEmail" placeholder="email@exemplo.com">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Filtrar por tipo</label>
+            <select class="form-select" id="reportTipo">
+              <option value="all">Todos os tipos</option>
+              <option value="novo_nascimento">Novo Nascimento</option>
+              <option value="reconciliacao">Reconciliacao</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Titulo do Relatorio</label>
+            <input type="text" class="form-control" id="reportTitulo" placeholder="Ex: Relatorio Mensal de Cadastros">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Mensagem / Observacoes</label>
+            <textarea class="form-control" id="reportMensagem" rows="3" placeholder="Descricao ou observacoes sobre o relatorio..."></textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="reportApenasSelecionados">
+              <label class="form-check-label" for="reportApenasSelecionados">
+                Enviar apenas pessoas selecionadas (<span id="reportSelectedCount">0</span>)
+              </label>
+            </div>
+          </div>
+        </div>
+        <!-- Preview area -->
+        <div class="mt-3" id="reportPreviewArea" style="display:none;">
+          <label class="form-label small fw-semibold"><i class="fas fa-eye me-1"></i>Preview do Relatorio</label>
+          <div class="report-preview" id="reportPreviewContent"></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-primary" id="btnPreviaRelatorio"><i class="fas fa-eye me-1"></i>Previa</button>
+        <button type="button" class="btn btn-primary" id="btnGerarRelatorio"><i class="fas fa-file-export me-1"></i>Gerar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+  // Auth
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token) { window.location.href = 'index.html'; return; }
+
+  // State
+  let currentPage = 1;
+  const itensPorPagina = 15;
+  let totalPessoas = 0;
+  let pessoaIdExcluir = null;
+  let pessoaDetalheId = null;
+  let selectedIds = new Set();
+
+  // DOM refs
+  const $filtroTipo = document.getElementById('filtroTipo');
+  const $pesquisaNome = document.getElementById('pesquisaNome');
+  const $cardsContainer = document.getElementById('cardsContainer');
+  const $pagination = document.getElementById('pagination');
+  const $totalItens = document.getElementById('totalItens');
+  const $selectAllBar = document.getElementById('selectAllBar');
+  const $selectAll = document.getElementById('selectAll');
+  const $selectedCount = document.getElementById('selectedCount');
+  const $btnRelatorio = document.getElementById('btnRelatorio');
+  const $navRelatorios = document.getElementById('navRelatorios');
+
+  // Admin controls
+  if (user.perfil === 'admin') {
+    $btnRelatorio.classList.remove('d-none');
+    $navRelatorios.style.display = '';
+  }
+
+  // Debounce
+  function debounce(fn, ms) {
+    let t;
+    return function() { clearTimeout(t); t = setTimeout(() => fn.apply(this, arguments), ms); };
+  }
+
+  // Events
+  $filtroTipo.addEventListener('change', () => { currentPage = 1; carregarPessoas(); });
+  $pesquisaNome.addEventListener('input', debounce(() => { currentPage = 1; carregarPessoas(); }, 350));
+  $selectAll.addEventListener('change', toggleSelectAll);
+
+  // Load people
+  async function carregarPessoas() {
+    const tipo = $filtroTipo.value;
+    const search = $pesquisaNome.value.trim();
+    try {
+      const res = await fetch(`api/pessoas?page=${currentPage}&limit=${itensPorPagina}&tipo=${tipo}&search=${encodeURIComponent(search)}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.status === 401) { window.location.href = 'index.html'; return; }
+      const data = await res.json();
+      if (res.ok) {
+        renderCards(data.pessoas);
+        totalPessoas = data.total;
+        $totalItens.textContent = totalPessoas;
+        renderPagination(data.totalPages);
+        updateSelectAllBar();
+      }
+    } catch (err) {
+      console.error('Erro ao carregar pessoas:', err);
+      $cardsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle fa-3x mb-3"></i><p>Erro ao carregar a lista.</p></div>';
+    }
+  }
+
+  // Render cards
+  function renderCards(pessoas) {
+    $cardsContainer.innerHTML = '';
+    if (!pessoas || pessoas.length === 0) {
+      $cardsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-inbox fa-3x mb-3"></i><p>Nenhum cadastro encontrado.</p></div>';
+      return;
+    }
+    pessoas.forEach(p => {
+      const isNasc = p.tipo_cadastro === 'novo_nascimento';
+      const tipoLabel = isNasc ? 'Nascimento' : 'Reconciliacao';
+      const tipoClass = isNasc ? 'tipo-nascimento' : 'tipo-reconciliacao';
+      const foto = p.foto_url || 'images/default-avatar.png';
+      const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+      const isSelected = selectedIds.has(p.id);
+
+      const card = document.createElement('div');
+      card.className = 'person-card' + (isSelected ? ' selected' : '');
+      card.dataset.id = p.id;
+      card.innerHTML = `
+        <input type="checkbox" class="form-check-input card-checkbox" data-id="${p.id}" ${isSelected ? 'checked' : ''} title="Selecionar">
+        <img src="${foto}" alt="${p.nome_completo}" class="avatar" onerror="this.src='images/default-avatar.png'">
+        <div class="card-info" data-id="${p.id}">
+          <div class="card-name">${p.nome_completo}</div>
+          <div class="card-meta">
+            <span class="badge badge-tipo ${tipoClass}">${tipoLabel}</span>
+            <span><i class="fas fa-calendar-alt me-1"></i>${dataFormatada}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-edit" title="Editar" data-action="edit" data-id="${p.id}"><i class="fas fa-pen"></i></button>
+          <button class="btn btn-delete" title="Excluir" data-action="delete" data-id="${p.id}" data-nome="${p.nome_completo}"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      `;
+      $cardsContainer.appendChild(card);
+    });
+
+    // Bind card events
+    $cardsContainer.querySelectorAll('.card-checkbox').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const id = parseInt(cb.dataset.id);
+        if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+        cb.closest('.person-card').classList.toggle('selected', cb.checked);
+        updateSelectAllBar();
+      });
+    });
+
+    $cardsContainer.querySelectorAll('.card-info').forEach(el => {
+      el.addEventListener('click', () => abrirDetalhe(parseInt(el.dataset.id)));
+    });
+
+    $cardsContainer.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = 'formulario.html?id=' + btn.dataset.id;
+      });
+    });
+
+    $cardsContainer.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        confirmarExclusao(parseInt(btn.dataset.id), btn.dataset.nome);
+      });
+    });
+  }
+
+  // Select all
+  function toggleSelectAll() {
+    const checked = $selectAll.checked;
+    const checkboxes = $cardsContainer.querySelectorAll('.card-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = checked;
+      const id = parseInt(cb.dataset.id);
+      if (checked) selectedIds.add(id); else selectedIds.delete(id);
+      cb.closest('.person-card').classList.toggle('selected', checked);
+    });
+    updateSelectAllBar();
+  }
+
+  function updateSelectAllBar() {
+    const count = selectedIds.size;
+    if (count > 0) {
+      $selectAllBar.style.display = '';
+      $selectedCount.textContent = count + ' selecionado' + (count > 1 ? 's' : '');
+    } else {
+      $selectAllBar.style.display = 'none';
+    }
+    document.getElementById('reportSelectedCount').textContent = count;
+  }
+
+  // Pagination
+  function renderPagination(totalPages) {
+    $pagination.innerHTML = '';
+    if (totalPages <= 1) return;
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+    // Prev
+    const prev = document.createElement('li');
+    prev.className = 'page-item' + (currentPage === 1 ? ' disabled' : '');
+    prev.innerHTML = '<a class="page-link" href="#">&laquo;</a>';
+    prev.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) { currentPage--; carregarPessoas(); } });
+    $pagination.appendChild(prev);
+
+    // Pages
+    for (let i = start; i <= end; i++) {
+      const li = document.createElement('li');
+      li.className = 'page-item' + (i === currentPage ? ' active' : '');
+      li.innerHTML = '<a class="page-link" href="#">' + i + '</a>';
+      li.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); currentPage = i; carregarPessoas(); });
+      $pagination.appendChild(li);
+    }
+
+    // Next
+    const next = document.createElement('li');
+    next.className = 'page-item' + (currentPage === totalPages ? ' disabled' : '');
+    next.innerHTML = '<a class="page-link" href="#">&raquo;</a>';
+    next.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); if (currentPage < totalPages) { currentPage++; carregarPessoas(); } });
+    $pagination.appendChild(next);
+  }
+
+  // Navigate
+  function novoCadastro() { window.location.href = 'formulario.html'; }
+
+  // Delete
+  function confirmarExclusao(id, nome) {
+    pessoaIdExcluir = id;
+    document.getElementById('nomeExcluir').textContent = nome;
+    const modal = new bootstrap.Modal(document.getElementById('modalExcluir'));
+    modal.show();
+  }
+
+  document.getElementById('btnConfirmarExcluir').addEventListener('click', async () => {
+    if (!pessoaIdExcluir) return;
+    try {
+      const res = await fetch('api/pessoas/' + pessoaIdExcluir, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('modalExcluir')).hide();
+        selectedIds.delete(pessoaIdExcluir);
+        updateSelectAllBar();
+        carregarPessoas();
+      } else {
+        alert(data.error || 'Erro ao excluir registro.');
+      }
+    } catch (err) {
+      console.error('Erro:', err);
+      alert('Erro de conexao ao excluir.');
+    }
+    pessoaIdExcluir = null;
+  });
+
+  // Detail modal
+  async function abrirDetalhe(id) {
+    pessoaDetalheId = id;
+    const $body = document.getElementById('detalheBody');
+    $body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalhe'));
+    modal.show();
+
+    try {
+      const res = await fetch('api/pessoas/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const text = await res.text();
+      console.log('Detail response:', res.status, text);
+      if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text);
+      const p = JSON.parse(text);
+
+      const isNasc = p.tipo_cadastro === 'novo_nascimento';
+      const tipoLabel = isNasc ? 'Nascimento' : 'Reconciliacao';
+      const tipoClass = isNasc ? 'tipo-nascimento' : 'tipo-reconciliacao';
+      const foto = p.foto_url || 'images/default-avatar.png';
+      const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleString('pt-BR') : '-';
+
+      $body.innerHTML = `
+        <div class="text-center mb-3">
+          <img src="${foto}" alt="${p.nome_completo}" class="detail-photo mb-2" onerror="this.src='images/default-avatar.png'">
+          <h5 class="fw-bold mb-0">${p.nome_completo}</h5>
+          <span class="badge badge-tipo ${tipoClass} mt-1">${tipoLabel}</span>
+        </div>
+        <div class="px-2">
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-phone me-1 text-muted"></i>Telefone</span><span class="detail-value">${p.telefone || '-'}</span></div>
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-home me-1 text-muted"></i>Endereco</span><span class="detail-value">${p.endereco || '-'}</span></div>
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Ref.</span><span class="detail-value">${p.ponto_referencia || '-'}</span></div>
+          ${p.acompanhante ? '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-friends me-1 text-muted"></i>Acompanhante</span><span class="detail-value">' + p.acompanhante + '</span></div>' : ''}
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-user-check me-1 text-muted"></i>Cadastrado por</span><span class="detail-value">${p.cadastrado_por || '-'}</span></div>
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-clock me-1 text-muted"></i>Data cadastro</span><span class="detail-value">${dataFormatada}</span></div>
+        </div>
+      `;
+    } catch (err) {
+      console.error('Erro detalhe:', err);
+      $body.innerHTML = '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Nao foi possivel carregar os detalhes.</p><p class="small">' + (err.message || err) + '</p></div>';
+    }
+  }
+
+  document.getElementById('btnEditarDetalhe').addEventListener('click', () => {
+    if (pessoaDetalheId) window.location.href = 'formulario.html?id=' + pessoaDetalheId;
+  });
+
+  // Helper: download via fetch with auth
+  async function downloadWithAuth(url, filename) {
+    try {
+      const separator = url.includes('?') ? '&' : '?';
+      const authUrl = url + separator + 'token=' + encodeURIComponent(token);
+      const res = await fetch(authUrl);
+      if (!res.ok) throw new Error('Erro ' + res.status);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.location.href = blobUrl;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (e) {
+      alert('Erro ao baixar arquivo: ' + e.message);
+    }
+  }
+
+  // Export CSV
+  function exportarCSV() {
+    const tipo = $filtroTipo.value;
+    const search = $pesquisaNome.value.trim();
+    let url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
+    if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
+    window.location.href = url;
+  }
+
+  // Export PDF
+  function exportarPDF() {
+    const tipo = $filtroTipo.value;
+    const search = $pesquisaNome.value.trim();
+    let url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
+    if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
+    window.location.href = url;
+  }
+
+  // Report modal
+  window.abrirModalRelatorio = function() {
+    document.getElementById('reportEmail').value = '';
+    document.getElementById('reportTitulo').value = '';
+    document.getElementById('reportMensagem').value = '';
+    document.getElementById('reportTipo').value = 'all';
+    document.getElementById('reportApenasSelecionados').checked = selectedIds.size > 0;
+    document.getElementById('reportPreviewArea').style.display = 'none';
+    document.getElementById('reportSelectedCount').textContent = selectedIds.size;
+    new bootstrap.Modal(document.getElementById('modalRelatorio')).show();
+  };
+
+  function getReportPayload() {
+    return {
+      email: document.getElementById('reportEmail').value.trim(),
+      tipo: document.getElementById('reportTipo').value,
+      search: $pesquisaNome.value.trim(),
+      ids: document.getElementById('reportApenasSelecionados').checked ? Array.from(selectedIds) : [],
+      titulo: document.getElementById('reportTitulo').value.trim(),
+      mensagem: document.getElementById('reportMensagem').value.trim()
+    };
+  }
+
+  document.getElementById('btnPreviaRelatorio').addEventListener('click', async () => {
+    const payload = getReportPayload();
+    try {
+      const res = await fetch('api/reports/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.html_content) {
+        document.getElementById('reportPreviewContent').innerHTML = data.html_content;
+        document.getElementById('reportPreviewArea').style.display = '';
+      } else {
+        alert(data.error || 'Erro ao gerar previa.');
+      }
+    } catch (err) {
+      alert('Erro de conexao ao gerar previa.');
+    }
+  });
+
+  document.getElementById('btnGerarRelatorio').addEventListener('click', async () => {
+    const payload = getReportPayload();
+    try {
+      const res = await fetch('api/reports/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.html_content) {
+        const win = window.open('', '_blank');
+        win.document.write(data.html_content);
+        win.document.close();
+        bootstrap.Modal.getInstance(document.getElementById('modalRelatorio')).hide();
+      } else {
+        alert(data.error || 'Erro ao gerar relatorio.');
+      }
+    } catch (err) {
+      alert('Erro de conexao ao gerar relatorio.');
+    }
+  });
+
+  // Init
+  carregarPessoas();
+})();
+</script>
+</body>
+</html>

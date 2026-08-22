@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro RECNC - Gerenciar Usuários</title>
+  <meta name="description" content="Gerenciar usuários do sistema - Cadastro RECNC">
+  
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/minimal-fontawesome.min.css">
+  
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <style>
+    .user-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    
+    .user-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .user-perfil-admin { color: var(--success); }
+    .user-perfil-usuario { color: var(--info); }
+    
+    .permission-badge {
+      font-size: 0.7rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    
+    .badge-admin { background: rgba(40,167,69,0.1); color: var(--success); }
+    .badge-usuario { background: rgba(23,162,184,0.1); color: var(--info); }
+  </style>
+</head>
+<body>
+
+<!-- Top navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+      <i class="fas fa-user-tie me-2"></i>Cadastro RECNC
+    </button>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="dashboard.html">Painel</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="lista.html">Lista</a>
+        </li>
+        <!-- Usuarios link - será escondido por JS se não for admin -->
+        <li class="nav-item" id="navUsuarios">
+          <a class="nav-link active" href="usuarios.html">Usuários</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<script>
+    // Hide Usuarios link for non-admin users
+    document.addEventListener('DOMContentLoaded', function() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const navUsuarios = document.getElementById('navUsuarios');
+      if (user && user.perfil !== 'admin') {
+        navUsuarios.style.display = 'none';
+      }
+    });
+</script>
+
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card fade-in-up">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4><i class="fas fa-users-gear me-2"></i>Gerenciar Usuários</h4>
+          <small class="text-secondary">Apenas administradores podem gerenciar usuários</small>
+          <!-- Botão Novo Usuário visível para admins -->
+          <button class="btn btn-sm btn-outline-secondary" onclick="modalAdicionar.show()" title="Adicionar novo usuário">
+            <i class="fas fa-user-plus me-1"></i> Novo
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-user-management">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyUsuarios">
+                <!-- Usuários serão inseridos aqui -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Adicionar Usuário -->
+  <div class="modal fade" id="modalAdicionarUsuario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="formAdicionarUsuario">
+        <div class="modal-header">
+          <h5 class="modal-title">Adicionar Novo Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-control" id="novoNome" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="novoEmail" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Senha</label>
+            <input type="password" class="form-control" id="novaSenha" required>
+            <small class="text-secondary">Mínimo 6 caracteres</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Perfil</label>
+            <select class="form-select" id="novoPerfil">
+              <option value="admin">Administrador</option>
+              <option value="usuario">Usuário</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Usuário</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Remover Usuário -->
+  <div class="modal fade" id="modalRemoverUsuario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="formRemoverUsuario">
+        <div class="modal-header">
+          <h5 class="modal-title">Remover Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Tem certeza que deseja remover este usuário?</p>
+          <input type="hidden" id="usuarioRemoverId">
+          <p class="text-danger small mt-3" id="usuarioRemoverNome"></p>
+          <small class="text-warning">Este usuário não poderá ser o último administrador.</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Remover</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Editar Usuário -->
+  <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="formEditarUsuario">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="usuarioEditarId">
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-control" id="nomeEditar" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="emailEditar" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Senha (deixe em branco para manter a senha atual)</label>
+            <input type="password" class="form-control" id="senhaEditar" placeholder="Deixe em branco para manter senha atual">
+            <small class="text-secondary">Mínimo 6 caracteres</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Perfil</label>
+            <select class="form-select" id="perfilEditar">
+              <option value="admin">Administrador</option>
+              <option value="usuario">Usuário</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Check authentication and admin only
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    if (!token || user.perfil !== 'admin') {
+      window.location.href = 'index.html';
+    }
+    
+    // Load users
+    async function carregarUsuarios() {
+      try {
+        const response = await fetch('api/usuarios', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          renderUsuarios(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+      }
+    }
+    
+    // Render users
+    function renderUsuarios(usuarios) {
+      const tbody = document.getElementById('tbodyUsuarios');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+      usuarios.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${user.nome}</td>
+          <td>${user.email}</td>
+          <td><span class="badge badge-${user.perfil === 'admin' ? 'admin' : 'usuario'} permission-badge">${user.perfil}</span></td>
+          <td>
+            <button class="btn btn-link text-primary btn-sm me-2" onclick="editarUsuario(${user.id})">Editar</button>
+            <button class="btn btn-link text-danger btn-sm" onclick="excluirUsuario(${user.id})">Remover</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Add user modal
+    const modalAdicionar = new bootstrap.Modal(document.getElementById('modalAdicionarUsuario'));
+    
+    document.querySelector('.btn-adicionar')?.addEventListener('click', () => {
+      modalAdicionar.show();
+    });
+    
+    // Note: The "Adicionar" button isn't in the toolbar, so we'll just show how to open modal
+    // We'll add a simple way to open it
+    document.getElementById('btnNovoUsuario')?.addEventListener('click', () => {
+      modalAdicionar.show();
+    });
+    
+    // Form submit - add user
+    const formAdicionarUsuario = document.getElementById('formAdicionarUsuario');
+    if (formAdicionarUsuario) {
+      formAdicionarUsuario.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nome = document.getElementById('novoNome').value.trim();
+        const email = document.getElementById('novoEmail').value.trim();
+        const senha = document.getElementById('novaSenha').value.trim();
+        const perfil = document.getElementById('novoPerfil').value;
+        
+        if (!nome || !email || !senha) {
+          alert('Por favor, preencha todos os campos.');
+          return;
+        }
+        
+        try {
+          const response = await fetch('api/usuarios', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ nome, email, senha, perfil })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            modalAdicionar.hide();
+            formAdicionarUsuario.reset();
+            carregarUsuarios();
+          } else {
+            alert(data.error || 'Erro ao criar usuário.');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Erro de conexão.');
+        }
+      });
+    }
+    
+    // Remove user modal
+    const modalRemover = new bootstrap.Modal(document.getElementById('modalRemoverUsuario'));
+    
+    // Excluir usuário
+    window.excluirUsuario = async function(id) {
+      // Check if it's the last admin
+      try {
+        const response = await fetch('api/usuarios/count-admin', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.totalAdmins <= 1) {
+          alert('Não é possível remover o último administrador do sistema.');
+          return;
+        }
+      } catch (e) {
+        // Continue if error
+      }
+      
+      document.getElementById('usuarioRemoverId').value = id;
+      
+      // Get user name from the row (simplified - in real app would pass name)
+      // For now, we'll just show a generic message
+      document.getElementById('usuarioRemoverNome').textContent = 'este usuário';
+      
+      modalRemover.show();
+    };
+    
+    // Form submit - remove user
+    const formRemoverUsuario = document.getElementById('formRemoverUsuario');
+    if (formRemoverUsuario) {
+      formRemoverUsuario.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('usuarioRemoverId').value;
+        
+        try {
+          const response = await fetch(`api/usuarios/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            modalRemover.hide();
+            carregarUsuarios();
+          } else {
+            alert(data.error || 'Erro ao remover usuário.');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Erro de conexão.');
+        }
+      });
+    }
+    
+    // Edit user
+    window.editarUsuario = async function(id) {
+      try {
+        const response = await fetch(`api/usuarios/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const user = await response.json();
+        
+        if (response.ok) {
+          document.getElementById('usuarioEditarId').value = user.id;
+          document.getElementById('nomeEditar').value = user.nome;
+          document.getElementById('emailEditar').value = user.email;
+          // Set perfil select
+          const perfilSelect = document.getElementById('perfilEditar');
+          if (perfilSelect) {
+            perfilSelect.value = user.perfil || 'usuario';
+          }
+          modalEditarUsuario.show();
+        } else {
+          alert(data.error || 'Erro ao carregar usuário.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Erro de conexão.');
+      }
+    };
+    
+    // Form submit - edit user
+    const formEditarUsuario = document.getElementById('formEditarUsuario');
+    if (formEditarUsuario) {
+      formEditarUsuario.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('usuarioEditarId').value;
+        const nome = document.getElementById('nomeEditar').value.trim();
+        const email = document.getElementById('emailEditar').value.trim();
+        const senha = document.getElementById('senhaEditar').value.trim();
+        const perfil = document.getElementById('perfilEditar').value;
+        
+        const body = { nome, email, perfil };
+        if (senha && senha.length >= 6) {
+          body.senha = senha;
+        }
+        
+        try {
+          const response = await fetch(`api/usuarios/${userId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(body)
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            modalEditarUsuario.hide();
+            carregarUsuarios();
+          } else {
+            alert(data.error || 'Erro ao atualizar usuário.');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Erro de conexão.');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
