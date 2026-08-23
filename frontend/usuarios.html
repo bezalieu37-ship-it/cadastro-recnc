@@ -26,7 +26,7 @@
       font-weight: 600; color: #6c757d; font-size: 1.1rem; flex-shrink: 0;
     }
     .user-info { flex: 1; min-width: 0; }
-    .user-name { font-weight: 600; color: #212529; margin-bottom: 2px; }
+    .user-name { font-weight: 600; color: #212529; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .user-email { font-size: 0.85rem; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .empty-state { padding: 40px 20px; text-align: center; color: #6c757d; }
     .empty-state i { opacity: 0.3; font-size: 3rem; }
@@ -58,7 +58,12 @@
     <div class="col-12">
       <div class="card" style="border-radius:12px; border:none; box-shadow:0 2px 12px rgba(0,0,0,0.06);">
         <div class="card-header d-flex justify-content-between align-items-center" style="border-radius:12px 12px 0 0; background:white; border-bottom:1px solid #f0f0f0;">
-          <h5 class="mb-0 fw-bold"><i class="fas fa-users-gear me-2 text-primary"></i>Gerenciar Usuarios</h5>
+          <div class="d-flex align-items-center gap-2">
+            <a href="dashboard.html" class="btn btn-sm btn-outline-secondary" title="Voltar">
+              <i class="fas fa-arrow-left"></i>
+            </a>
+            <h5 class="mb-0 fw-bold"><i class="fas fa-users-gear me-2 text-primary"></i>Gerenciar Usuarios</h5>
+          </div>
           <button class="btn btn-primary btn-sm" id="btnNovoUsuario" title="Adicionar novo usuario">
             <i class="fas fa-user-plus me-1"></i> Novo Usuario
           </button>
