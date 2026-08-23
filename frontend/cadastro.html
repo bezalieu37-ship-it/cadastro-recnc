@@ -55,10 +55,32 @@
       display: block;
     }
     .alert { display: none; }
+    .btn-back {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      text-decoration: none;
+      z-index: 10;
+    }
+    .btn-back:hover { background: #fff; color: var(--primary-dark); }
   </style>
 </head>
 <body>
-  <div class="login-page">
+  <div class="login-page" style="position: relative;">
+    <a href="index.html" class="btn-back" title="Voltar">
+      <i class="fas fa-arrow-left"></i>
+    </a>
     <div class="login-card">
       <h2><span class="logo-text">Cadastro</span> RECNC</h2>
       <p class="text-muted text-center mb-3">Crie sua conta</p>
