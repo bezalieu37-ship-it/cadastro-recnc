@@ -123,6 +123,7 @@
     .badge-tipo { font-size: 0.7rem; padding: 3px 9px; font-weight: 500; border-radius: 20px; }
     .tipo-nascimento { background: rgba(25,135,84,0.1); color: #198754; }
     .tipo-reconciliacao { background: rgba(255,193,7,0.12); color: #d4a017; }
+    .tipo-ncgr { background: rgba(13,202,240,0.1); color: #0dcaf0; }
 
     /* Card actions */
     .card-actions {
@@ -293,6 +294,7 @@
           <option value="all">Todos os tipos</option>
           <option value="novo_nascimento">Novo Nascimento</option>
           <option value="reconciliacao">Reconciliacao</option>
+          <option value="novo_congregado">Novo Congregado</option>
         </select>
       </div>
       <div class="col-lg-4 col-md-4 col-sm-6">
@@ -398,6 +400,7 @@
               <option value="all">Todos os tipos</option>
               <option value="novo_nascimento">Novo Nascimento</option>
               <option value="reconciliacao">Reconciliacao</option>
+              <option value="novo_congregado">Novo Congregado</option>
             </select>
           </div>
           <div class="col-12">
@@ -517,8 +520,9 @@
     }
     pessoas.forEach(p => {
       const isNasc = p.tipo_cadastro === 'novo_nascimento';
-      const tipoLabel = isNasc ? 'Nascimento' : 'Reconciliacao';
-      const tipoClass = isNasc ? 'tipo-nascimento' : 'tipo-reconciliacao';
+      const isNcgr = p.tipo_cadastro === 'novo_congregado';
+      const tipoLabel = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
+      const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
       const isSelected = selectedIds.has(p.id);
@@ -683,8 +687,9 @@
       const p = JSON.parse(text);
 
       const isNasc = p.tipo_cadastro === 'novo_nascimento';
-      const tipoLabel = isNasc ? 'Nascimento' : 'Reconciliacao';
-      const tipoClass = isNasc ? 'tipo-nascimento' : 'tipo-reconciliacao';
+      const isNcgr = p.tipo_cadastro === 'novo_congregado';
+      const tipoLabel = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
+      const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleString('pt-BR') : '-';
 

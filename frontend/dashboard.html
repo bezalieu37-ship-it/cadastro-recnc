@@ -65,6 +65,8 @@
     .stat-card.green .stat-number { color: #198754; }
     .stat-card.yellow .stat-icon { background: rgba(255,193,7,0.12); color: #d4a017; }
     .stat-card.yellow .stat-number { color: #d4a017; }
+    .stat-card.cyan .stat-icon { background: rgba(13,202,240,0.1); color: #0dcaf0; }
+    .stat-card.cyan .stat-number { color: #0dcaf0; }
     .stat-card.purple .stat-icon { background: rgba(111,66,193,0.1); color: #6f42c1; }
     .stat-card.purple .stat-number { color: #6f42c1; }
 
@@ -107,6 +109,7 @@
     }
     .recent-avatar.nasc { background: rgba(25,135,84,0.1); color: #198754; }
     .recent-avatar.reconc { background: rgba(255,193,7,0.12); color: #d4a017; }
+    .recent-avatar.ncgr { background: rgba(13,202,240,0.1); color: #0dcaf0; }
     .recent-info { flex: 1; min-width: 0; }
     .recent-name { font-weight: 600; font-size: 0.9rem; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .recent-meta { font-size: 0.75rem; color: #6c757d; display: flex; align-items: center; gap: 8px; }
@@ -180,6 +183,11 @@
       <div class="stat-icon"><i class="fas fa-handshake"></i></div>
       <div class="stat-number" id="totalReconciliacao">0</div>
       <div class="stat-label"><i class="fas fa-people-arrows"></i> Reconciliacoes</div>
+    </div>
+    <div class="stat-card cyan">
+      <div class="stat-icon"><i class="fas fa-church"></i></div>
+      <div class="stat-number" id="totalNcgr">0</div>
+      <div class="stat-label"><i class="fas fa-users"></i> Novos Congregados</div>
     </div>
     <div class="stat-card purple">
       <div class="stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
@@ -337,6 +345,7 @@
         animateNumber('totalPessoas', data.totalPessoas || 0);
         animateNumber('totalNascimento', data.totalNascimento || 0);
         animateNumber('totalReconciliacao', data.totalReconciliacao || 0);
+        animateNumber('totalNcgr', data.totalNcgr || 0);
         animateNumber('ultimosCadastros', data.ultimosCadastros || 0);
       }
     } catch (e) { console.error('Erro stats:', e); }
@@ -368,14 +377,15 @@
       container.innerHTML = '';
       data.slice(0, 5).forEach(p => {
         const isNasc = p.tipo_cadastro === 'novo_nascimento';
+        const isNcgr = p.tipo_cadastro === 'novo_congregado';
         const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Nascimento' : 'Reconciliacao';
+        const tipo = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
 
         const item = document.createElement('div');
         item.className = 'recent-item';
         item.innerHTML = `
-          <div class="recent-avatar ${isNasc ? 'nasc' : 'reconc'}">${initials}</div>
+          <div class="recent-avatar ${isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc'}">${initials}</div>
           <div class="recent-info">
             <div class="recent-name">${p.nome_completo || ''}</div>
             <div class="recent-meta">
@@ -412,14 +422,15 @@
       container.innerHTML = '';
       data.pessoas.forEach(p => {
         const isNasc = p.tipo_cadastro === 'novo_nascimento';
+        const isNcgr = p.tipo_cadastro === 'novo_congregado';
         const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Nascimento' : 'Reconciliacao';
+        const tipo = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
 
         const item = document.createElement('div');
         item.className = 'recent-item';
         item.innerHTML = `
-          <div class="recent-avatar ${isNasc ? 'nasc' : 'reconc'}">${initials}</div>
+          <div class="recent-avatar ${isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc'}">${initials}</div>
           <div class="recent-info">
             <div class="recent-name">${p.nome_completo || ''}</div>
             <div class="recent-meta">

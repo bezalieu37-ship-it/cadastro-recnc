@@ -56,7 +56,7 @@ function initializeDatabase() {
           endereco TEXT NOT NULL,
           ponto_referencia TEXT NOT NULL,
           telefone TEXT NOT NULL,
-          tipo_cadastro TEXT NOT NULL CHECK (tipo_cadastro IN ('novo_nascimento', 'reconciliacao')),
+          tipo_cadastro TEXT NOT NULL CHECK (tipo_cadastro IN ('novo_nascimento', 'reconciliacao', 'novo_congregado')),
           acompanhante TEXT,
           foto_url TEXT,
           cadastrado_por INTEGER,
@@ -487,10 +487,15 @@ app.get('/api/estatisticas', authMiddleware, adminMiddleware, (req, res) => {
         if (err) return res.status(500).json({ error: 'Erro ao buscar estatísticas.' });
         results.totalReconciliacao = row.total;
         
-        db.all('SELECT * FROM pessoas ORDER BY data_cadastro DESC LIMIT 5', [], (err, ultimos) => {
-          if (err) return res.status(500).json({ error: 'Erro ao buscar últimos cadastros.' });
-          results.ultimosCadastros = ultimos.length;
-          res.json(results);
+        db.get("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_congregado'", [], (err, row) => {
+          if (err) return res.status(500).json({ error: 'Erro ao buscar estatísticas.' });
+          results.totalNcgr = row.total;
+          
+          db.all('SELECT * FROM pessoas ORDER BY data_cadastro DESC LIMIT 5', [], (err, ultimos) => {
+            if (err) return res.status(500).json({ error: 'Erro ao buscar últimos cadastros.' });
+            results.ultimosCadastros = ultimos.length;
+            res.json(results);
+          });
         });
       });
     });
@@ -531,7 +536,8 @@ app.get('/api/export/csv', authMiddleware, adminMiddleware, (req, res) => {
     const BOM = '\uFEFF';
     const header = 'ID,Nome Completo,Data Nascimento,Endereco,Ponto Referencia,Telefone,Tipo,Acompanhamento,Cadastrado Por,Data Cadastro\n';
     const rows = pessoas.map(p => {
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : 'Reconciliacao'}","${(p.acompanhante||'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
+      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
+      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(p.acompanhante||'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
     }).join('\n');
     
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -570,7 +576,7 @@ app.get('/api/export/pdf', authMiddleware, adminMiddleware, (req, res) => {
     }
     
     const rows = pessoas.map(p => {
-      const tipo = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : 'Reconciliacao';
+      const tipo = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
       return `<tr>
         <td>${p.id}</td>
         <td>${p.nome_completo || ''}</td>
@@ -645,7 +651,7 @@ app.post('/api/reports/send', authMiddleware, adminMiddleware, (req, res) => {
     
     // Generate report HTML content
     const rows = pessoas.map(p => {
-      const tipo = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : 'Reconciliacao';
+      const tipo = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
       return `<tr>
         <td style="padding:6px;border:1px solid #dee2e6">${p.id}</td>
         <td style="padding:6px;border:1px solid #dee2e6">${p.nome_completo || ''}</td>
