@@ -226,11 +226,11 @@
       </a>
       <a href="#" class="action-item" id="actionBackup" onclick="window.__backupDados(); return false;">
         <i class="fas fa-download text-primary"></i>
-        <span>Baixar Backup</span>
+        <span>Exportar Backup</span>
       </a>
       <a href="#" class="action-item" id="actionRestaurar" onclick="document.getElementById('backupFileInput').click(); return false;">
         <i class="fas fa-upload text-warning"></i>
-        <span>Restaurar Backup</span>
+        <span>Importar Backup</span>
       </a>
       <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="window.__restaurarBackup(this)">
     </div>
