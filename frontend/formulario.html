@@ -434,7 +434,7 @@
           }
           
           nomeArquivo.textContent = file.name;
-          nomeArquivo.parentClassList.remove('d-none');
+          nomeArquivo.parentElement.classList.remove('d-none');
         }
       });
     }
@@ -443,7 +443,7 @@
     function limparArquivo() {
       arquivoUpload.value = '';
       nomeArquivo.textContent = '';
-      nomeArquivo.parentClassList.add('d-none');
+      nomeArquivo.parentElement.classList.add('d-none');
     }
     
     // ====== Montar endereco completo ======
