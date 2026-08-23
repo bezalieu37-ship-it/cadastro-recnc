@@ -72,11 +72,6 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label" for="email">E-mail</label>
-          <input type="email" class="form-control" id="email" required>
-        </div>
-
-        <div class="mb-3">
           <label class="form-label" for="senha">Senha</label>
           <input type="password" class="form-control" id="senha" minlength="6" required>
           <small class="text-muted">Minimo 6 caracteres</small>
@@ -112,11 +107,10 @@
       e.preventDefault();
 
       const nome = document.getElementById('nome').value.trim();
-      const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
       const confirmar = document.getElementById('confirmar_senha').value;
 
-      if (!nome || !email || !senha) {
+      if (!nome || !senha) {
         showAlert('Preencha todos os campos.', 'warning');
         return;
       }
@@ -138,7 +132,7 @@
         const response = await fetch('api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome, email, senha })
+          body: JSON.stringify({ nome, senha })
         });
 
         const data = await response.json();
@@ -148,18 +142,13 @@
           localStorage.setItem('user', JSON.stringify({
             id: data.user.id,
             nome: data.user.nome,
-            email: data.user.email,
             perfil: data.user.perfil
           }));
 
           showAlert('Conta criada com sucesso! Redirecionando...', 'success');
 
           setTimeout(() => {
-            if (data.user.perfil === 'admin') {
-              window.location.href = 'dashboard.html';
-            } else {
-              window.location.href = 'lista.html';
-            }
+            window.location.href = 'dashboard.html';
           }, 1500);
         } else {
           showAlert(data.error || 'Erro ao criar conta.', 'danger');

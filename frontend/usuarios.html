@@ -91,10 +91,6 @@
             <input type="text" class="form-control" id="novoNome" required>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">E-mail</label>
-            <input type="email" class="form-control" id="novoEmail" required>
-          </div>
-          <div class="mb-3">
             <label class="form-label fw-semibold">Senha</label>
             <input type="password" class="form-control" id="novaSenha" minlength="6" required>
             <small class="text-muted">Minimo 6 caracteres</small>
@@ -130,10 +126,6 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Nome</label>
             <input type="text" class="form-control" id="editarNome" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">E-mail</label>
-            <input type="email" class="form-control" id="editarEmail" required>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Senha (deixe vazio para manter)</label>
@@ -242,7 +234,6 @@
         <div class="user-avatar">${initials}</div>
         <div class="user-info">
           <div class="user-name">${u.nome}${isMe ? ' <small class="text-muted">(Voce)</small>' : ''}</div>
-          <div class="user-email">${u.email}</div>
         </div>
         <span class="badge ${badgeClass}">${u.perfil === 'admin' ? 'Admin' : 'Usuario'}</span>
         <div class="d-flex gap-1">
@@ -267,7 +258,6 @@
   document.getElementById('formNovoUsuario').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = document.getElementById('novoNome').value.trim();
-    const email = document.getElementById('novoEmail').value.trim();
     const senha = document.getElementById('novaSenha').value;
     const perfil = document.getElementById('novoPerfil').value;
 
@@ -278,7 +268,7 @@
       const res = await fetch('api/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ nome, email, senha, perfil })
+        body: JSON.stringify({ nome, senha, perfil })
       });
       const data = await res.json();
       if (res.ok) {
@@ -299,7 +289,6 @@
     if (!u) return;
     document.getElementById('editarId').value = u.id;
     document.getElementById('editarNome').value = u.nome;
-    document.getElementById('editarEmail').value = u.email;
     document.getElementById('editarSenha').value = '';
     document.getElementById('editarPerfil').value = u.perfil || 'usuario';
     modalEditar.show();
@@ -309,11 +298,10 @@
     e.preventDefault();
     const id = document.getElementById('editarId').value;
     const nome = document.getElementById('editarNome').value.trim();
-    const email = document.getElementById('editarEmail').value.trim();
     const senha = document.getElementById('editarSenha').value;
     const perfil = document.getElementById('editarPerfil').value;
 
-    const body = { nome, email, perfil };
+    const body = { nome, perfil };
     if (senha && senha.length >= 6) body.senha = senha;
 
     const btn = document.getElementById('btnSalvarEditar');
@@ -330,7 +318,7 @@
         modalEditar.hide();
         // Update local user data if editing self
         if (parseInt(id) === currentUser.id) {
-          localStorage.setItem('user', JSON.stringify({ ...currentUser, nome, email }));
+          localStorage.setItem('user', JSON.stringify({ ...currentUser, nome }));
         }
         carregarUsuarios();
       } else {

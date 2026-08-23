@@ -40,9 +40,8 @@ function initializeDatabase() {
       db.run(`
         CREATE TABLE IF NOT EXISTS usuarios (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nome TEXT NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          senha_hash TEXT NOT NULL,
+          nome TEXT NOT NULL UNIQUE,
+          senha TEXT NOT NULL,
           perfil TEXT DEFAULT 'usuario' CHECK (perfil IN ('admin', 'usuario')),
           data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -138,52 +137,51 @@ function adminMiddleware(req, res, next) {
 
 // 1. Register - First user becomes admin
 app.post('/api/register', async (req, res) => {
-  const { nome, email, senha } = req.body;
+  const { nome, senha } = req.body;
   
-  if (!nome || !email || !senha) {
-    return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
+  if (!nome || !senha) {
+    return res.status(400).json({ error: 'Nome e senha sao obrigatorios.' });
   }
 
   try {
     const saltRounds = 10;
     const senha_hash = await bcrypt.hash(senha, saltRounds);
     
-    // Check if user exists
-    db.get('SELECT id FROM usuarios WHERE email = ?', [email], async (err, user) => {
+    // Check if user exists by name
+    db.get('SELECT id FROM usuarios WHERE nome = ?', [nome], async (err, user) => {
       if (err) {
-        return res.status(500).json({ error: 'Erro ao verificar usuário.' });
+        return res.status(500).json({ error: 'Erro ao verificar usuario.' });
       }
       
       if (user) {
-        return res.status(409).json({ error: 'Este email já está cadastrado.' });
+        return res.status(409).json({ error: 'Este nome ja esta cadastrado.' });
       }
       
       // Determine perfil: first user becomes admin, others are 'usuario'
-      // Simple approach: check total users count
       db.get('SELECT COUNT(*) as count FROM usuarios', [], (err, row) => {
         if (err) {
-          return res.status(500).json({ error: 'Erro ao contar usuários.' });
+          return res.status(500).json({ error: 'Erro ao contar usuarios.' });
         }
         
         const perfil = row.count === 0 ? 'admin' : 'usuario';
         
-        const stmt = `INSERT INTO usuarios (nome, email, senha_hash, perfil) VALUES (?, ?, ?, ?)`;
-        db.run(stmt, [nome, email, senha_hash, perfil], function(err) {
+        const stmt = `INSERT INTO usuarios (nome, senha, perfil) VALUES (?, ?, ?)`;
+        db.run(stmt, [nome, senha_hash, perfil], function(err) {
           if (err) {
-            return res.status(500).json({ error: 'Erro ao criar usuário.' });
+            return res.status(500).json({ error: 'Erro ao criar usuario.' });
           }
           
           // Generate JWT token
           const token = jwt.sign(
-            { id: this.lastID, email, perfil },
+            { id: this.lastID, nome, perfil },
             process.env.JWT_SECRET || 'cadastro-remc-secret-key',
             { expiresIn: '24h' }
           );
           
           res.status(201).json({
-            message: 'Usuário criado com sucesso.',
+            message: 'Usuario criado com sucesso.',
             token,
-            user: { id: this.lastID, nome, email, perfil }
+            user: { id: this.lastID, nome, perfil }
           });
         });
       });
@@ -195,28 +193,28 @@ app.post('/api/register', async (req, res) => {
 
 // 2. Login
 app.post('/api/login', (req, res) => {
-  const { email, senha } = req.body;
+  const { nome, senha } = req.body;
   
-  if (!email || !senha) {
-    return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+  if (!nome || !senha) {
+    return res.status(400).json({ error: 'Nome e senha sao obrigatorios.' });
   }
 
-  db.get('SELECT * FROM usuarios WHERE email = ?', [email], async (err, user) => {
+  db.get('SELECT * FROM usuarios WHERE nome = ?', [nome], async (err, user) => {
     if (err) {
       return res.status(500).json({ error: 'Erro no servidor.' });
     }
     
     if (!user) {
-      return res.status(401).json({ error: 'Credenciais inválidas.' });
+      return res.status(401).json({ error: 'Credenciais invalidas.' });
     }
     
-    const validPassword = await bcrypt.compare(senha, user.senha_hash);
+    const validPassword = await bcrypt.compare(senha, user.senha);
     if (!validPassword) {
-      return res.status(401).json({ error: 'Credenciais inválidas.' });
+      return res.status(401).json({ error: 'Credenciais invalidas.' });
     }
     
     const token = jwt.sign(
-      { id: user.id, email: user.email, perfil: user.perfil },
+      { id: user.id, nome: user.nome, perfil: user.perfil },
       process.env.JWT_SECRET || 'cadastro-remc-secret-key',
       { expiresIn: '24h' }
     );
@@ -224,7 +222,7 @@ app.post('/api/login', (req, res) => {
     res.json({
       message: 'Login bem-sucedido.',
       token,
-      user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil }
+      user: { id: user.id, nome: user.nome, perfil: user.perfil }
     });
   });
 });
@@ -236,9 +234,9 @@ app.get('/api/profile', authMiddleware, (req, res) => {
 
 // 4. Get all users (admin only)
 app.get('/api/usuarios', authMiddleware, adminMiddleware, (req, res) => {
-  db.all('SELECT id, nome, email, perfil, data_criacao FROM usuarios', [], (err, users) => {
+  db.all('SELECT id, nome, perfil, data_criacao FROM usuarios', [], (err, users) => {
     if (err) {
-      return res.status(500).json({ error: 'Erro ao buscar usuários.' });
+      return res.status(500).json({ error: 'Erro ao buscar usuarios.' });
     }
     res.json(users);
   });
@@ -248,7 +246,7 @@ app.get('/api/usuarios', authMiddleware, adminMiddleware, (req, res) => {
 app.get('/api/usuarios/list', authMiddleware, (req, res) => {
   db.all('SELECT id, nome FROM usuarios ORDER BY nome', [], (err, users) => {
     if (err) {
-      return res.status(500).json({ error: 'Erro ao buscar lista de usuários.' });
+      return res.status(500).json({ error: 'Erro ao buscar lista de usuarios.' });
     }
     res.json(users);
   });
@@ -256,10 +254,10 @@ app.get('/api/usuarios/list', authMiddleware, (req, res) => {
 
 // 5. Create new user (admin only)
 app.post('/api/usuarios', authMiddleware, adminMiddleware, (req, res) => {
-  const { nome, email, senha, perfil } = req.body;
+  const { nome, senha, perfil } = req.body;
   
-  if (!nome || !email || !senha) {
-    return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
+  if (!nome || !senha) {
+    return res.status(400).json({ error: 'Nome e senha sao obrigatorios.' });
   }
   
   bcrypt.hash(senha, 10, (err, saltHash) => {
@@ -267,12 +265,12 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, (req, res) => {
       return res.status(500).json({ error: 'Erro ao hashear senha.' });
     }
     
-    const stmt = `INSERT INTO usuarios (nome, email, senha_hash, perfil) VALUES (?, ?, ?, ?)`;
-    db.run(stmt, [nome, email, saltHash, perfil || 'usuario'], function(err) {
+    const stmt = `INSERT INTO usuarios (nome, senha, perfil) VALUES (?, ?, ?)`;
+    db.run(stmt, [nome, saltHash, perfil || 'usuario'], function(err) {
       if (err) {
-        return res.status(500).json({ error: 'Erro ao criar usuário. Email já existe?' });
+        return res.status(500).json({ error: 'Erro ao criar usuario. Nome ja existe?' });
       }
-      res.json({ message: 'Usuário criado com sucesso.', userId: this.lastID });
+      res.json({ message: 'Usuario criado com sucesso.', userId: this.lastID });
     });
   });
 });
@@ -442,31 +440,31 @@ app.delete('/api/usuarios/:id', authMiddleware, adminMiddleware, (req, res) => {
 
 // 12. Update user (admin only)
 app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, (req, res) => {
-  const { nome, email, senha, perfil } = req.body;
+  const { nome, senha, perfil } = req.body;
   const userId = req.params.id;
   
-  if (!nome || !email) {
-    return res.status(400).json({ error: 'Nome e email são obrigatórios.' });
+  if (!nome) {
+    return res.status(400).json({ error: 'Nome e obrigatorio.' });
   }
   
   // If password provided, hash it and update with password
   if (senha && senha.length >= 6) {
     bcrypt.hash(senha, 10, (err, hash) => {
       if (err) return res.status(500).json({ error: 'Erro ao processar senha.' });
-      db.run('UPDATE usuarios SET nome = ?, email = ?, senha_hash = ?, perfil = ? WHERE id = ?',
-        [nome, email, hash, perfil || 'usuario', userId], function(err) {
-          if (err) return res.status(500).json({ error: 'Erro ao atualizar usuário. Email já existe?' });
-          if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
-          res.json({ message: 'Usuário atualizado com sucesso.' });
+      db.run('UPDATE usuarios SET nome = ?, senha = ?, perfil = ? WHERE id = ?',
+        [nome, hash, perfil || 'usuario', userId], function(err) {
+          if (err) return res.status(500).json({ error: 'Erro ao atualizar usuario. Nome ja existe?' });
+          if (this.changes === 0) return res.status(404).json({ error: 'Usuario nao encontrado.' });
+          res.json({ message: 'Usuario atualizado com sucesso.' });
       });
     });
   } else {
     // Update without password
-    db.run('UPDATE usuarios SET nome = ?, email = ?, perfil = ? WHERE id = ?',
-      [nome, email, perfil || 'usuario', userId], function(err) {
-        if (err) return res.status(500).json({ error: 'Erro ao atualizar usuário. Email já existe?' });
-        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
-        res.json({ message: 'Usuário atualizado com sucesso.' });
+    db.run('UPDATE usuarios SET nome = ?, perfil = ? WHERE id = ?',
+      [nome, perfil || 'usuario', userId], function(err) {
+        if (err) return res.status(500).json({ error: 'Erro ao atualizar usuario. Nome ja existe?' });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuario nao encontrado.' });
+        res.json({ message: 'Usuario atualizado com sucesso.' });
     });
   }
 });
@@ -794,8 +792,8 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, (req, res) => {
         // Restore usuarios
         if (backup.tables.usuarios && backup.tables.usuarios.length > 0) {
           backup.tables.usuarios.forEach(u => {
-            const stmt = `INSERT OR REPLACE INTO usuarios (id, nome, email, senha, perfil, data_criacao) VALUES (?, ?, ?, ?, ?, ?)`;
-            db.run(stmt, [u.id, u.nome, u.email, u.senha, u.perfil || 'usuario', u.data_criacao || new Date().toISOString()], (err) => {
+            const stmt = `INSERT OR REPLACE INTO usuarios (id, nome, senha, perfil, data_criacao) VALUES (?, ?, ?, ?, ?)`;
+            db.run(stmt, [u.id, u.nome, u.senha, u.perfil || 'usuario', u.data_criacao || new Date().toISOString()], (err) => {
               if (err) errors.push(`Erro ao restaurar usuario ${u.nome}: ${err.message}`);
               checkDone();
             });

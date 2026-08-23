@@ -79,8 +79,8 @@
       
       <form id="loginForm">
         <div class="mb-3">
-          <label class="form-label" for="email">E-mail</label>
-          <input type="email" class="form-control" id="email" required>
+          <label class="form-label" for="nome">Nome</label>
+          <input type="text" class="form-control" id="nome" required>
         </div>
         
         <div class="mb-3">
@@ -110,10 +110,10 @@
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const email = document.getElementById('email').value.trim();
+      const nome = document.getElementById('nome').value.trim();
       const senha = document.getElementById('senha').value.trim();
       
-      if (!email || !senha) {
+      if (!nome || !senha) {
         alert('Por favor, preencha todos os campos.');
         return;
       }
@@ -124,7 +124,7 @@
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, senha })
+          body: JSON.stringify({ nome, senha })
         });
         
         const data = await response.json();
@@ -135,16 +135,11 @@
           localStorage.setItem('user', JSON.stringify({
             id: data.user.id,
             nome: data.user.nome,
-            email: data.user.email,
             perfil: data.user.perfil
           }));
           
-          // Redirect based on profile
-          if (data.user.perfil === 'admin') {
-            window.location.href = 'dashboard.html';
-          } else {
-            window.location.href = 'lista.html';
-          }
+          // Redirect to dashboard
+          window.location.href = 'dashboard.html';
         } else {
           alert(data.error || 'Login falhou. Tente novamente.');
         }
