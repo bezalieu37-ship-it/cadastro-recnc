@@ -3,320 +3,339 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro RECNC - Dashboard</title>
+  <title>Cadastro RECNC - Painel</title>
   <meta name="description" content="Painel administrativo - Cadastro RECNC">
-  
-  <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/minimal-fontawesome.min.css">
-  
-  <!-- Custom styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
-  
-<!-- Font Awesome for specific icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css">
-  
   <style>
-    .sidebar {
-      min-height: 100vh;
-      background: var(--dark);
+    :root { --primary: #0d6efd; --primary-dark: #0a58ca; }
+
+    body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; }
+
+    /* Top Navbar */
+    .top-nav {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 12px 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      position: sticky; top: 0; z-index: 100;
     }
-    
-    .sidebar a {
-      color: #adb5bd;
-      text-decoration: none;
-      display: block;
-      padding: 12px 15px;
-      border-radius: 8px;
-      margin: 5px 10px;
+    .top-nav .brand { color: white; font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+    .top-nav .nav-links { display: flex; gap: 4px; align-items: center; }
+    .top-nav .nav-links a {
+      color: rgba(255,255,255,0.8); text-decoration: none; padding: 6px 14px;
+      border-radius: 8px; font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
     }
-    
-    .sidebar a:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: white;
+    .top-nav .nav-links a:hover, .top-nav .nav-links a.active { background: rgba(255,255,255,0.2); color: white; }
+    .btn-sair {
+      color: white; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
     }
-    
-    .sidebar a.active {
-      background-color: var(--primary-color);
-      color: white;
+    .btn-sair:hover { background: rgba(220,53,69,0.8); border-color: rgba(220,53,69,0.9); }
+
+    /* Welcome Banner */
+    .welcome-banner {
+      background: white; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
     }
-    
-    .hero-section {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-      border-radius: 16px 16px 0 0;
-      padding: 40px 20px;
-      margin: -20px -20px 30px;
-      overflow: hidden;
-    }
-    
-    .hero-section .hero-bg {
-      width: 100%;
-      height: 100%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" viewBox="0 0 4 4"><path fill="rgba(255,255,255,0.3)" d="M0 0h4v4H0zM2 2L2 2"/><path fill="rgba(255,255,255,0.1)" d="M0 0h4v4H0zM2 2L2 2"/>' />
-      background-size: 40px 40px;
-    }
-    
-    .hero-section .hero-content {
-      position: relative;
-      z-index: 10;
-    }
-    
-    .hero-section h1 {
-      color: white;
-      font-weight: 800;
-    }
-    
-    .hero-section p {
-      color: rgba(255,255,255,0.8);
-    }
-    
+    .welcome-text h4 { margin: 0; font-weight: 700; color: #212529; }
+    .welcome-text p { margin: 4px 0 0; color: #6c757d; font-size: 0.9rem; }
+    .welcome-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .welcome-actions .btn { border-radius: 10px; padding: 10px 20px; font-weight: 600; font-size: 0.85rem; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-}
-    
-    .stat-card:hover {
-      transform: translateY(-2px);
+      background: white; border-radius: 14px; padding: 20px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden;
     }
-    
-    .stat-card .number {
-      font-size: 2.5rem;
-      font-weight: bold;
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .stat-card .stat-icon {
+      width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px; font-size: 1.3rem;
     }
-    
-    .stat-card .label {
-      color: #6c757d;
-      font-size: 0.9rem;
+    .stat-card .stat-number { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+    .stat-card .stat-label { font-size: 0.8rem; color: #6c757d; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+    .stat-card.blue .stat-icon { background: rgba(13,110,253,0.1); color: #0d6efd; }
+    .stat-card.blue .stat-number { color: #0d6efd; }
+    .stat-card.green .stat-icon { background: rgba(25,135,84,0.1); color: #198754; }
+    .stat-card.green .stat-number { color: #198754; }
+    .stat-card.yellow .stat-icon { background: rgba(255,193,7,0.12); color: #d4a017; }
+    .stat-card.yellow .stat-number { color: #d4a017; }
+    .stat-card.purple .stat-icon { background: rgba(111,66,193,0.1); color: #6f42c1; }
+    .stat-card.purple .stat-number { color: #6f42c1; }
+
+    /* Quick Actions */
+    .quick-actions {
+      background: white; border-radius: 14px; padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px;
     }
-    
-    .stat-card.primary { border-top: 4px solid var(--primary-color); }
-    .stat-card.success { border-top: 4px solid var(--success); }
-    .stat-card.info { border-top: 4px solid var(--info); }
-    
-    .card-table th {
-      background-color: var(--light);
-      border-top: none;
+    .quick-actions h6 { font-weight: 700; color: #212529; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .action-item {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 16px 10px; border-radius: 12px; border: 1px solid #e9ecef;
+      text-decoration: none; color: #495057; transition: all 0.2s; cursor: pointer;
     }
-    
-    /* Table row actions */
-    .action-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
+    .action-item:hover { border-color: var(--primary); background: #f0f6ff; color: var(--primary); transform: translateY(-2px); }
+    .action-item i { font-size: 1.5rem; }
+    .action-item span { font-size: 0.8rem; font-weight: 600; text-align: center; }
+
+    /* Recent List */
+    .recent-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;
     }
-    
-    .action-btn.editar { background: rgba(40,167,69,0.1); color: var(--success); }
-    .action-btn.excluir { background: rgba(220,53,69,0.1); color: var(--danger); }
-    
-    /* Modal styles */
-    .modal-content {
-      border: none;
-      border-radius: 12px;
+    .recent-card .card-header-custom {
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    
-    .modal-header {
-      border-bottom: 1px solid #dee2e6;
-      border-radius: 12px 12px 0 0;
+    .recent-card .card-header-custom h6 { margin: 0; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .recent-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+      border-bottom: 1px solid #f8f9fa; transition: background 0.15s;
     }
-    
-    /* Reduced table height for mobile */
-    @media (max-width: 768px) {
-      .table-responsive {
-        overflow-x: auto;
-      }
-      .table th, .table td {
-        padding: 8px 4px;
-      }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item:hover { background: #f8f9fa; }
+    .recent-avatar {
+      width: 40px; height: 40px; border-radius: 10px; display: flex;
+      align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .recent-avatar.nasc { background: rgba(25,135,84,0.1); color: #198754; }
+    .recent-avatar.reconc { background: rgba(255,193,7,0.12); color: #d4a017; }
+    .recent-info { flex: 1; min-width: 0; }
+    .recent-name { font-weight: 600; font-size: 0.9rem; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-meta { font-size: 0.75rem; color: #6c757d; display: flex; align-items: center; gap: 8px; }
+    .recent-date { font-size: 0.75rem; color: #adb5bd; white-space: nowrap; }
+
+    .empty-state { padding: 40px 20px; text-align: center; color: #adb5bd; }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; }
+
+    /* Mobile */
+    @media (max-width: 576px) {
+      .welcome-banner { padding: 16px; }
+      .welcome-actions { width: 100%; }
+      .welcome-actions .btn { flex: 1; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-card .stat-number { font-size: 1.5rem; }
+      .top-nav .nav-links a.hide-mobile { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="container-fluid">
-    <!-- Sidebar -->
-    <div class="row">
-      <div class="col-md-2 sidebar py-5">
-        <h4 class="text-white text-center mb-4"><i class="fas fa-users me-2"></i>Cadastro RECNC</h4>
-        
-        <a href="dashboard.html" class="text-decoration-none text-white small">
-          <i class="fas fa-tachometer-alt me-2"></i>Painel
-        </a>
-        <a href="lista.html" class="text-decoration-none text-white small">
-          <i class="fas fa-list me-2"></i>Lista
-        </a>
-        <a href="usuarios.html" class="text-decoration-none text-white small">
-          <i class="fas fa-user-tie me-2"></i>Usuários
-        </a>
-        
-        <div class="mt-5">
-          <hr class="border-secondary">
-          <div class="text-center">
-            <small>Bem-vindo, <strong id="userName"></strong></small>
-          </div>
-          <div class="text-center mt-3">
-            <button class="btn btn-outline-light w-100" id="btnLogout">
-              <i class="fas fa-sign-out-alt me-2"></i>Sair
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Main Content -->
-      <div class="col-12 col-md-10 main-content p-4">
-        <!-- Hero Section -->
-        <div class="hero-section mb-4">
-          <div class="hero-bg"></div>
-          <div class="hero-content text-center py-5">
-            <h1 class="display-4 fw-bold text-white mb-3">Cadastro RECNC</h1>
-            <p class="lead text-white-50 mb-4">Sistema de gestão de cadastros</p>
-            <div class="d-flex justify-content-center gap-2">
-              <a href="formulario.html" class="btn btn-light btn-sm">
-                <i class="fas fa-user-plus me-2"></i>Novo Cadastro
-              </a>
-              <a href="lista.html" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-list me-2"></i>Ver Lista
-              </a>
-            </div>
-          </div>
-        </div>
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2><i class="fas fa-chart-bar me-2"></i>Painel Administrativo</h2>
-          <div>
-            <small class="text-secondary" id="dataAtual"></small>
-          </div>
-        </div>
-        
-        <!-- Estatísticas Cards -->
-        <div class="row g-4 mb-4">
-          <!-- Total Pessoas -->
-          <div class="stat-card primary col-12 col-sm-6 col-md-3">
-            <div class="number" id="totalPessoas">0</div>
-            <div class="label">Total de Pessoas</div>
-          </div>
-          
-          <!-- Novos Nascimentos -->
-          <div class="stat-card success col-12 col-sm-6 col-md-3">
-            <div class="number" id="totalNascimento">0</div>
-            <div class="label">Novos Nascimentos</div>
-          </div>
-          
-          <!-- Reconciliações -->
-          <div class="stat-card info col-12 col-sm-6 col-md-3">
-            <div class="number" id="totalReconciliacao">0</div>
-            <div class="label">Reconciliações</div>
-          </div>
-          
-          <!-- Últimos Cadastros -->
-          <div class="stat-card secondary col-12 col-sm-6 col-md-3">
-            <div class="number" id="ultimosCadastros">0</div>
-            <div class="label">Últimos 5</div>
-          </div>
-        </div>
-        
-        <!-- Últimos Cadastros -->
-        <div class="card fade-in-up">
-          <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Últimos Cadastros</h5>
-          </div>
-          <div class="card-body p-0" id="ultimosCadastrosList">
-            <!-- Cards serão inseridos aqui via JS -->
-          </div>
-        </div>
+
+<!-- Top Navigation -->
+<div class="top-nav">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a href="dashboard.html" class="brand">
+      <i class="fas fa-user-tie me-2"></i>Cadastro RECNC
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i> Painel</a>
+      <a href="lista.html" class="hide-mobile"><i class="fas fa-list me-1"></i> Lista</a>
+      <a href="usuarios.html" class="hide-mobile" id="navUsuarios"><i class="fas fa-users me-1"></i> Usuarios</a>
+      <button class="btn-sair" id="btnLogout">
+        <i class="fas fa-right-from-bracket"></i> Sair
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h4><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">Usuario</span>!</h4>
+      <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
+    </div>
+    <div class="welcome-actions">
+      <a href="formulario.html" class="btn btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Novo Cadastro
+      </a>
+      <a href="lista.html" class="btn btn-outline-secondary">
+        <i class="fas fa-list-ul me-1"></i> Ver Lista
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="fas fa-users"></i></div>
+      <div class="stat-number" id="totalPessoas">0</div>
+      <div class="stat-label"><i class="fas fa-database"></i> Total de Pessoas</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon"><i class="fas fa-baby"></i></div>
+      <div class="stat-number" id="totalNascimento">0</div>
+      <div class="stat-label"><i class="fas fa-heart"></i> Novos Nascimentos</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+      <div class="stat-number" id="totalReconciliacao">0</div>
+      <div class="stat-label"><i class="fas fa-people-arrows"></i> Reconciliacoes</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
+      <div class="stat-number" id="ultimosCadastros">0</div>
+      <div class="stat-label"><i class="fas fa-calendar-check"></i> Ultimos 5</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h6><i class="fas fa-bolt text-warning"></i> Acoes Rapidas</h6>
+    <div class="action-grid">
+      <a href="formulario.html" class="action-item">
+        <i class="fas fa-user-plus text-primary"></i>
+        <span>Novo Cadastro</span>
+      </a>
+      <a href="lista.html" class="action-item">
+        <i class="fas fa-list-check text-success"></i>
+        <span>Ver Lista</span>
+      </a>
+      <a href="usuarios.html" class="action-item" id="actionUsuarios">
+        <i class="fas fa-user-gear text-info"></i>
+        <span>Gerenciar Usuarios</span>
+      </a>
+      <a href="lista.html" class="action-item" id="actionCSV">
+        <i class="fas fa-file-csv text-success"></i>
+        <span>Exportar CSV</span>
+      </a>
+      <a href="lista.html" class="action-item" id="actionPDF">
+        <i class="fas fa-file-pdf text-danger"></i>
+        <span>Exportar PDF</span>
+      </a>
+      <a href="usuarios.html" class="action-item" id="actionNovoUsuario">
+        <i class="fas fa-user-plus text-warning"></i>
+        <span>Novo Usuario</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Cadastros -->
+  <div class="recent-card">
+    <div class="card-header-custom">
+      <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos Cadastros</h6>
+      <a href="lista.html" class="text-primary text-decoration-none" style="font-size:0.85rem; font-weight:600;">
+        <i class="fas fa-arrow-right me-1"></i>Ver todos
+      </a>
+    </div>
+    <div id="ultimosCadastrosList">
+      <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>Nenhum cadastro encontrado</p>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Custom JS -->
-  <script>
-    // Check authentication
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    if (!token) {
-      window.location.href = 'index.html';
-    }
-    
-    document.getElementById('userName').textContent = user.nome || 'Usuário';
-    
-    // Logout
-    document.getElementById('btnLogout').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = 'index.html';
-    });
-    
-    // Show current date
-    const dataAtual = document.getElementById('dataAtual');
-    if (dataAtual) {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      dataAtual.textContent = new Date().toLocaleDateString('pt-BR', options);
-    }
-    
-    // Fetch statistics
-    async function carregarEstatisticas() {
-      try {
-        const response = await fetch('api/estatisticas', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (response.ok) {
-          document.getElementById('totalPessoas').textContent = data.totalPessoas || 0;
-          document.getElementById('totalNascimento').textContent = data.totalNascimento || 0;
-          document.getElementById('totalReconciliacao').textContent = data.totalReconciliacao || 0;
-          document.getElementById('ultimosCadastros').textContent = data.ultimosCadastros || 0;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) { window.location.href = 'index.html'; return; }
+
+  // User info
+  document.getElementById('userName').textContent = user.nome || 'Usuario';
+
+  // Date
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
+
+  // Admin-only items
+  if (user.perfil !== 'admin') {
+    const navU = document.getElementById('navUsuarios');
+    const actU = document.getElementById('actionUsuarios');
+    const actNU = document.getElementById('actionNovoUsuario');
+    if (navU) navU.style.display = 'none';
+    if (actU) actU.style.display = 'none';
+    if (actNU) actNU.style.display = 'none';
+  }
+
+  // Logout
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'index.html';
+  });
+
+  // Stats
+  async function carregarEstatisticas() {
+    try {
+      const res = await fetch('api/estatisticas', { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      if (res.ok) {
+        animateNumber('totalPessoas', data.totalPessoas || 0);
+        animateNumber('totalNascimento', data.totalNascimento || 0);
+        animateNumber('totalReconciliacao', data.totalReconciliacao || 0);
+        animateNumber('ultimosCadastros', data.ultimosCadastros || 0);
       }
-    }
-    
-    // Fetch últimos cadastros
-    async function carregarUltimosCadastros() {
-      try {
-        const response = await fetch('api/ultimos-cadastros', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (response.ok && data.length > 0) {
-          const container = document.getElementById('ultimosCadastrosList');
-          container.innerHTML = '';
-          
-          data.slice(0, 5).forEach(pessoa => {
-            const card = document.createElement('div');
-            card.className = 'card p-3 border-start border-primary';
-            card.innerHTML = `
-              <div class="d-flex w-100 justify-content-between align-items-start">
-                <div class="flex-grow-1 me-3">
-                  <h6 class="mb-1">${pessoa.nome_completo.substring(0, 30)}...</h6>
-                  <small class="text-secondary">${pessoa.telefone}</small>
-                </div>
-                <small class="text-secondary">${new Date(pessoa.data_cadastro).toLocaleDateString('pt-BR')}</small>
-              </div>
-            `;
-            container.appendChild(card);
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao carregar últimos cadastros:', error);
+    } catch (e) { console.error('Erro stats:', e); }
+  }
+
+  function animateNumber(id, target) {
+    const el = document.getElementById(id);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 20));
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(interval); }
+      el.textContent = current;
+    }, 30);
+  }
+
+  // Recent cadastros
+  async function carregarUltimos() {
+    try {
+      const res = await fetch('api/ultimos-cadastros', { headers: { 'Authorization': 'Bearer ' + token } });
+      const data = await res.json();
+      const container = document.getElementById('ultimosCadastrosList');
+
+      if (!res.ok || !data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum cadastro encontrado</p></div>';
+        return;
       }
-    }
-    
-    // Initialize
-    carregarEstatisticas();
-    carregarUltimosCadastros();
-  </script>
+
+      container.innerHTML = '';
+      data.slice(0, 5).forEach(p => {
+        const isNasc = p.tipo_cadastro === 'novo_nascimento';
+        const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
+        const tipo = isNasc ? 'Nascimento' : 'Reconciliacao';
+
+        const item = document.createElement('div');
+        item.className = 'recent-item';
+        item.innerHTML = `
+          <div class="recent-avatar ${isNasc ? 'nasc' : 'reconc'}">${initials}</div>
+          <div class="recent-info">
+            <div class="recent-name">${p.nome_completo || ''}</div>
+            <div class="recent-meta">
+              <i class="fas fa-phone"></i> ${p.telefone || '-'}
+              <span class="badge ${isNasc ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
+                <i class="fas ${isNasc ? 'fa-baby' : 'fa-handshake'}"></i> ${tipo}
+              </span>
+            </div>
+          </div>
+          <div class="recent-date"><i class="fas fa-calendar me-1"></i>${date}</div>
+        `;
+        container.appendChild(item);
+      });
+    } catch (e) { console.error('Erro recentes:', e); }
+  }
+
+  carregarEstatisticas();
+  carregarUltimos();
+})();
+</script>
 </body>
 </html>
