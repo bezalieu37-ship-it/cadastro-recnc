@@ -683,9 +683,10 @@
         </div>
         <div class="px-2">
           <div class="detail-row"><span class="detail-label"><i class="fas fa-phone me-1 text-muted"></i>Telefone</span><span class="detail-value">${p.telefone || '-'}</span></div>
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-birthday-cake me-1 text-muted"></i>Data Nasc.</span><span class="detail-value">${p.data_nascimento || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-home me-1 text-muted"></i>Endereco</span><span class="detail-value">${p.endereco || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Ref.</span><span class="detail-value">${p.ponto_referencia || '-'}</span></div>
-          ${p.acompanhante ? '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-friends me-1 text-muted"></i>Acompanhante</span><span class="detail-value">' + p.acompanhante + '</span></div>' : ''}
+          ${p.acompanhante ? '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-friends me-1 text-muted"></i>Acompanhamento</span><span class="detail-value">' + p.acompanhante + '</span></div>' : ''}
           <div class="detail-row"><span class="detail-label"><i class="fas fa-user-check me-1 text-muted"></i>Cadastrado por</span><span class="detail-value">${p.cadastrado_por || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-clock me-1 text-muted"></i>Data cadastro</span><span class="detail-value">${dataFormatada}</span></div>
         </div>

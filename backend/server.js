@@ -52,13 +52,13 @@ function initializeDatabase() {
         CREATE TABLE IF NOT EXISTS pessoas (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nome_completo TEXT NOT NULL,
+          data_nascimento TEXT,
           endereco TEXT NOT NULL,
           ponto_referencia TEXT NOT NULL,
           telefone TEXT NOT NULL,
           tipo_cadastro TEXT NOT NULL CHECK (tipo_cadastro IN ('novo_nascimento', 'reconciliacao')),
           acompanhante TEXT,
           foto_url TEXT,
-          arquivo_url TEXT,
           cadastrado_por INTEGER,
           data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (cadastrado_por) REFERENCES usuarios(id)
@@ -74,6 +74,14 @@ function initializeDatabase() {
               console.log('Migration: added acompanhante column');
             });
           }
+          const hasDataNasc = columns.some(c => c.name === 'data_nascimento');
+          if (!hasDataNasc) {
+            db.run("ALTER TABLE pessoas ADD COLUMN data_nascimento TEXT", [], () => {
+              console.log('Migration: added data_nascimento column');
+            });
+          }
+          // Remove arquivo_url if exists (deprecated)
+          // SQLite doesn't support DROP COLUMN in older versions, we just ignore it
         }
       });
 
@@ -271,7 +279,7 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, (req, res) => {
 
 // 6. Create new pessoa (all authenticated users)
 app.post('/api/pessoas', authMiddleware, (req, res) => {
-  const { nome_completo, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, arquivo_url } = req.body;
+  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
   
   if (!nome_completo || !endereco || !ponto_referencia || !telefone || !tipo_cadastro) {
     return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos.' });
@@ -279,10 +287,11 @@ app.post('/api/pessoas', authMiddleware, (req, res) => {
   
   const cadastrado_por = req.user.id;
   
-  const stmt = `INSERT INTO pessoas (nome_completo, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, arquivo_url, cadastrado_por, data_cadastro) 
+  const stmt = `INSERT INTO pessoas (nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
-  db.run(stmt, [nome_completo, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url, arquivo_url, cadastrado_por], function(err) {
+  db.run(stmt, [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url || '', cadastrado_por], function(err) {
     if (err) {
+      console.error('Erro ao cadastrar pessoa:', err);
       return res.status(500).json({ error: 'Erro ao cadastrar pessoa.' });
     }
     res.json({ message: 'Pessoa cadastrada com sucesso.', pessoaId: this.lastID });
@@ -344,10 +353,10 @@ app.get('/api/pessoas/:id', authMiddleware, (req, res) => {
 
 // 9. Update pessoa (all authenticated users)
 app.put('/api/pessoas/:id', authMiddleware, (req, res) => {
-  const { nome_completo, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, arquivo_url } = req.body;
+  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
   
-  const stmt = `UPDATE pessoas SET nome_completo = ?, endereco = ?, ponto_referencia = ?, telefone = ?, tipo_cadastro = ?, acompanhante = ?, foto_url = ?, arquivo_url = ? WHERE id = ?`;
-  db.run(stmt, [nome_completo, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url, arquivo_url, req.params.id], function(err) {
+  const stmt = `UPDATE pessoas SET nome_completo = ?, data_nascimento = ?, endereco = ?, ponto_referencia = ?, telefone = ?, tipo_cadastro = ?, acompanhante = ?, foto_url = ? WHERE id = ?`;
+  db.run(stmt, [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url || '', req.params.id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Erro ao atualizar pessoa.' });
     }
@@ -489,9 +498,9 @@ app.get('/api/export/csv', authMiddleware, (req, res) => {
     }
     
     const BOM = '\uFEFF';
-    const header = 'ID,Nome Completo,Endereco,Ponto Referencia,Telefone,Tipo,Acompanhante,Cadastrado Por,Data Cadastro\n';
+    const header = 'ID,Nome Completo,Data Nascimento,Endereco,Ponto Referencia,Telefone,Tipo,Acompanhamento,Cadastrado Por,Data Cadastro\n';
     const rows = pessoas.map(p => {
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : 'Reconciliacao'}","${(p.acompanhante||'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
+      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : 'Reconciliacao'}","${(p.acompanhante||'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
     }).join('\n');
     
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -534,6 +543,7 @@ app.get('/api/export/pdf', authMiddleware, (req, res) => {
       return `<tr>
         <td>${p.id}</td>
         <td>${p.nome_completo || ''}</td>
+        <td>${p.data_nascimento || '-'}</td>
         <td>${p.endereco || ''}</td>
         <td>${p.ponto_referencia || ''}</td>
         <td>${p.telefone || ''}</td>
@@ -560,7 +570,7 @@ app.get('/api/export/pdf', authMiddleware, (req, res) => {
 <h1>Cadastro RECNC - Relatorio de Cadastros</h1>
 <div class="info">Gerado em: ${new Date().toLocaleString('pt-BR')} | Total: ${pessoas.length} registro(s)</div>
 <table><thead><tr>
-  <th>ID</th><th>Nome</th><th>Endereco</th><th>Ref.</th><th>Telefone</th><th>Tipo</th><th>Acompanhante</th><th>Cadastrado por</th><th>Data</th>
+  <th>ID</th><th>Nome</th><th>Data Nasc.</th><th>Endereco</th><th>Ref.</th><th>Telefone</th><th>Tipo</th><th>Acompanhamento</th><th>Cadastrado por</th><th>Data</th>
 </tr></thead><tbody>${rows}</tbody></table>
 </body></html>`;
     
