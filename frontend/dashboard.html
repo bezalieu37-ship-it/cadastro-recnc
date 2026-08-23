@@ -137,7 +137,7 @@
     </a>
     <div class="nav-links">
       <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i> Painel</a>
-      <a href="lista.html" class="hide-mobile"><i class="fas fa-list me-1"></i> Lista</a>
+      <a href="lista.html" class="hide-mobile" id="navLista"><i class="fas fa-list me-1"></i> Lista</a>
       <a href="usuarios.html" class="hide-mobile" id="navUsuarios"><i class="fas fa-users me-1"></i> Usuarios</a>
       <button class="btn-sair" id="btnLogout">
         <i class="fas fa-right-from-bracket"></i> Sair
@@ -158,7 +158,7 @@
       <a href="formulario.html" class="btn btn-primary">
         <i class="fas fa-user-plus me-1"></i> Novo Cadastro
       </a>
-      <a href="lista.html" class="btn btn-outline-secondary">
+      <a href="lista.html" class="btn btn-outline-secondary" id="btnVerLista">
         <i class="fas fa-list-ul me-1"></i> Ver Lista
       </a>
     </div>
@@ -196,7 +196,7 @@
         <i class="fas fa-user-plus text-primary"></i>
         <span>Novo Cadastro</span>
       </a>
-      <a href="lista.html" class="action-item">
+      <a href="lista.html" class="action-item" id="actionLista">
         <i class="fas fa-list-check text-success"></i>
         <span>Ver Lista</span>
       </a>
@@ -220,7 +220,7 @@
   </div>
 
   <!-- Recent Cadastros -->
-  <div class="recent-card">
+  <div class="recent-card" id="recentSection">
     <div class="card-header-custom">
       <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos Cadastros</h6>
       <a href="lista.html" class="text-primary text-decoration-none" style="font-size:0.85rem; font-weight:600;">
@@ -254,12 +254,49 @@
 
   // Admin-only items
   if (user.perfil !== 'admin') {
+    // Hide all admin elements
     const navU = document.getElementById('navUsuarios');
+    const navL = document.getElementById('navLista');
     const actU = document.getElementById('actionUsuarios');
     const actNU = document.getElementById('actionNovoUsuario');
+    const actL = document.getElementById('actionLista');
+    const actCSV = document.getElementById('actionCSV');
+    const actPDF = document.getElementById('actionPDF');
+    const btnLista = document.getElementById('btnVerLista');
+    const statsGrid = document.querySelector('.stats-grid');
+    const quickActions = document.querySelector('.quick-actions');
+    const recentSection = document.getElementById('recentSection');
+    
     if (navU) navU.style.display = 'none';
+    if (navL) navL.style.display = 'none';
     if (actU) actU.style.display = 'none';
     if (actNU) actNU.style.display = 'none';
+    if (actL) actL.style.display = 'none';
+    if (actCSV) actCSV.style.display = 'none';
+    if (actPDF) actPDF.style.display = 'none';
+    if (btnLista) btnLista.style.display = 'none';
+    if (statsGrid) statsGrid.style.display = 'none';
+    if (quickActions) quickActions.style.display = 'none';
+    if (recentSection) recentSection.style.display = 'none';
+    
+    // Show message for regular users
+    const banner = document.querySelector('.welcome-banner');
+    if (banner) {
+      banner.innerHTML = `
+        <div class="welcome-text">
+          <h4><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">${user.nome || 'Usuario'}</span>!</h4>
+          <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
+          <p class="mt-2"><i class="fas fa-info-circle me-1"></i> Bem-vindo! Use o botao abaixo para cadastrar uma nova pessoa.</p>
+        </div>
+        <div class="welcome-actions">
+          <a href="formulario.html" class="btn btn-primary btn-lg">
+            <i class="fas fa-user-plus me-1"></i> Novo Cadastro
+          </a>
+        </div>
+      `;
+      const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
+    }
   }
 
   // Logout

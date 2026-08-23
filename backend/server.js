@@ -298,8 +298,8 @@ app.post('/api/pessoas', authMiddleware, (req, res) => {
   });
 });
 
-// 7. Get all pessoas (with pagination and filters)
-app.get('/api/pessoas', authMiddleware, (req, res) => {
+// 7. Get all pessoas (admin only - with pagination and filters)
+app.get('/api/pessoas', authMiddleware, adminMiddleware, (req, res) => {
   const { tipo, search, page = 1, limit = 10 } = req.query;
   let whereClause = ' WHERE 1=1';
   const params = [];
@@ -338,8 +338,8 @@ app.get('/api/pessoas', authMiddleware, (req, res) => {
   });
 });
 
-// 8. Get single pessoa
-app.get('/api/pessoas/:id', authMiddleware, (req, res) => {
+// 8. Get single pessoa (admin only)
+app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, (req, res) => {
   db.get('SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.id = ?', [req.params.id], (err, pessoa) => {
     if (err) {
       return res.status(500).json({ error: 'Erro ao buscar pessoa.' });
@@ -351,8 +351,8 @@ app.get('/api/pessoas/:id', authMiddleware, (req, res) => {
   });
 });
 
-// 9. Update pessoa (all authenticated users)
-app.put('/api/pessoas/:id', authMiddleware, (req, res) => {
+// 9. Update pessoa (admin only)
+app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, (req, res) => {
   const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
   
   const stmt = `UPDATE pessoas SET nome_completo = ?, data_nascimento = ?, endereco = ?, ponto_referencia = ?, telefone = ?, tipo_cadastro = ?, acompanhante = ?, foto_url = ? WHERE id = ?`;
@@ -367,8 +367,8 @@ app.put('/api/pessoas/:id', authMiddleware, (req, res) => {
   });
 });
 
-// 10. Delete pessoa (all authenticated users)
-app.delete('/api/pessoas/:id', authMiddleware, (req, res) => {
+// 10. Delete pessoa (admin only)
+app.delete('/api/pessoas/:id', authMiddleware, adminMiddleware, (req, res) => {
   db.run('DELETE FROM pessoas WHERE id = ?', [req.params.id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Erro ao excluir pessoa.' });
@@ -440,8 +440,8 @@ app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, (req, res) => {
   }
 });
 
-// API: Get statistics
-app.get('/api/estatisticas', authMiddleware, (req, res) => {
+// API: Get statistics (admin only)
+app.get('/api/estatisticas', authMiddleware, adminMiddleware, (req, res) => {
   const results = {};
   
   db.get('SELECT COUNT(*) as total FROM pessoas', [], (err, row) => {
@@ -468,8 +468,8 @@ app.get('/api/estatisticas', authMiddleware, (req, res) => {
 
 // ===== EXPORT ROUTES =====
 
-// Export CSV
-app.get('/api/export/csv', authMiddleware, (req, res) => {
+// Export CSV (admin only)
+app.get('/api/export/csv', authMiddleware, adminMiddleware, (req, res) => {
   const { tipo, search, ids } = req.query;
   let whereClause = ' WHERE 1=1';
   const params = [];
@@ -509,8 +509,8 @@ app.get('/api/export/csv', authMiddleware, (req, res) => {
   });
 });
 
-// Export PDF (generates HTML that browser prints as PDF)
-app.get('/api/export/pdf', authMiddleware, (req, res) => {
+// Export PDF (admin only - generates HTML that browser prints as PDF)
+app.get('/api/export/pdf', authMiddleware, adminMiddleware, (req, res) => {
   const { tipo, search, ids } = req.query;
   let whereClause = ' WHERE 1=1';
   const params = [];
