@@ -13,8 +13,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve frontend static files
 const path = require('path');
@@ -724,6 +724,110 @@ app.get('/api/reports', authMiddleware, adminMiddleware, (req, res) => {
     criado_por: r.criado_por
   }));
   res.json(reports);
+});
+
+// ===== BACKUP & RESTORE (Admin only) =====
+
+// Generate backup JSON
+app.get('/api/backup', authMiddleware, adminMiddleware, (req, res) => {
+  const backup = { version: 1, createdAt: new Date().toISOString(), tables: {} };
+  
+  db.all('SELECT * FROM usuarios', [], (err, usuarios) => {
+    if (err) return res.status(500).json({ error: 'Erro ao gerar backup.' });
+    backup.tables.usuarios = usuarios || [];
+    
+    db.all('SELECT * FROM pessoas', [], (err, pessoas) => {
+      if (err) return res.status(500).json({ error: 'Erro ao gerar backup.' });
+      backup.tables.pessoas = pessoas || [];
+      
+      db.all('SELECT * FROM relatorios', [], (err, relatorios) => {
+        if (err) return res.status(500).json({ error: 'Erro ao gerar backup.' });
+        backup.tables.relatorios = relatorios || [];
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename=backup_recnc_${new Date().toISOString().slice(0,10)}.json`);
+        res.json(backup);
+      });
+    });
+  });
+});
+
+// Restore from backup JSON
+app.post('/api/backup/restore', authMiddleware, adminMiddleware, (req, res) => {
+  const { backup } = req.body;
+  
+  if (!backup || !backup.tables) {
+    return res.status(400).json({ error: 'Arquivo de backup invalido.' });
+  }
+  
+  // Clear existing data
+  db.run('DELETE FROM relatorios', [], (err) => {
+    if (err) return res.status(500).json({ error: 'Erro ao limpar dados antigos.' });
+    
+    db.run('DELETE FROM pessoas', [], (err) => {
+      if (err) return res.status(500).json({ error: 'Erro ao limpar dados antigos.' });
+      
+      db.run('DELETE FROM usuarios', [], (err) => {
+        if (err) return res.status(500).json({ error: 'Erro ao limpar dados antigos.' });
+        
+        const errors = [];
+        let completed = 0;
+        const total = (backup.tables.usuarios?.length || 0) + 
+                      (backup.tables.pessoas?.length || 0) + 
+                      (backup.tables.relatorios?.length || 0);
+        
+        if (total === 0) {
+          return res.json({ message: 'Backup restaurado com sucesso (vazio).' });
+        }
+        
+        function checkDone() {
+          completed++;
+          if (completed >= total) {
+            if (errors.length > 0) {
+              res.json({ message: `Backup restaurado com ${errors.length} erro(s).`, errors });
+            } else {
+              res.json({ message: 'Backup restaurado com sucesso!' });
+            }
+          }
+        }
+        
+        // Restore usuarios
+        if (backup.tables.usuarios && backup.tables.usuarios.length > 0) {
+          backup.tables.usuarios.forEach(u => {
+            const stmt = `INSERT OR REPLACE INTO usuarios (id, nome, email, senha, perfil, data_criacao) VALUES (?, ?, ?, ?, ?, ?)`;
+            db.run(stmt, [u.id, u.nome, u.email, u.senha, u.perfil || 'usuario', u.data_criacao || new Date().toISOString()], (err) => {
+              if (err) errors.push(`Erro ao restaurar usuario ${u.nome}: ${err.message}`);
+              checkDone();
+            });
+          });
+        } else {
+          // No usuarios to restore, skip
+        }
+        
+        // Restore pessoas
+        if (backup.tables.pessoas && backup.tables.pessoas.length > 0) {
+          backup.tables.pessoas.forEach(p => {
+            const stmt = `INSERT OR REPLACE INTO pessoas (id, nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            db.run(stmt, [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, p.tipo_cadastro, p.acompanhante, p.foto_url, p.cadastrado_por, p.data_cadastro], (err) => {
+              if (err) errors.push(`Erro ao restaurar pessoa ${p.nome_completo}: ${err.message}`);
+              checkDone();
+            });
+          });
+        }
+        
+        // Restore relatorios
+        if (backup.tables.relatorios && backup.tables.relatorios.length > 0) {
+          backup.tables.relatorios.forEach(r => {
+            const stmt = `INSERT OR REPLACE INTO relatorios (id, titulo, email_destino, tipo_filtro, filtro_valor, total_registros, data_geracao, criado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+            db.run(stmt, [r.id, r.titulo, r.email_destino, r.tipo_filtro, r.filtro_valor, r.total_registros, r.data_geracao, r.criado_por], (err) => {
+              if (err) errors.push(`Erro ao restaurar relatorio ${r.titulo}: ${err.message}`);
+              checkDone();
+            });
+          });
+        }
+      });
+    });
+  });
 });
 
 // Default route - serve login page

@@ -224,6 +224,15 @@
         <i class="fas fa-user-plus text-warning"></i>
         <span>Novo Usuario</span>
       </a>
+      <a href="#" class="action-item" id="actionBackup" onclick="window.__backupDados(); return false;">
+        <i class="fas fa-download text-primary"></i>
+        <span>Baixar Backup</span>
+      </a>
+      <a href="#" class="action-item" id="actionRestaurar" onclick="document.getElementById('backupFileInput').click(); return false;">
+        <i class="fas fa-upload text-warning"></i>
+        <span>Restaurar Backup</span>
+      </a>
+      <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="window.__restaurarBackup(this)">
     </div>
   </div>
 
@@ -328,6 +337,76 @@
       carregarMeusAcompanhamentos();
     }
   }
+
+  // Backup & Restore functions
+  window.__backupDados = async function() {
+    if (!confirm('Deseja baixar o backup de todos os dados?')) return;
+    
+    try {
+      const res = await fetch('api/backup', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      
+      if (!res.ok) throw new Error('Erro ao gerar backup');
+      
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_recnc_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      alert('Backup baixado com sucesso!');
+    } catch (err) {
+      console.error('Erro backup:', err);
+      alert('Erro ao gerar backup: ' + err.message);
+    }
+  };
+  
+  window.__restaurarBackup = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!confirm('ATENCAO: Isto ira SUBSTITUIR TODOS os dados atuais pelo backup. Deseja continuar?')) {
+      input.value = '';
+      return;
+    }
+    
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      
+      if (!backup.tables) {
+        alert('Arquivo de backup invalido.');
+        input.value = '';
+        return;
+      }
+      
+      const res = await fetch('api/backup/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ backup })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        alert(data.message || 'Backup restaurado com sucesso!');
+        window.location.reload();
+      } else {
+        alert(data.error || 'Erro ao restaurar backup.');
+      }
+    } catch (err) {
+      console.error('Erro restore:', err);
+      alert('Erro ao processar backup: ' + err.message);
+    }
+    
+    input.value = '';
+  };
 
   // Logout
   document.getElementById('btnLogout').addEventListener('click', () => {
