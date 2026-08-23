@@ -619,7 +619,7 @@
   }
 
   // Navigate
-  function novoCadastro() { window.location.href = 'formulario.html'; }
+  window.novoCadastro = function() { window.location.href = 'formulario.html'; }
 
   // Delete
   function confirmarExclusao(id, nome) {
@@ -717,21 +717,48 @@
   }
 
   // Export CSV
-  function exportarCSV() {
+  window.exportarCSV = async function() {
     const tipo = $filtroTipo.value;
     const search = $pesquisaNome.value.trim();
     let url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
     if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-    window.location.href = url;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Erro ' + res.status);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (e) {
+      alert('Erro ao baixar CSV: ' + e.message);
+    }
   }
 
   // Export PDF
-  function exportarPDF() {
+  window.exportarPDF = async function() {
     const tipo = $filtroTipo.value;
     const search = $pesquisaNome.value.trim();
     let url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
     if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-    window.location.href = url;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Erro ' + res.status);
+      const html = await res.text();
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      } else {
+        alert('Permita pop-ups para gerar o PDF.');
+      }
+    } catch (e) {
+      alert('Erro ao gerar PDF: ' + e.message);
+    }
   }
 
   // Report modal
