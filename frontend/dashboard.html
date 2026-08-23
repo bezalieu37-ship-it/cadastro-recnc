@@ -286,7 +286,6 @@
         <div class="welcome-text">
           <h4><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">${user.nome || 'Usuario'}</span>!</h4>
           <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
-          <p class="mt-2"><i class="fas fa-info-circle me-1"></i> Bem-vindo! Use o botao abaixo para cadastrar uma nova pessoa.</p>
         </div>
         <div class="welcome-actions">
           <a href="formulario.html" class="btn btn-primary btn-lg">
@@ -296,6 +295,29 @@
       `;
       const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
+    }
+    
+    // Show section for my acompanhamentos
+    const container = document.querySelector('.container.py-4');
+    if (container) {
+      const minhaSection = document.createElement('div');
+      minhaSection.innerHTML = `
+        <div class="recent-card" id="meusAcompanhamentos">
+          <div class="card-header-custom">
+            <h6><i class="fas fa-user-friends text-primary"></i> Minhas Pessoas para Acompanhar</h6>
+          </div>
+          <div id="meusAcompanhamentosList">
+            <div class="empty-state">
+              <i class="fas fa-inbox"></i>
+              <p>Carregando...</p>
+            </div>
+          </div>
+        </div>
+      `;
+      container.appendChild(minhaSection);
+      
+      // Load my acompanhamentos
+      carregarMeusAcompanhamentos();
     }
   }
 
@@ -372,6 +394,47 @@
 
   carregarEstatisticas();
   carregarUltimos();
+  
+  // Load my acompanhamentos (for regular users)
+  async function carregarMeusAcompanhamentos() {
+    try {
+      const res = await fetch('api/pessoas/meus-acompanhamentos', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      const container = document.getElementById('meusAcompanhamentosList');
+
+      if (!res.ok || !data.pessoas || data.pessoas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida para acompanhamento</p></div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.pessoas.forEach(p => {
+        const isNasc = p.tipo_cadastro === 'novo_nascimento';
+        const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
+        const tipo = isNasc ? 'Nascimento' : 'Reconciliacao';
+
+        const item = document.createElement('div');
+        item.className = 'recent-item';
+        item.innerHTML = `
+          <div class="recent-avatar ${isNasc ? 'nasc' : 'reconc'}">${initials}</div>
+          <div class="recent-info">
+            <div class="recent-name">${p.nome_completo || ''}</div>
+            <div class="recent-meta">
+              <i class="fas fa-phone"></i> ${p.telefone || '-'}
+              <span class="badge ${isNasc ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
+                <i class="fas ${isNasc ? 'fa-baby' : 'fa-handshake'}"></i> ${tipo}
+              </span>
+            </div>
+          </div>
+          <div class="recent-date"><i class="fas fa-calendar me-1"></i>${date}</div>
+        `;
+        container.appendChild(item);
+      });
+    } catch (e) { console.error('Erro acompanhamentos:', e); }
+  }
 })();
 </script>
 </body>

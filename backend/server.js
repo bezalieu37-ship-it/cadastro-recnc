@@ -351,6 +351,37 @@ app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, (req, res) => {
   });
 });
 
+// 8.1 Get my acompanhamentos (regular users see only people assigned to them)
+app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, (req, res) => {
+  const userId = req.user.id;
+  const { page = 1, limit = 10 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  
+  const whereClause = ' WHERE p.acompanhante = ?';
+  const params = [userId.toString()];
+  
+  // Count total
+  const countQuery = `SELECT COUNT(*) as total FROM pessoas p${whereClause}`;
+  
+  db.get(countQuery, params, (err, countResult) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao contar acompanhamentos.' });
+    }
+    
+    const total = countResult.total;
+    const totalPages = Math.ceil(total / parseInt(limit));
+    
+    const query = `SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id${whereClause} ORDER BY p.data_cadastro DESC LIMIT ? OFFSET ?`;
+    
+    db.all(query, [...params, parseInt(limit), offset], (err, pessoas) => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao buscar acompanhamentos.' });
+      }
+      res.json({ pessoas, total, totalPages, page: parseInt(page) });
+    });
+  });
+});
+
 // 9. Update pessoa (admin only)
 app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, (req, res) => {
   const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
