@@ -5,14 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cadastro RECNC - Gerenciar Usuários</title>
   <meta name="description" content="Gerenciar usuários do sistema - Cadastro RECNC">
-  
-  <!-- Bootstrap 5 CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/minimal-fontawesome.min.css">
-  
-  <!-- Custom styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
-  
   <style>
     .user-card {
       background: white;
@@ -22,430 +17,360 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
       transition: transform 0.2s;
     }
-    
-    .user-card:hover {
-      transform: translateY(-2px);
+    .user-card:hover { transform: translateY(-2px); }
+    .badge-admin { background: rgba(40,167,69,0.1); color: #198754; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; }
+    .badge-usuario { background: rgba(23,162,184,0.1); color: #0dcaf0; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; }
+    .user-avatar {
+      width: 45px; height: 45px; border-radius: 50%; background: #e9ecef;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: #6c757d; font-size: 1.1rem; flex-shrink: 0;
     }
-    
-    .user-perfil-admin { color: var(--success); }
-    .user-perfil-usuario { color: var(--info); }
-    
-    .permission-badge {
-      font-size: 0.7rem;
-      padding: 3px 6px;
-      border-radius: 4px;
-    }
-    
-    .badge-admin { background: rgba(40,167,69,0.1); color: var(--success); }
-    .badge-usuario { background: rgba(23,162,184,0.1); color: var(--info); }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-weight: 600; color: #212529; margin-bottom: 2px; }
+    .user-email { font-size: 0.85rem; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty-state { padding: 40px 20px; text-align: center; color: #6c757d; }
+    .empty-state i { opacity: 0.3; font-size: 3rem; }
   </style>
 </head>
 <body>
 
-<!-- Top navigation -->
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
       <i class="fas fa-user-tie me-2"></i>Cadastro RECNC
-    </button>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="dashboard.html">Painel</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="lista.html">Lista</a>
-        </li>
-        <!-- Usuarios link - será escondido por JS se não for admin -->
-        <li class="nav-item" id="navUsuarios">
-          <a class="nav-link active" href="usuarios.html">Usuários</a>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
+        <li class="nav-item"><a class="nav-link" href="lista.html">Lista</a></li>
+        <li class="nav-item" id="navUsuarios"><a class="nav-link active" href="usuarios.html">Usuarios</a></li>
       </ul>
     </div>
   </div>
 </nav>
 
-<script>
-    // Hide Usuarios link for non-admin users
-    document.addEventListener('DOMContentLoaded', function() {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const navUsuarios = document.getElementById('navUsuarios');
-      if (user && user.perfil !== 'admin') {
-        navUsuarios.style.display = 'none';
-      }
-    });
-</script>
-
 <div class="container">
   <div class="row">
     <div class="col-12">
-      <div class="card fade-in-up">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h4><i class="fas fa-users-gear me-2"></i>Gerenciar Usuários</h4>
-          <small class="text-secondary">Apenas administradores podem gerenciar usuários</small>
-          <!-- Botão Novo Usuário visível para admins -->
-          <button class="btn btn-sm btn-outline-secondary" onclick="modalAdicionar.show()" title="Adicionar novo usuário">
-            <i class="fas fa-user-plus me-1"></i> Novo
+      <div class="card" style="border-radius:12px; border:none; box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+        <div class="card-header d-flex justify-content-between align-items-center" style="border-radius:12px 12px 0 0; background:white; border-bottom:1px solid #f0f0f0;">
+          <h5 class="mb-0 fw-bold"><i class="fas fa-users-gear me-2 text-primary"></i>Gerenciar Usuarios</h5>
+          <button class="btn btn-primary btn-sm" id="btnNovoUsuario" title="Adicionar novo usuario">
+            <i class="fas fa-user-plus me-1"></i> Novo Usuario
           </button>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-user-management">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyUsuarios">
-                <!-- Usuários serão inseridos aqui -->
-              </tbody>
-            </table>
-          </div>
+        <div class="card-body p-0">
+          <div id="usuariosContainer"></div>
         </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Modal Adicionar Usuário -->
-  <div class="modal fade" id="modalAdicionarUsuario" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="formAdicionarUsuario">
-        <div class="modal-header">
-          <h5 class="modal-title">Adicionar Novo Usuário</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Nome</label>
-            <input type="text" class="form-control" id="novoNome" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="novoEmail" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Senha</label>
-            <input type="password" class="form-control" id="novaSenha" required>
-            <small class="text-secondary">Mínimo 6 caracteres</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Perfil</label>
-            <select class="form-select" id="novoPerfil">
-              <option value="admin">Administrador</option>
-              <option value="usuario">Usuário</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Usuário</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Modal Remover Usuário -->
-  <div class="modal fade" id="modalRemoverUsuario" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="formRemoverUsuario">
-        <div class="modal-header">
-          <h5 class="modal-title">Remover Usuário</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p>Tem certeza que deseja remover este usuário?</p>
-          <input type="hidden" id="usuarioRemoverId">
-          <p class="text-danger small mt-3" id="usuarioRemoverNome"></p>
-          <small class="text-warning">Este usuário não poderá ser o último administrador.</small>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger">Remover</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Modal Editar Usuário -->
-  <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="formEditarUsuario">
-        <div class="modal-header">
-          <h5 class="modal-title">Editar Usuário</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="usuarioEditarId">
-          <div class="mb-3">
-            <label class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nomeEditar" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="emailEditar" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Senha (deixe em branco para manter a senha atual)</label>
-            <input type="password" class="form-control" id="senhaEditar" placeholder="Deixe em branco para manter senha atual">
-            <small class="text-secondary">Mínimo 6 caracteres</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Perfil</label>
-            <select class="form-select" id="perfilEditar">
-              <option value="admin">Administrador</option>
-              <option value="usuario">Usuário</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-        </div>
-        </form>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Scripts -->
+<!-- Modal: Novo Usuario -->
+<div class="modal fade" id="modalNovoUsuario" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px; border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2 text-primary"></i>Novo Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formNovoUsuario">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome</label>
+            <input type="text" class="form-control" id="novoNome" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">E-mail</label>
+            <input type="email" class="form-control" id="novoEmail" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Senha</label>
+            <input type="password" class="form-control" id="novaSenha" minlength="6" required>
+            <small class="text-muted">Minimo 6 caracteres</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Perfil</label>
+            <select class="form-select" id="novoPerfil">
+              <option value="usuario">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnSalvarNovo">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar Usuario -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px; border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i>Editar Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formEditarUsuario">
+        <div class="modal-body">
+          <input type="hidden" id="editarId">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome</label>
+            <input type="text" class="form-control" id="editarNome" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">E-mail</label>
+            <input type="email" class="form-control" id="editarEmail" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Senha (deixe vazio para manter)</label>
+            <input type="password" class="form-control" id="editarSenha" minlength="6">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Perfil</label>
+            <select class="form-select" id="editarPerfil">
+              <option value="usuario">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnSalvarEditar">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar Exclusao -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px; border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Excluir Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir este usuario?</p>
+        <p class="text-danger fw-bold" id="excluirNome"></p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarExcluir"><i class="fas fa-trash me-1"></i>Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Check authentication and admin only
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    if (!token || user.perfil !== 'admin') {
-      window.location.href = 'index.html';
-    }
-    
-    // Load users
-    async function carregarUsuarios() {
-      try {
-        const response = await fetch('api/usuarios', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (response.ok) {
-          renderUsuarios(data);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-      }
-    }
-    
-    // Render users
-    function renderUsuarios(usuarios) {
-      const tbody = document.getElementById('tbodyUsuarios');
-      if (!tbody) return;
-      
-      tbody.innerHTML = '';
-      
-      usuarios.forEach(user => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user.nome}</td>
-          <td>${user.email}</td>
-          <td><span class="badge badge-${user.perfil === 'admin' ? 'admin' : 'usuario'} permission-badge">${user.perfil}</span></td>
-          <td>
-            <button class="btn btn-link text-primary btn-sm me-2" onclick="editarUsuario(${user.id})">Editar</button>
-            <button class="btn btn-link text-danger btn-sm" onclick="excluirUsuario(${user.id})">Remover</button>
-          </td>
-        `;
-        tbody.appendChild(row);
+(function() {
+  const token = localStorage.getItem('token');
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token || currentUser.perfil !== 'admin') {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Hide nav for non-admin
+  if (currentUser.perfil !== 'admin') {
+    document.getElementById('navUsuarios').style.display = 'none';
+  }
+
+  // State
+  let usuarios = [];
+  let excluirId = null;
+
+  // Modal instances
+  const modalNovo = new bootstrap.Modal(document.getElementById('modalNovoUsuario'));
+  const modalEditar = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
+  const modalExcluir = new bootstrap.Modal(document.getElementById('modalExcluir'));
+
+  // Load users
+  async function carregarUsuarios() {
+    try {
+      const res = await fetch('api/usuarios', {
+        headers: { 'Authorization': 'Bearer ' + token }
       });
+      if (res.status === 401) { window.location.href = 'index.html'; return; }
+      const data = await res.json();
+      if (res.ok) {
+        usuarios = data;
+        renderUsuarios(data);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar usuarios:', err);
+      document.getElementById('usuariosContainer').innerHTML =
+        '<div class="empty-state"><i class="fas fa-exclamation-circle mb-3"></i><p>Erro ao carregar usuarios.</p></div>';
     }
-    
-    // Add user modal
-    const modalAdicionar = new bootstrap.Modal(document.getElementById('modalAdicionarUsuario'));
-    
-    document.querySelector('.btn-adicionar')?.addEventListener('click', () => {
-      modalAdicionar.show();
+  }
+
+  // Render user cards
+  function renderUsuarios(list) {
+    const container = document.getElementById('usuariosContainer');
+    if (!list || list.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-users mb-3"></i><p>Nenhum usuario encontrado.</p></div>';
+      return;
+    }
+    container.innerHTML = '';
+    list.forEach(u => {
+      const initials = u.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const badgeClass = u.perfil === 'admin' ? 'badge-admin' : 'badge-usuario';
+      const isMe = u.id === currentUser.id;
+
+      const card = document.createElement('div');
+      card.className = 'd-flex align-items-center gap-3 p-3 border-bottom';
+      card.style.cssText = 'transition: background 0.15s;';
+      card.onmouseenter = () => card.style.background = '#f8f9fa';
+      card.onmouseleave = () => card.style.background = 'white';
+      card.innerHTML = `
+        <div class="user-avatar">${initials}</div>
+        <div class="user-info">
+          <div class="user-name">${u.nome}${isMe ? ' <small class="text-muted">(Voce)</small>' : ''}</div>
+          <div class="user-email">${u.email}</div>
+        </div>
+        <span class="badge ${badgeClass}">${u.perfil === 'admin' ? 'Admin' : 'Usuario'}</span>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm btn-outline-primary" onclick="window.__editarUsuario(${u.id})" title="Editar">
+            <i class="fas fa-pen"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="window.__excluirUsuario(${u.id}, '${u.nome.replace(/'/g, "\\'")}'${isMe ? ', true' : ''})" title="Excluir">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
     });
-    
-    // Note: The "Adicionar" button isn't in the toolbar, so we'll just show how to open modal
-    // We'll add a simple way to open it
-    document.getElementById('btnNovoUsuario')?.addEventListener('click', () => {
-      modalAdicionar.show();
-    });
-    
-    // Form submit - add user
-    const formAdicionarUsuario = document.getElementById('formAdicionarUsuario');
-    if (formAdicionarUsuario) {
-      formAdicionarUsuario.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const nome = document.getElementById('novoNome').value.trim();
-        const email = document.getElementById('novoEmail').value.trim();
-        const senha = document.getElementById('novaSenha').value.trim();
-        const perfil = document.getElementById('novoPerfil').value;
-        
-        if (!nome || !email || !senha) {
-          alert('Por favor, preencha todos os campos.');
-          return;
-        }
-        
-        try {
-          const response = await fetch('api/usuarios', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ nome, email, senha, perfil })
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            modalAdicionar.hide();
-            formAdicionarUsuario.reset();
-            carregarUsuarios();
-          } else {
-            alert(data.error || 'Erro ao criar usuário.');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Erro de conexão.');
-        }
+  }
+
+  // Novo usuario
+  document.getElementById('btnNovoUsuario').addEventListener('click', () => {
+    document.getElementById('formNovoUsuario').reset();
+    modalNovo.show();
+  });
+
+  document.getElementById('formNovoUsuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById('novoNome').value.trim();
+    const email = document.getElementById('novoEmail').value.trim();
+    const senha = document.getElementById('novaSenha').value;
+    const perfil = document.getElementById('novoPerfil').value;
+
+    const btn = document.getElementById('btnSalvarNovo');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      const res = await fetch('api/usuarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ nome, email, senha, perfil })
       });
-    }
-    
-    // Remove user modal
-    const modalRemover = new bootstrap.Modal(document.getElementById('modalRemoverUsuario'));
-    
-    // Excluir usuário
-    window.excluirUsuario = async function(id) {
-      // Check if it's the last admin
-      try {
-        const response = await fetch('api/usuarios/count-admin', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (data.totalAdmins <= 1) {
-          alert('Não é possível remover o último administrador do sistema.');
-          return;
-        }
-      } catch (e) {
-        // Continue if error
+      const data = await res.json();
+      if (res.ok) {
+        modalNovo.hide();
+        carregarUsuarios();
+      } else {
+        alert(data.error || 'Erro ao criar usuario.');
       }
-      
-      document.getElementById('usuarioRemoverId').value = id;
-      
-      // Get user name from the row (simplified - in real app would pass name)
-      // For now, we'll just show a generic message
-      document.getElementById('usuarioRemoverNome').textContent = 'este usuário';
-      
-      modalRemover.show();
-    };
-    
-    // Form submit - remove user
-    const formRemoverUsuario = document.getElementById('formRemoverUsuario');
-    if (formRemoverUsuario) {
-      formRemoverUsuario.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const userId = document.getElementById('usuarioRemoverId').value;
-        
-        try {
-          const response = await fetch(`api/usuarios/${userId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            modalRemover.hide();
-            carregarUsuarios();
-          } else {
-            alert(data.error || 'Erro ao remover usuário.');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Erro de conexão.');
-        }
-      });
+    } catch (err) {
+      alert('Erro de conexao.');
     }
-    
-    // Edit user
-    window.editarUsuario = async function(id) {
-      try {
-        const response = await fetch(`api/usuarios/${id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const user = await response.json();
-        
-        if (response.ok) {
-          document.getElementById('usuarioEditarId').value = user.id;
-          document.getElementById('nomeEditar').value = user.nome;
-          document.getElementById('emailEditar').value = user.email;
-          // Set perfil select
-          const perfilSelect = document.getElementById('perfilEditar');
-          if (perfilSelect) {
-            perfilSelect.value = user.perfil || 'usuario';
-          }
-          modalEditarUsuario.show();
-        } else {
-          alert(data.error || 'Erro ao carregar usuário.');
+    btn.disabled = false; btn.textContent = 'Salvar';
+  });
+
+  // Editar usuario
+  window.__editarUsuario = function(id) {
+    const u = usuarios.find(u => u.id === id);
+    if (!u) return;
+    document.getElementById('editarId').value = u.id;
+    document.getElementById('editarNome').value = u.nome;
+    document.getElementById('editarEmail').value = u.email;
+    document.getElementById('editarSenha').value = '';
+    document.getElementById('editarPerfil').value = u.perfil || 'usuario';
+    modalEditar.show();
+  };
+
+  document.getElementById('formEditarUsuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editarId').value;
+    const nome = document.getElementById('editarNome').value.trim();
+    const email = document.getElementById('editarEmail').value.trim();
+    const senha = document.getElementById('editarSenha').value;
+    const perfil = document.getElementById('editarPerfil').value;
+
+    const body = { nome, email, perfil };
+    if (senha && senha.length >= 6) body.senha = senha;
+
+    const btn = document.getElementById('btnSalvarEditar');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      const res = await fetch('api/usuarios/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        modalEditar.hide();
+        // Update local user data if editing self
+        if (parseInt(id) === currentUser.id) {
+          localStorage.setItem('user', JSON.stringify({ ...currentUser, nome, email }));
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Erro de conexão.');
+        carregarUsuarios();
+      } else {
+        alert(data.error || 'Erro ao atualizar.');
       }
-    };
-    
-    // Form submit - edit user
-    const formEditarUsuario = document.getElementById('formEditarUsuario');
-    if (formEditarUsuario) {
-      formEditarUsuario.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const userId = document.getElementById('usuarioEditarId').value;
-        const nome = document.getElementById('nomeEditar').value.trim();
-        const email = document.getElementById('emailEditar').value.trim();
-        const senha = document.getElementById('senhaEditar').value.trim();
-        const perfil = document.getElementById('perfilEditar').value;
-        
-        const body = { nome, email, perfil };
-        if (senha && senha.length >= 6) {
-          body.senha = senha;
-        }
-        
-        try {
-          const response = await fetch(`api/usuarios/${userId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(body)
-          });
-          
-          const data = await response.json();
-          
-          if (response.ok) {
-            modalEditarUsuario.hide();
-            carregarUsuarios();
-          } else {
-            alert(data.error || 'Erro ao atualizar usuário.');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Erro de conexão.');
-        }
-      });
+    } catch (err) {
+      alert('Erro de conexao.');
     }
-  </script>
+    btn.disabled = false; btn.textContent = 'Salvar';
+  });
+
+  // Excluir usuario
+  window.__excluirUsuario = function(id, nome, isSelf) {
+    if (isSelf) {
+      alert('Voce nao pode excluir sua propria conta.');
+      return;
+    }
+    excluirId = id;
+    document.getElementById('excluirNome').textContent = nome;
+    modalExcluir.show();
+  };
+
+  document.getElementById('btnConfirmarExcluir').addEventListener('click', async () => {
+    if (!excluirId) return;
+    try {
+      const res = await fetch('api/usuarios/' + excluirId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        modalExcluir.hide();
+        excluirId = null;
+        carregarUsuarios();
+      } else {
+        alert(data.error || 'Erro ao excluir.');
+      }
+    } catch (err) {
+      alert('Erro de conexao.');
+    }
+  });
+
+  // Init
+  carregarUsuarios();
+})();
+</script>
 </body>
 </html>
