@@ -64,6 +64,22 @@ function initializeDatabase() {
         )
       `);
 
+      db.run(`
+        CREATE TABLE IF NOT EXISTS relatorios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          titulo TEXT NOT NULL,
+          email_destino TEXT,
+          mensagem TEXT,
+          tipo_filtro TEXT,
+          filtro_valor TEXT,
+          total_registros INTEGER DEFAULT 0,
+          data_geracao DATETIME DEFAULT CURRENT_TIMESTAMP,
+          criado_por INTEGER,
+          conteudo_html TEXT,
+          FOREIGN KEY (criado_por) REFERENCES usuarios(id)
+        )
+      `);
+
       // Migration: add acompanhante column if missing
       db.run("PRAGMA table_info(pessoas)", [], (err, columns) => {
         if (!err && columns) {
