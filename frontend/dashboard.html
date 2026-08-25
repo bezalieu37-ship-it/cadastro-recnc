@@ -313,29 +313,29 @@
       const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
     }
-    
-    // Show section for my acompanhamentos
-    const container = document.querySelector('.container.py-4');
-    if (container) {
-      const minhaSection = document.createElement('div');
-      minhaSection.innerHTML = `
-        <div class="recent-card" id="meusAcompanhamentos">
-          <div class="card-header-custom">
-            <h6><i class="fas fa-user-friends text-primary"></i> Minhas Pessoas para Acompanhar</h6>
-          </div>
-          <div id="meusAcompanhamentosList">
-            <div class="empty-state">
-              <i class="fas fa-inbox"></i>
-              <p>Carregando...</p>
-            </div>
+  }
+
+  // Show "Meus Acompanhamentos" for ALL users (admin and regular)
+  const containerAcomp = document.querySelector('.container.py-4');
+  if (containerAcomp) {
+    const minhaSection = document.createElement('div');
+    minhaSection.innerHTML = `
+      <div class="recent-card" id="meusAcompanhamentos">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+          <h6 class="mb-0"><i class="fas fa-user-friends text-primary"></i> Minhas Pessoas para Acompanhar <span class="badge bg-primary ms-2" id="totalAcompBadge">0</span></h6>
+        </div>
+        <div id="meusAcompanhamentosList">
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>Carregando...</p>
           </div>
         </div>
-      `;
-      container.appendChild(minhaSection);
-      
-      // Load my acompanhamentos
-      carregarMeusAcompanhamentos();
-    }
+      </div>
+    `;
+    containerAcomp.appendChild(minhaSection);
+    
+    // Load my acompanhamentos
+    carregarMeusAcompanhamentos();
   }
 
   // Backup & Restore functions
@@ -459,7 +459,7 @@
         const isNcgr = p.tipo_cadastro === 'novo_congregado';
         const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
+        const tipo = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
 
         const item = document.createElement('div');
         item.className = 'recent-item';
@@ -484,7 +484,7 @@
   carregarEstatisticas();
   carregarUltimos();
   
-  // Load my acompanhamentos (for regular users)
+  // Load my acompanhamentos (for ALL users)
   async function carregarMeusAcompanhamentos() {
     try {
       const res = await fetch('api/pessoas/meus-acompanhamentos', {
@@ -492,30 +492,36 @@
       });
       const data = await res.json();
       const container = document.getElementById('meusAcompanhamentosList');
+      const badge = document.getElementById('totalAcompBadge');
 
       if (!res.ok || !data.pessoas || data.pessoas.length === 0) {
+        if (badge) badge.textContent = '0';
         container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida para acompanhamento</p></div>';
         return;
       }
 
+      if (badge) badge.textContent = data.total || data.pessoas.length;
       container.innerHTML = '';
       data.pessoas.forEach(p => {
         const isNasc = p.tipo_cadastro === 'novo_nascimento';
         const isNcgr = p.tipo_cadastro === 'novo_congregado';
         const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Nascimento' : isNcgr ? 'NCGR' : 'Reconciliacao';
+        const tipo = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
+        const badgeClass = isNasc ? 'bg-success' : isNcgr ? 'bg-info' : 'bg-warning text-dark';
+        const iconClass = isNasc ? 'fa-baby' : isNcgr ? 'fa-church' : 'fa-handshake';
+        const avatarClass = isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc';
 
         const item = document.createElement('div');
         item.className = 'recent-item';
         item.innerHTML = `
-          <div class="recent-avatar ${isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc'}">${initials}</div>
+          <div class="recent-avatar ${avatarClass}">${initials}</div>
           <div class="recent-info">
             <div class="recent-name">${p.nome_completo || ''}</div>
             <div class="recent-meta">
               <i class="fas fa-phone"></i> ${p.telefone || '-'}
-              <span class="badge ${isNasc ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
-                <i class="fas ${isNasc ? 'fa-baby' : 'fa-handshake'}"></i> ${tipo}
+              <span class="badge ${badgeClass}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
+                <i class="fas ${iconClass}"></i> ${tipo}
               </span>
             </div>
           </div>
