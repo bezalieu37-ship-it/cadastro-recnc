@@ -8,8 +8,8 @@ services:
     envVars:
       - key: JWT_SECRET
         generateValue: true
-      - key: DATABASE_PATH
-        value: ./database.db
+      - key: DATABASE_URL
+        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
