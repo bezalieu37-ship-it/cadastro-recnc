@@ -270,7 +270,8 @@
   document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
 
   // Admin-only items
-  if (user.perfil !== 'admin') {
+  const isAdmin = user.perfil && user.perfil.toLowerCase() === 'admin';
+  if (!isAdmin) {
     // Hide all admin elements
     const navU = document.getElementById('navUsuarios');
     const navL = document.getElementById('navLista');
@@ -317,6 +318,22 @@
 
   // Show "Meus Acompanhamentos" for ALL users (admin and regular)
   const containerAcomp = document.querySelector('.container.py-4');
+  
+  // Explicit click handlers for "Ver Lista" (works in Capacitor WebView)
+  const btnVerLista = document.getElementById('btnVerLista');
+  const statTotalPessoas = document.getElementById('statTotalPessoas');
+  if (btnVerLista) {
+    btnVerLista.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = 'lista.html';
+    });
+  }
+  if (statTotalPessoas) {
+    statTotalPessoas.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = 'lista.html';
+    });
+  }
   if (containerAcomp) {
     const minhaSection = document.createElement('div');
     minhaSection.innerHTML = `
