@@ -169,11 +169,11 @@
 
   <!-- Stats Cards -->
   <div class="stats-grid">
-    <div class="stat-card blue">
+    <a href="lista.html" class="stat-card blue" id="statTotalPessoas" style="text-decoration:none;color:inherit;cursor:pointer;">
       <div class="stat-icon"><i class="fas fa-users"></i></div>
       <div class="stat-number" id="totalPessoas">0</div>
       <div class="stat-label"><i class="fas fa-database"></i> Total de Pessoas</div>
-    </div>
+    </a>
     <div class="stat-card green">
       <div class="stat-icon"><i class="fas fa-baby"></i></div>
       <div class="stat-number" id="totalNascimento">0</div>
@@ -562,6 +562,26 @@
       document.getElementById('editNascimento').value = p.data_nascimento || '';
       document.getElementById('editTipo').value = p.tipo_cadastro || '';
       document.getElementById('editFotoAtual').value = p.foto_url || '';
+      // Data de cadastro formatada para datetime-local
+      if (p.data_cadastro) {
+        const dt = new Date(p.data_cadastro);
+        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('editDataCadastro').value = local;
+      }
+      // Carregar lista de usuarios para acompanhante
+      const selAcomp = document.getElementById('editAcompanhante');
+      selAcomp.innerHTML = '<option value="">Nenhum</option>';
+      try {
+        const resUsers = await fetch('api/usuarios/list', { headers: { 'Authorization': 'Bearer ' + token } });
+        const usersList = await resUsers.json();
+        usersList.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = u.nome;
+          if (String(u.id) === String(p.acompanhante)) opt.selected = true;
+          selAcomp.appendChild(opt);
+        });
+      } catch (e) {}
       // Esconder detalhes, mostrar modal
       new bootstrap.Modal(modal).show();
     } catch (e) { console.error('Erro ao abrir detalhe:', e); }
@@ -577,8 +597,9 @@
     formData.append('endereco', document.getElementById('editEndereco').value);
     formData.append('ponto_referencia', document.getElementById('editPontoRef').value);
     formData.append('data_nascimento', document.getElementById('editNascimento').value);
+    formData.append('data_cadastro', document.getElementById('editDataCadastro').value || new Date().toISOString());
     formData.append('tipo_cadastro', document.getElementById('editTipo').value);
-    formData.append('acompanhante', user.id);
+    formData.append('acompanhante', document.getElementById('editAcompanhante').value || user.id);
     formData.append('foto_url', document.getElementById('editFotoAtual').value);
     const novaFoto = document.getElementById('editNovaFoto').files[0];
     if (novaFoto) formData.append('foto', novaFoto);
@@ -645,6 +666,10 @@
               <input type="date" class="form-control form-control-sm" id="editNascimento">
             </div>
             <div class="col-md-6">
+              <label class="form-label small">Data de Cadastro</label>
+              <input type="datetime-local" class="form-control form-control-sm" id="editDataCadastro">
+            </div>
+            <div class="col-md-6">
               <label class="form-label small">Tipo</label>
               <select class="form-select form-select-sm" id="editTipo">
                 <option value="novo_nascimento">Novo Nascimento</option>
@@ -660,7 +685,13 @@
               <label class="form-label small">Ponto de Referencia</label>
               <input type="text" class="form-control form-control-sm" id="editPontoRef" required>
             </div>
-            <div class="col-12">
+            <div class="col-md-6">
+              <label class="form-label small">Acompanhante</label>
+              <select class="form-select form-select-sm" id="editAcompanhante">
+                <option value="">Nenhum</option>
+              </select>
+            </div>
+            <div class="col-md-6">
               <label class="form-label small">Nova Foto (opcional)</label>
               <input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*">
             </div>

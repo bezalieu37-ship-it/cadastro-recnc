@@ -186,6 +186,15 @@
               </div>
             </div>
 
+            <!-- Data de Cadastro -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label-custom">Data de Cadastro</label>
+                <input type="date" class="form-control form-control-custom" id="dataCadastro">
+                <small class="text-muted">Deixe vazio para usar a data atual.</small>
+              </div>
+            </div>
+
             <!-- Foto -->
             <div class="section-title mt-4"><i class="fas fa-camera"></i> Foto</div>
 
@@ -341,6 +350,8 @@
       const formData = new FormData();
       formData.append('nome_completo', nomeCompleto);
       formData.append('data_nascimento', dataNascimento || '');
+      const dataCadastro = document.getElementById('dataCadastro').value;
+      formData.append('data_cadastro', dataCadastro || new Date().toISOString());
       formData.append('endereco', endereco);
       formData.append('ponto_referencia', pontoReferencia);
       formData.append('telefone', telefone);

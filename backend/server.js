@@ -241,7 +241,7 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res) => {
-  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante } = req.body;
+  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante } = req.body;
   if (!nome_completo || !endereco || !ponto_referencia || !telefone || !tipo_cadastro) {
     return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos.' });
   }
@@ -266,9 +266,9 @@ app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res)
     }
 
     const result = await pool.query(
-      `INSERT INTO pessoas (nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id`,
-      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, cadastrado_por]
+      `INSERT INTO pessoas (nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, cadastrado_por]
     );
     res.json({ message: 'Pessoa cadastrada com sucesso.', pessoaId: result.rows[0].id });
   } catch (error) {
@@ -359,7 +359,7 @@ app.get('/api/pessoas/:id', authMiddleware, async (req, res) => {
   }
 });
 app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, res) => {
-  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
+  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
   let fotoUrl = foto_url || '';
 
   try {
@@ -387,8 +387,8 @@ app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, r
     }
 
     const result = await pool.query(
-      'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, endereco = $3, ponto_referencia = $4, telefone = $5, tipo_cadastro = $6, acompanhante = $7, foto_url = $8 WHERE id = $9',
-      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, req.params.id]
+      'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, data_cadastro = $3, endereco = $4, ponto_referencia = $5, telefone = $6, tipo_cadastro = $7, acompanhante = $8, foto_url = $9 WHERE id = $10',
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, req.params.id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
