@@ -2,653 +2,206 @@
 <html lang="pt-BR" data-bs-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Cadastro RECNC - Painel</title>
-  <meta name="description" content="Painel administrativo - Cadastro RECNC">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    :root { --primary: #0d6efd; --primary-dark: #0a58ca; }
+    :root { --pri: #0d6efd; --pri-dark: #0a58ca; --bg: #f0f2f5; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; min-height: 100vh; }
 
-    body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; }
-
-    /* Top Navbar */
+    /* === NAV === */
     .top-nav {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      padding: 12px 0;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-      position: sticky; top: 0; z-index: 100;
+      background: linear-gradient(135deg, var(--pri), var(--pri-dark));
+      padding: 10px 0; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,.12);
     }
-    .top-nav .brand { color: white; font-weight: 700; font-size: 1.1rem; text-decoration: none; }
-    .top-nav .nav-links { display: flex; gap: 4px; align-items: center; }
+    .top-nav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; text-decoration: none; display:flex; align-items:center; gap:8px; }
+    .top-nav .nav-links { display:flex; gap:4px; align-items:center; }
     .top-nav .nav-links a {
-      color: rgba(255,255,255,0.8); text-decoration: none; padding: 6px 14px;
-      border-radius: 8px; font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+      color: rgba(255,255,255,.8); text-decoration:none; padding:6px 12px;
+      border-radius:8px; font-size:.82rem; font-weight:500; transition:.2s;
     }
-    .top-nav .nav-links a:hover, .top-nav .nav-links a.active { background: rgba(255,255,255,0.2); color: white; }
+    .top-nav .nav-links a:hover, .top-nav .nav-links a.active { background:rgba(255,255,255,.2); color:#fff; }
     .btn-sair {
-      color: white; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
-      padding: 6px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
-      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+      color:#fff; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+      padding:5px 14px; border-radius:8px; font-size:.82rem; font-weight:500;
+      cursor:pointer; transition:.2s; display:flex; align-items:center; gap:5px;
     }
-    .btn-sair:hover { background: rgba(220,53,69,0.8); border-color: rgba(220,53,69,0.9); }
+    .btn-sair:hover { background:rgba(220,53,69,.8); }
 
-    /* Welcome Banner */
-    .welcome-banner {
-      background: white; border-radius: 16px; padding: 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    /* === BEM-VINDO === */
+    .welcome {
+      background: #fff; border-radius: 14px; padding: 20px 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.05); margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     }
-    .welcome-text h4 { margin: 0; font-weight: 700; color: #212529; }
-    .welcome-text p { margin: 4px 0 0; color: #6c757d; font-size: 0.9rem; }
-    .welcome-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .welcome-actions .btn { border-radius: 10px; padding: 10px 20px; font-weight: 600; font-size: 0.85rem; }
+    .welcome-text h5 { margin:0; font-weight:700; color:#212529; font-size:1rem; }
+    .welcome-text p { margin:3px 0 0; color:#6c757d; font-size:.82rem; }
+    .welcome-btns { display:flex; gap:8px; flex-wrap:wrap; }
+    .welcome-btns .btn { border-radius:10px; padding:8px 18px; font-weight:600; font-size:.82rem; }
 
-    /* Stats Grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card {
-      background: white; border-radius: 14px; padding: 20px; text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden;
+    /* === STATS === */
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:12px; margin-bottom:20px; }
+    .s-card {
+      background:#fff; border-radius:12px; padding:16px; text-align:center;
+      box-shadow:0 2px 8px rgba(0,0,0,.04); transition:.2s; text-decoration:none; color:inherit; cursor:pointer;
     }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-    .stat-card .stat-icon {
-      width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 12px; font-size: 1.3rem;
-    }
-    .stat-card .stat-number { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-    .stat-card .stat-label { font-size: 0.8rem; color: #6c757d; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .s-card:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.1); }
+    .s-card .ico { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:1.2rem; }
+    .s-card .num { font-size:1.7rem; font-weight:800; line-height:1; margin-bottom:4px; }
+    .s-card .lbl { font-size:.72rem; color:#6c757d; font-weight:500; }
+    .s-card.c1 .ico { background:rgba(13,110,253,.1); color:#0d6efd; } .s-card.c1 .num { color:#0d6efd; }
+    .s-card.c2 .ico { background:rgba(25,135,84,.1); color:#198754; } .s-card.c2 .num { color:#198754; }
+    .s-card.c3 .ico { background:rgba(255,193,7,.12); color:#d4a017; } .s-card.c3 .num { color:#d4a017; }
+    .s-card.c4 .ico { background:rgba(13,202,240,.1); color:#0dcaf0; } .s-card.c4 .num { color:#0dcaf0; }
 
-    .stat-card.blue .stat-icon { background: rgba(13,110,253,0.1); color: #0d6efd; }
-    .stat-card.blue .stat-number { color: #0d6efd; }
-    .stat-card.green .stat-icon { background: rgba(25,135,84,0.1); color: #198754; }
-    .stat-card.green .stat-number { color: #198754; }
-    .stat-card.yellow .stat-icon { background: rgba(255,193,7,0.12); color: #d4a017; }
-    .stat-card.yellow .stat-number { color: #d4a017; }
-    .stat-card.cyan .stat-icon { background: rgba(13,202,240,0.1); color: #0dcaf0; }
-    .stat-card.cyan .stat-number { color: #0dcaf0; }
+    /* === SECAO === */
+    .section { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow:hidden; margin-bottom:20px; }
+    .section-hdr {
+      padding:14px 18px; border-bottom:1px solid #f0f0f0;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .section-hdr h6 { margin:0; font-weight:700; font-size:.88rem; display:flex; align-items:center; gap:7px; }
+    .section-hdr a { font-size:.8rem; font-weight:600; }
 
-    /* Quick Actions */
-    .quick-actions {
-      background: white; border-radius: 14px; padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px;
+    /* === ACOES RAPIDAS === */
+    .actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; padding:14px; }
+    .act-item {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      padding:14px 8px; border-radius:10px; border:1px solid #e9ecef;
+      text-decoration:none; color:#495057; transition:.2s; cursor:pointer; font-size:.78rem; font-weight:600;
     }
-    .quick-actions h6 { font-weight: 700; color: #212529; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-    .action-item {
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      padding: 16px 10px; border-radius: 12px; border: 1px solid #e9ecef;
-      text-decoration: none; color: #495057; transition: all 0.2s; cursor: pointer;
-    }
-    .action-item:hover { border-color: var(--primary); background: #f0f6ff; color: var(--primary); transform: translateY(-2px); }
-    .action-item i { font-size: 1.5rem; }
-    .action-item span { font-size: 0.8rem; font-weight: 600; text-align: center; }
+    .act-item:hover { border-color:var(--pri); background:#f0f6ff; color:var(--pri); transform:translateY(-1px); }
+    .act-item i { font-size:1.3rem; }
 
-    /* Recent List */
-    .recent-card {
-      background: white; border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;
+    /* === LISTA RECENTE === */
+    .r-item {
+      display:flex; align-items:center; gap:10px; padding:11px 18px;
+      border-bottom:1px solid #f8f9fa; transition:.15s; cursor:pointer;
     }
-    .recent-card .card-header-custom {
-      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
-      display: flex; align-items: center; justify-content: space-between;
+    .r-item:last-child { border-bottom:none; }
+    .r-item:hover { background:#f8f9fa; }
+    .r-av {
+      width:38px; height:38px; border-radius:10px; display:flex;
+      align-items:center; justify-content:center; font-weight:700; font-size:.8rem; flex-shrink:0;
     }
-    .recent-card .card-header-custom h6 { margin: 0; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .recent-item {
-      display: flex; align-items: center; gap: 12px; padding: 12px 20px;
-      border-bottom: 1px solid #f8f9fa; transition: background 0.15s;
-    }
-    .recent-item:last-child { border-bottom: none; }
-    .recent-item:hover { background: #f8f9fa; }
-    .recent-avatar {
-      width: 40px; height: 40px; border-radius: 10px; display: flex;
-      align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-    .recent-avatar.nasc { background: rgba(25,135,84,0.1); color: #198754; }
-    .recent-avatar.reconc { background: rgba(255,193,7,0.12); color: #d4a017; }
-    .recent-avatar.ncgr { background: rgba(13,202,240,0.1); color: #0dcaf0; }
-    .recent-info { flex: 1; min-width: 0; }
-    .recent-name { font-weight: 600; font-size: 0.9rem; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-meta { font-size: 0.75rem; color: #6c757d; display: flex; align-items: center; gap: 8px; }
-    .recent-date { font-size: 0.75rem; color: #adb5bd; white-space: nowrap; }
+    .r-av.nasc { background:rgba(25,135,84,.1); color:#198754; }
+    .r-av.reconc { background:rgba(255,193,7,.12); color:#d4a017; }
+    .r-av.ncgr { background:rgba(13,202,240,.1); color:#0dcaf0; }
+    .r-info { flex:1; min-width:0; }
+    .r-name { font-weight:600; font-size:.85rem; color:#212529; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .r-meta { font-size:.72rem; color:#6c757d; display:flex; align-items:center; gap:6px; }
+    .r-date { font-size:.72rem; color:#adb5bd; white-space:nowrap; }
+    .empty { padding:36px 18px; text-align:center; color:#adb5bd; }
+    .empty i { font-size:2.2rem; margin-bottom:8px; opacity:.35; }
 
-    .empty-state { padding: 40px 20px; text-align: center; color: #adb5bd; }
-    .empty-state i { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.4; }
-
-    /* Mobile */
-    @media (max-width: 576px) {
-      .welcome-banner { padding: 16px; }
-      .welcome-actions { width: 100%; }
-      .welcome-actions .btn { flex: 1; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .stat-card { padding: 14px; }
-      .stat-card .stat-number { font-size: 1.5rem; }
-      .top-nav .nav-links a.hide-mobile { display: none; }
+    /* === MOBILE === */
+    @media(max-width:576px){
+      .welcome { padding:14px 16px; }
+      .welcome-btns { width:100%; }
+      .welcome-btns .btn { flex:1; }
+      .stats { grid-template-columns:repeat(2,1fr); gap:8px; }
+      .s-card { padding:12px; }
+      .s-card .num { font-size:1.4rem; }
+      .top-nav .nav-links a.hide-m { display:none; }
     }
   </style>
 </head>
 <body>
 
-<!-- Top Navigation -->
+<!-- NAV -->
 <div class="top-nav">
   <div class="container d-flex align-items-center justify-content-between">
-    <a href="dashboard.html" class="brand">
-      <i class="fas fa-user-tie me-2"></i>Cadastro RECNC
-    </a>
+    <a href="dashboard.html" class="brand"><i class="fas fa-user-tie"></i>Cadastro RECNC</a>
     <div class="nav-links">
-      <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i> Painel</a>
-      <a href="lista.html" class="hide-mobile" id="navLista"><i class="fas fa-list me-1"></i> Lista</a>
-      <a href="usuarios.html" class="hide-mobile" id="navUsuarios"><i class="fas fa-users me-1"></i> Usuarios</a>
-      <button class="btn-sair" id="btnLogout">
-        <i class="fas fa-right-from-bracket"></i> Sair
-      </button>
+      <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i>Painel</a>
+      <a href="lista.html" class="hide-m" id="navLista"><i class="fas fa-list me-1"></i>Lista</a>
+      <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuarios</a>
+      <button class="btn-sair" id="btnLogout"><i class="fas fa-right-from-bracket"></i>Sair</button>
     </div>
   </div>
 </div>
 
-<div class="container py-4">
+<div class="container py-3">
 
-  <!-- Welcome Banner -->
-  <div class="welcome-banner">
+  <!-- BEM-VINDO -->
+  <div class="welcome">
     <div class="welcome-text">
-      <h4><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">Usuario</span>!</h4>
+      <h5><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">Usuario</span>!</h5>
       <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
     </div>
-    <div class="welcome-actions">
-      <a href="formulario.html" class="btn btn-primary">
-        <i class="fas fa-user-plus me-1"></i> Novo Cadastro
-      </a>
-      <a href="lista.html" class="btn btn-outline-secondary" id="btnVerLista">
-        <i class="fas fa-list-ul me-1"></i> Ver Lista
-      </a>
+    <div class="welcome-btns">
+      <a href="formulario.html" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i>Novo Cadastro</a>
+      <a href="lista.html" class="btn btn-outline-secondary" id="btnVerLista"><i class="fas fa-list-ul me-1"></i>Ver Lista</a>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-grid">
-    <a href="lista.html" class="stat-card blue" id="statTotalPessoas" style="text-decoration:none;color:inherit;cursor:pointer;">
-      <div class="stat-icon"><i class="fas fa-users"></i></div>
-      <div class="stat-number" id="totalPessoas">0</div>
-      <div class="stat-label"><i class="fas fa-database"></i> Total de Pessoas</div>
+  <!-- STATS -->
+  <div class="stats">
+    <a href="lista.html" class="s-card c1" id="statTotalPessoas">
+      <div class="ico"><i class="fas fa-users"></i></div>
+      <div class="num" id="totalPessoas">0</div>
+      <div class="lbl"><i class="fas fa-database"></i> Total Pessoas</div>
     </a>
-    <div class="stat-card green">
-      <div class="stat-icon"><i class="fas fa-baby"></i></div>
-      <div class="stat-number" id="totalNascimento">0</div>
-      <div class="stat-label"><i class="fas fa-heart"></i> Novos Nascimentos</div>
+    <div class="s-card c2">
+      <div class="ico"><i class="fas fa-baby"></i></div>
+      <div class="num" id="totalNascimento">0</div>
+      <div class="lbl"><i class="fas fa-heart"></i> Nascimentos</div>
     </div>
-    <div class="stat-card yellow">
-      <div class="stat-icon"><i class="fas fa-handshake"></i></div>
-      <div class="stat-number" id="totalReconciliacao">0</div>
-      <div class="stat-label"><i class="fas fa-people-arrows"></i> Reconciliacoes</div>
+    <div class="s-card c3">
+      <div class="ico"><i class="fas fa-handshake"></i></div>
+      <div class="num" id="totalReconciliacao">0</div>
+      <div class="lbl"><i class="fas fa-people-arrows"></i> Reconciliacoes</div>
     </div>
-    <div class="stat-card cyan">
-      <div class="stat-icon"><i class="fas fa-church"></i></div>
-      <div class="stat-number" id="totalNcgr">0</div>
-      <div class="stat-label"><i class="fas fa-users"></i> Novos Congregados</div>
-    </div>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="quick-actions">
-    <h6><i class="fas fa-bolt text-warning"></i> Acoes Rapidas</h6>
-    <div class="action-grid">
-      <a href="formulario.html" class="action-item">
-        <i class="fas fa-user-plus text-primary"></i>
-        <span>Novo Cadastro</span>
-      </a>
-      <a href="lista.html" class="action-item" id="actionLista">
-        <i class="fas fa-list-check text-success"></i>
-        <span>Ver Lista</span>
-      </a>
-      <a href="usuarios.html" class="action-item" id="actionUsuarios">
-        <i class="fas fa-user-gear text-info"></i>
-        <span>Gerenciar Usuarios</span>
-      </a>
-      <a href="#" class="action-item" id="actionCSV" onclick="window.__exportarCSV(); return false;">
-        <i class="fas fa-file-csv text-success"></i>
-        <span>Exportar CSV</span>
-      </a>
-      <a href="#" class="action-item" id="actionPDF" onclick="window.__exportarPDF(); return false;">
-        <i class="fas fa-file-pdf text-danger"></i>
-        <span>Exportar PDF</span>
-      </a>
-      <a href="usuarios.html" class="action-item" id="actionNovoUsuario">
-        <i class="fas fa-user-plus text-warning"></i>
-        <span>Novo Usuario</span>
-      </a>
-      <a href="#" class="action-item" id="actionBackup" onclick="window.__backupDados(); return false;">
-        <i class="fas fa-download text-primary"></i>
-        <span>Exportar Backup</span>
-      </a>
-      <a href="#" class="action-item" id="actionRestaurar" onclick="document.getElementById('backupFileInput').click(); return false;">
-        <i class="fas fa-upload text-warning"></i>
-        <span>Importar Backup</span>
-      </a>
-      <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="window.__restaurarBackup(this)">
+    <div class="s-card c4">
+      <div class="ico"><i class="fas fa-church"></i></div>
+      <div class="num" id="totalNcgr">0</div>
+      <div class="lbl"><i class="fas fa-users"></i> Congregados</div>
     </div>
   </div>
 
-  <!-- Recent Cadastros -->
-  <div class="recent-card" id="recentSection">
-    <div class="card-header-custom">
+  <!-- ACOES RAPIDAS (ADMIN) -->
+  <div class="section" id="secAcoes">
+    <div class="section-hdr">
+      <h6><i class="fas fa-bolt text-warning"></i> Acoes Rapidas</h6>
+    </div>
+    <div class="actions" id="actionsGrid">
+      <a href="formulario.html" class="act-item"><i class="fas fa-user-plus text-primary"></i>Novo Cadastro</a>
+      <a href="lista.html" class="act-item actLista"><i class="fas fa-list-check text-success"></i>Ver Lista</a>
+      <a href="usuarios.html" class="act-item actUsuarios"><i class="fas fa-user-gear text-info"></i>Usuarios</a>
+      <a href="usuarios.html" class="act-item actNovoUsuario"><i class="fas fa-user-plus text-warning"></i>Novo Usuario</a>
+      <button class="act-item" id="btnCSV"><i class="fas fa-file-csv text-success"></i>Exportar CSV</button>
+      <button class="act-item" id="btnPDF"><i class="fas fa-file-pdf text-danger"></i>Exportar PDF</button>
+      <button class="act-item" id="btnBackup"><i class="fas fa-download text-primary"></i>Backup</button>
+      <label class="act-item" for="backupFileInput"><i class="fas fa-upload text-warning"></i>Restaurar</label>
+      <input type="file" id="backupFileInput" accept=".json" style="display:none">
+    </div>
+  </div>
+
+  <!-- ULTIMOS CADASTROS -->
+  <div class="section" id="secRecentes">
+    <div class="section-hdr">
       <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos Cadastros</h6>
-      <a href="lista.html" class="text-primary text-decoration-none" style="font-size:0.85rem; font-weight:600;">
-        <i class="fas fa-arrow-right me-1"></i>Ver todos
-      </a>
+      <a href="lista.html" class="text-primary text-decoration-none"><i class="fas fa-arrow-right me-1"></i>Ver todos</a>
     </div>
-    <div id="ultimosCadastrosList">
-      <div class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <p>Nenhum cadastro encontrado</p>
-      </div>
+    <div id="listaRecentes"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhum cadastro</p></div></div>
+  </div>
+
+  <!-- ACOMPANHAMENTOS -->
+  <div class="section" id="secAcomp">
+    <div class="section-hdr">
+      <h6><i class="fas fa-user-friends text-primary"></i> Acompanhamentos <span class="badge bg-primary ms-1" id="badgeAcomp">0</span></h6>
     </div>
+    <div id="listaAcomp"><div class="empty"><i class="fas fa-inbox"></i><p>Carregando...</p></div></div>
   </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-(function() {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-  if (!token) { window.location.href = 'index.html'; return; }
-
-  // User info
-  document.getElementById('userName').textContent = user.nome || 'Usuario';
-
-  // Date
-  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
-
-  // Admin-only items
-  const isAdmin = user.perfil && user.perfil.toLowerCase() === 'admin';
-  if (!isAdmin) {
-    // Hide admin-only elements
-    const navU = document.getElementById('navUsuarios');
-    const navL = document.getElementById('navLista');
-    const actU = document.getElementById('actionUsuarios');
-    const actNU = document.getElementById('actionNovoUsuario');
-    const actL = document.getElementById('actionLista');
-    const actCSV = document.getElementById('actionCSV');
-    const actPDF = document.getElementById('actionPDF');
-    const btnLista = document.getElementById('btnVerLista');
-    
-    if (navU) navU.style.display = 'none';
-    if (navL) navL.style.display = 'none';
-    if (actU) actU.style.display = 'none';
-    if (actNU) actNU.style.display = 'none';
-    if (actL) actL.style.display = 'none';
-    if (actCSV) actCSV.style.display = 'none';
-    if (actPDF) actPDF.style.display = 'none';
-    if (btnLista) btnLista.style.display = 'none';
-    
-    // Show message for regular users
-    const banner = document.querySelector('.welcome-banner');
-    if (banner) {
-      banner.innerHTML = `
-        <div class="welcome-text">
-          <h4><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">${user.nome || 'Usuario'}</span>!</h4>
-          <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
-        </div>
-        <div class="welcome-actions">
-          <a href="formulario.html" class="btn btn-primary btn-lg">
-            <i class="fas fa-user-plus me-1"></i> Novo Cadastro
-          </a>
-        </div>
-      `;
-      const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', opts);
-    }
-  }
-
-  // Show "Meus Acompanhamentos" for ALL users (admin and regular)
-  const containerAcomp = document.querySelector('.container.py-4');
-  
-  // Explicit click handlers for "Ver Lista" (works in Capacitor WebView)
-  const btnVerLista = document.getElementById('btnVerLista');
-  const statTotalPessoas = document.getElementById('statTotalPessoas');
-  if (btnVerLista) {
-    btnVerLista.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'lista.html';
-    });
-  }
-  if (statTotalPessoas) {
-    statTotalPessoas.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.location.href = 'lista.html';
-    });
-  }
-  if (containerAcomp) {
-    const minhaSection = document.createElement('div');
-    minhaSection.innerHTML = `
-      <div class="recent-card" id="meusAcompanhamentos">
-        <div class="card-header-custom d-flex justify-content-between align-items-center">
-          <h6 class="mb-0"><i class="fas fa-user-friends text-primary"></i> Minhas Pessoas para Acompanhar <span class="badge bg-primary ms-2" id="totalAcompBadge">0</span></h6>
-        </div>
-        <div id="meusAcompanhamentosList">
-          <div class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <p>Carregando...</p>
-          </div>
-        </div>
-      </div>
-    `;
-    containerAcomp.appendChild(minhaSection);
-    
-    // Load my acompanhamentos
-    carregarMeusAcompanhamentos();
-  }
-
-  // Backup & Restore functions
-  window.__backupDados = async function() {
-    if (!confirm('Deseja baixar o backup de todos os dados?')) return;
-    
-    try {
-      const res = await fetch('api/backup', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      
-      if (!res.ok) throw new Error('Erro ao gerar backup');
-      
-      const data = await res.json();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup_recnc_${new Date().toISOString().slice(0,10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      alert('Backup baixado com sucesso!');
-    } catch (err) {
-      console.error('Erro backup:', err);
-      alert('Erro ao gerar backup: ' + err.message);
-    }
-  };
-  
-  window.__restaurarBackup = async function(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    if (!confirm('ATENCAO: Isto ira SUBSTITUIR TODOS os dados atuais pelo backup. Deseja continuar?')) {
-      input.value = '';
-      return;
-    }
-    
-    try {
-      const text = await file.text();
-      const backup = JSON.parse(text);
-      
-      if (!backup.tables) {
-        alert('Arquivo de backup invalido.');
-        input.value = '';
-        return;
-      }
-      
-      const res = await fetch('api/backup/restore', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ backup })
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok) {
-        alert(data.message || 'Backup restaurado com sucesso!');
-        window.location.reload();
-      } else {
-        alert(data.error || 'Erro ao restaurar backup.');
-      }
-    } catch (err) {
-      console.error('Erro restore:', err);
-      alert('Erro ao processar backup: ' + err.message);
-    }
-    
-    input.value = '';
-  };
-
-  // Exportar CSV - abre em nova aba (funciona na WebView do Capacitor)
-  window.__exportarCSV = function() {
-    try {
-      const url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=';
-      window.open(url, '_blank');
-    } catch (e) {
-      console.error('Erro exportar CSV:', e);
-      alert('Erro ao exportar CSV. Tente novamente.');
-    }
-  };
-
-  // Exportar PDF - abre em nova aba (funciona na WebView do Capacitor)
-  window.__exportarPDF = function() {
-    try {
-      const url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=';
-      window.open(url, '_blank');
-    } catch (e) {
-      console.error('Erro exportar PDF:', e);
-      alert('Erro ao exportar relatório. Tente novamente.');
-    }
-  };
-
-  // Logout
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = 'index.html';
-  });
-
-  // Stats
-  async function carregarEstatisticas() {
-    try {
-      const res = await fetch('api/estatisticas', { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      if (res.ok) {
-        animateNumber('totalPessoas', data.totalPessoas || 0);
-        animateNumber('totalNascimento', data.totalNascimento || 0);
-        animateNumber('totalReconciliacao', data.totalReconciliacao || 0);
-        animateNumber('totalNcgr', data.totalNcgr || 0);
-      }
-    } catch (e) { console.error('Erro stats:', e); }
-  }
-
-  function animateNumber(id, target) {
-    const el = document.getElementById(id);
-    let current = 0;
-    const step = Math.max(1, Math.ceil(target / 20));
-    const interval = setInterval(() => {
-      current += step;
-      if (current >= target) { current = target; clearInterval(interval); }
-      el.textContent = current;
-    }, 30);
-  }
-
-  // Recent cadastros
-  async function carregarUltimos() {
-    try {
-      const res = await fetch('api/ultimos-cadastros', { headers: { 'Authorization': 'Bearer ' + token } });
-      const data = await res.json();
-      const container = document.getElementById('ultimosCadastrosList');
-
-      if (!res.ok || !data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum cadastro encontrado</p></div>';
-        return;
-      }
-
-      container.innerHTML = '';
-      data.slice(0, 5).forEach(p => {
-        const isNasc = p.tipo_cadastro === 'novo_nascimento';
-        const isNcgr = p.tipo_cadastro === 'novo_congregado';
-        const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
-
-        const item = document.createElement('div');
-        item.className = 'recent-item';
-        item.innerHTML = `
-          <div class="recent-avatar ${isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc'}">${initials}</div>
-          <div class="recent-info">
-            <div class="recent-name">${p.nome_completo || ''}</div>
-            <div class="recent-meta">
-              <i class="fas fa-phone"></i> ${p.telefone || '-'}
-              <span class="badge ${isNasc ? 'bg-success' : 'bg-warning text-dark'}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
-                <i class="fas ${isNasc ? 'fa-baby' : 'fa-handshake'}"></i> ${tipo}
-              </span>
-            </div>
-          </div>
-          <div class="recent-date"><i class="fas fa-calendar me-1"></i>${date}</div>
-        `;
-        container.appendChild(item);
-      });
-    } catch (e) { console.error('Erro recentes:', e); }
-  }
-
-  carregarEstatisticas();
-  carregarUltimos();
-  
-  // Load my acompanhamentos (for ALL users)
-  async function carregarMeusAcompanhamentos() {
-    try {
-      const res = await fetch('api/pessoas/meus-acompanhamentos', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      const data = await res.json();
-      const container = document.getElementById('meusAcompanhamentosList');
-      const badge = document.getElementById('totalAcompBadge');
-
-      if (!res.ok || !data.pessoas || data.pessoas.length === 0) {
-        if (badge) badge.textContent = '0';
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida para acompanhamento</p></div>';
-        return;
-      }
-
-      if (badge) badge.textContent = data.total || data.pessoas.length;
-      container.innerHTML = '';
-      data.pessoas.forEach(p => {
-        const isNasc = p.tipo_cadastro === 'novo_nascimento';
-        const isNcgr = p.tipo_cadastro === 'novo_congregado';
-        const initials = (p.nome_completo || '??').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        const date = new Date(p.data_cadastro).toLocaleDateString('pt-BR');
-        const tipo = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
-        const badgeClass = isNasc ? 'bg-success' : isNcgr ? 'bg-info' : 'bg-warning text-dark';
-        const iconClass = isNasc ? 'fa-baby' : isNcgr ? 'fa-church' : 'fa-handshake';
-        const avatarClass = isNasc ? 'nasc' : isNcgr ? 'ncgr' : 'reconc';
-
-        const item = document.createElement('div');
-        item.className = 'recent-item';
-        item.innerHTML = `
-          <div class="recent-avatar ${avatarClass}">${initials}</div>
-          <div class="recent-info">
-            <div class="recent-name">${p.nome_completo || ''}</div>
-            <div class="recent-meta">
-              <i class="fas fa-phone"></i> ${p.telefone || '-'}
-              <span class="badge ${badgeClass}" style="font-size:0.65rem;padding:2px 6px;border-radius:10px;">
-                <i class="fas ${iconClass}"></i> ${tipo}
-              </span>
-            </div>
-          </div>
-          <div class="recent-date"><i class="fas fa-calendar me-1"></i>${date}</div>
-        `;
-        item.style.cursor = 'pointer';
-        item.dataset.id = p.id;
-        item.addEventListener('click', () => abrirDetalheAcomp(p.id));
-        container.appendChild(item);
-      });
-    } catch (e) { console.error('Erro acompanhamentos:', e); }
-  }
-
-  // Abrir detalhe da pessoa (acompanhamento)
-  async function abrirDetalheAcomp(id) {
-    try {
-      const res = await fetch('api/pessoas/' + id, {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) { alert('Erro ao carregar dados.'); return; }
-      const p = await res.json();
-      const modal = document.getElementById('modalDetalheAcomp');
-      document.getElementById('detNome').textContent = p.nome_completo || '-';
-      document.getElementById('detTelefone').textContent = p.telefone || '-';
-      document.getElementById('detEndereco').textContent = p.endereco || '-';
-      document.getElementById('detPontoRef').textContent = p.ponto_referencia || '-';
-      document.getElementById('detTipo').textContent = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'novo_congregado' ? 'Novo Congregado' : 'Reconciliacao';
-      document.getElementById('detData').textContent = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
-      document.getElementById('detNascimento').textContent = p.data_nascimento || '-';
-      const fotoEl = document.getElementById('detFoto');
-      if (p.foto_url) { fotoEl.src = p.foto_url; fotoEl.style.display = 'block'; } else { fotoEl.style.display = 'none'; }
-      // Preencher campos do form de edicao
-      document.getElementById('editId').value = p.id;
-      document.getElementById('editNome').value = p.nome_completo || '';
-      document.getElementById('editTelefone').value = p.telefone || '';
-      document.getElementById('editEndereco').value = p.endereco || '';
-      document.getElementById('editPontoRef').value = p.ponto_referencia || '';
-      document.getElementById('editNascimento').value = p.data_nascimento || '';
-      document.getElementById('editTipo').value = p.tipo_cadastro || '';
-      document.getElementById('editFotoAtual').value = p.foto_url || '';
-      // Data de cadastro formatada para datetime-local
-      if (p.data_cadastro) {
-        const dt = new Date(p.data_cadastro);
-        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        document.getElementById('editDataCadastro').value = local;
-      }
-      // Carregar lista de usuarios para acompanhante
-      const selAcomp = document.getElementById('editAcompanhante');
-      selAcomp.innerHTML = '<option value="">Nenhum</option>';
-      try {
-        const resUsers = await fetch('api/usuarios/list', { headers: { 'Authorization': 'Bearer ' + token } });
-        const usersList = await resUsers.json();
-        usersList.forEach(u => {
-          const opt = document.createElement('option');
-          opt.value = u.id;
-          opt.textContent = u.nome;
-          if (String(u.id) === String(p.acompanhante)) opt.selected = true;
-          selAcomp.appendChild(opt);
-        });
-      } catch (e) {}
-      // Esconder detalhes, mostrar modal
-      new bootstrap.Modal(modal).show();
-    } catch (e) { console.error('Erro ao abrir detalhe:', e); }
-  }
-
-  // Salvar edicao
-  document.getElementById('formEditarAcomp')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('editId').value;
-    const formData = new FormData();
-    formData.append('nome_completo', document.getElementById('editNome').value);
-    formData.append('telefone', document.getElementById('editTelefone').value);
-    formData.append('endereco', document.getElementById('editEndereco').value);
-    formData.append('ponto_referencia', document.getElementById('editPontoRef').value);
-    formData.append('data_nascimento', document.getElementById('editNascimento').value);
-    formData.append('data_cadastro', document.getElementById('editDataCadastro').value || new Date().toISOString());
-    formData.append('tipo_cadastro', document.getElementById('editTipo').value);
-    formData.append('acompanhante', document.getElementById('editAcompanhante').value || user.id);
-    formData.append('foto_url', document.getElementById('editFotoAtual').value);
-    const novaFoto = document.getElementById('editNovaFoto').files[0];
-    if (novaFoto) formData.append('foto', novaFoto);
-    try {
-      const res = await fetch('api/pessoas/' + id, {
-        method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + token },
-        body: formData
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Cadastro atualizado!');
-        bootstrap.Modal.getInstance(document.getElementById('modalDetalheAcomp')).hide();
-        carregarMeusAcompanhamentos();
-      } else {
-        alert(data.error || 'Erro ao salvar.');
-      }
-    } catch (err) { alert('Erro de conexao.'); }
-  });
-})();
-</script>
-
-<!-- Modal Detalhe Pessoa (Acompanhamento) -->
-<div class="modal fade" id="modalDetalheAcomp" tabindex="-1">
+<!-- MODAL DETALHE -->
+<div class="modal fade" id="modalDetalhe" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
@@ -656,8 +209,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <!-- Visualizar -->
-        <div id="detalheView">
+        <div id="detView">
           <div class="text-center mb-3">
             <img id="detFoto" src="" alt="Foto" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;display:none;">
           </div>
@@ -667,68 +219,304 @@
             <div class="col-md-6"><strong>Data Nasc:</strong> <span id="detNascimento">-</span></div>
             <div class="col-md-6"><strong>Tipo:</strong> <span id="detTipo" class="badge bg-primary">-</span></div>
             <div class="col-12"><strong>Endereco:</strong> <span id="detEndereco">-</span></div>
-            <div class="col-12"><strong>Ponto Referencia:</strong> <span id="detPontoRef">-</span></div>
+            <div class="col-12"><strong>Ponto Ref:</strong> <span id="detPontoRef">-</span></div>
             <div class="col-12"><strong>Data Cadastro:</strong> <span id="detData">-</span></div>
           </div>
         </div>
         <hr>
-        <!-- Editar -->
         <h6 class="mt-3"><i class="fas fa-pen me-1"></i>Editar Cadastro</h6>
         <form id="formEditarAcomp">
           <input type="hidden" id="editId">
           <input type="hidden" id="editFotoAtual">
           <div class="row g-2">
-            <div class="col-md-6">
-              <label class="form-label small">Nome Completo</label>
-              <input type="text" class="form-control form-control-sm" id="editNome" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Telefone</label>
-              <input type="text" class="form-control form-control-sm" id="editTelefone" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Data Nascimento</label>
-              <input type="date" class="form-control form-control-sm" id="editNascimento">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Data de Cadastro</label>
-              <input type="datetime-local" class="form-control form-control-sm" id="editDataCadastro">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Tipo</label>
+            <div class="col-md-6"><label class="form-label small">Nome</label><input type="text" class="form-control form-control-sm" id="editNome" required></div>
+            <div class="col-md-6"><label class="form-label small">Telefone</label><input type="text" class="form-control form-control-sm" id="editTelefone" required></div>
+            <div class="col-md-6"><label class="form-label small">Data Nascimento</label><input type="date" class="form-control form-control-sm" id="editNascimento"></div>
+            <div class="col-md-6"><label class="form-label small">Data Cadastro</label><input type="datetime-local" class="form-control form-control-sm" id="editDataCadastro"></div>
+            <div class="col-md-6"><label class="form-label small">Tipo</label>
               <select class="form-select form-select-sm" id="editTipo">
                 <option value="novo_nascimento">Novo Nascimento</option>
                 <option value="reconciliacao">Reconciliacao</option>
                 <option value="novo_congregado">Novo Congregado</option>
               </select>
             </div>
-            <div class="col-12">
-              <label class="form-label small">Endereco</label>
-              <input type="text" class="form-control form-control-sm" id="editEndereco" required>
-            </div>
-            <div class="col-12">
-              <label class="form-label small">Ponto de Referencia</label>
-              <input type="text" class="form-control form-control-sm" id="editPontoRef" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Acompanhante</label>
-              <select class="form-select form-select-sm" id="editAcompanhante">
-                <option value="">Nenhum</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small">Nova Foto (opcional)</label>
-              <input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*">
-            </div>
+            <div class="col-12"><label class="form-label small">Endereco</label><input type="text" class="form-control form-control-sm" id="editEndereco" required></div>
+            <div class="col-12"><label class="form-label small">Ponto Referencia</label><input type="text" class="form-control form-control-sm" id="editPontoRef" required></div>
+            <div class="col-md-6"><label class="form-label small">Acompanhante</label><select class="form-select form-select-sm" id="editAcompanhante"><option value="">Nenhum</option></select></div>
+            <div class="col-md-6"><label class="form-label small">Nova Foto</label><input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*"></div>
           </div>
-          <div class="mt-3 text-end">
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Salvar Alteracoes</button>
-          </div>
+          <div class="mt-3 text-end"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Salvar</button></div>
         </form>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if(!token){ window.location.href='index.html'; return; }
+
+  const isAdmin = (user.perfil||'').toLowerCase() === 'admin';
+
+  // UI base
+  document.getElementById('userName').textContent = user.nome || 'Usuario';
+  const d = new Date();
+  document.getElementById('dataAtual').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Esconder nav admin se nao for admin
+  if(!isAdmin){
+    ['navUsuarios','navLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+    ['btnVerLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+    // Dentro das acoes rapidas: esconder itens admin
+    document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario').forEach(e=>e.style.display='none');
+    // Re-welcome banner
+    document.querySelector('.welcome').innerHTML = `
+      <div class="welcome-text">
+        <h5><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span>${user.nome||'Usuario'}</span>!</h5>
+        <p><i class="fas fa-calendar-day me-1"></i> ${d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+      </div>
+      <div class="welcome-btns"><a href="formulario.html" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i>Novo Cadastro</a></div>
+    `;
+  }
+
+  // Navegacao explicita (Capacitor compat)
+  document.getElementById('btnVerLista')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
+  document.getElementById('statTotalPessoas')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
+  document.getElementById('navLista')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
+  document.getElementById('navUsuarios')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='usuarios.html'; });
+
+  // Logout
+  document.getElementById('btnLogout').addEventListener('click', ()=>{
+    localStorage.removeItem('token'); localStorage.removeItem('user');
+    window.location.href='index.html';
+  });
+
+  // =========== EXPORT FUNCTIONS ===========
+  // Gera o arquivo via fetch, depois usa navigator.share (Android share sheet)
+  // Fallback: window.open
+  async function exportar(endpoint, filename){
+    try{
+      const res = await fetch(endpoint, { headers:{'Authorization':'Bearer '+token} });
+      if(!res.ok) throw new Error('Erro ao gerar arquivo');
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+
+      // Tenta navigator.share (abre share sheet do Android)
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({ files:[file], title: filename });
+        return;
+      }
+      // Fallback: window.open (abre em nova aba)
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 10000);
+    }catch(e){
+      console.error('Erro export:', e);
+      if(e.name !== 'AbortError') alert('Erro ao exportar: '+e.message);
+    }
+  }
+
+  document.getElementById('btnCSV')?.addEventListener('click', ()=>{
+    exportar('api/export/csv?tipo=&search=', 'cadastro_recnc_'+new Date().toISOString().slice(0,10)+'.csv');
+  });
+  document.getElementById('btnPDF')?.addEventListener('click', ()=>{
+    exportar('api/export/pdf?tipo=&search=', 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.html');
+  });
+
+  // =========== BACKUP ===========
+  document.getElementById('btnBackup')?.addEventListener('click', async ()=>{
+    if(!confirm('Baixar backup de todos os dados?')) return;
+    try{
+      const res = await fetch('api/backup',{headers:{'Authorization':'Bearer '+token}});
+      if(!res.ok) throw new Error('Erro ao gerar backup');
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const file = new File([blob],'backup_recnc_'+new Date().toISOString().slice(0,10)+'.json',{type:'application/json'});
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Backup RECNC'});
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=file.name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      alert('Backup baixado!');
+    }catch(e){ console.error(e); alert('Erro: '+e.message); }
+  });
+
+  document.getElementById('backupFileInput')?.addEventListener('change', async function(){
+    const file = this.files[0]; if(!file) return;
+    if(!confirm('ATENCAO: Isto SUBSTITUIRÁ todos os dados. Continuar?')){ this.value=''; return; }
+    try{
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      if(!backup.tables){ alert('Arquivo invalido.'); this.value=''; return; }
+      const res = await fetch('api/backup/restore',{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:JSON.stringify({backup})
+      });
+      const data = await res.json();
+      if(res.ok){ alert(data.message||'Restaurado!'); window.location.reload(); }
+      else alert(data.error||'Erro ao restaurar.');
+    }catch(e){ alert('Erro: '+e.message); }
+    this.value='';
+  });
+
+  // =========== STATS ===========
+  async function loadStats(){
+    try{
+      const res = await fetch('api/estatisticas',{headers:{'Authorization':'Bearer '+token}});
+      const data = await res.json();
+      if(res.ok){
+        anim('totalPessoas', data.totalPessoas||0);
+        anim('totalNascimento', data.totalNascimento||0);
+        anim('totalReconciliacao', data.totalReconciliacao||0);
+        anim('totalNcgr', data.totalNcgr||0);
+      }
+    }catch(e){ console.error(e); }
+  }
+  function anim(id,target){
+    const el=document.getElementById(id); if(!el) return;
+    let c=0; const step=Math.max(1,Math.ceil(target/20));
+    const iv=setInterval(()=>{ c+=step; if(c>=target){c=target;clearInterval(iv);} el.textContent=c; },30);
+  }
+
+  // =========== RECENT ===========
+  async function loadRecent(){
+    try{
+      const res = await fetch('api/ultimos-cadastros',{headers:{'Authorization':'Bearer '+token}});
+      const data = await res.json();
+      const box = document.getElementById('listaRecentes');
+      if(!res.ok||!data||!data.length){ box.innerHTML='<div class="empty"><i class="fas fa-inbox"></i><p>Nenhum cadastro</p></div>'; return; }
+      box.innerHTML='';
+      data.slice(0,5).forEach(p=>{
+        const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+        const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
+        const badge = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
+        const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
+        const el = document.createElement('div'); el.className='r-item';
+        el.innerHTML=`
+          <div class="r-av ${cls}">${initials}</div>
+          <div class="r-info">
+            <div class="r-name">${p.nome_completo||''}</div>
+            <div class="r-meta"><i class="fas fa-phone"></i>${p.telefone||'-'} <span class="badge ${badge}" style="font-size:.62rem;padding:2px 5px;border-radius:8px;"><i class="fas ${icon}"></i> ${tipo}</span></div>
+          </div>
+          <div class="r-date">${new Date(p.data_cadastro).toLocaleDateString('pt-BR')}</div>`;
+        box.appendChild(el);
+      });
+    }catch(e){ console.error(e); }
+  }
+
+  // =========== ACOMPANHAMENTOS ===========
+  async function loadAcomp(){
+    try{
+      const res = await fetch('api/pessoas/meus-acompanhamentos',{headers:{'Authorization':'Bearer '+token}});
+      const data = await res.json();
+      const box = document.getElementById('listaAcomp');
+      const badge = document.getElementById('badgeAcomp');
+      if(!res.ok||!data.pessoas||!data.pessoas.length){
+        if(badge) badge.textContent='0';
+        box.innerHTML='<div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida</p></div>';
+        return;
+      }
+      if(badge) badge.textContent=data.total||data.pessoas.length;
+      box.innerHTML='';
+      data.pessoas.forEach(p=>{
+        const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+        const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
+        const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
+        const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
+        const el = document.createElement('div'); el.className='r-item';
+        el.dataset.id=p.id;
+        el.innerHTML=`
+          <div class="r-av ${cls}">${initials}</div>
+          <div class="r-info">
+            <div class="r-name">${p.nome_completo||''}</div>
+            <div class="r-meta"><i class="fas fa-phone"></i>${p.telefone||'-'} <span class="badge ${badgeCls}" style="font-size:.62rem;padding:2px 5px;border-radius:8px;"><i class="fas ${icon}"></i> ${tipo}</span></div>
+          </div>
+          <div class="r-date">${new Date(p.data_cadastro).toLocaleDateString('pt-BR')}</div>`;
+        el.addEventListener('click',()=>openDetail(p.id));
+        box.appendChild(el);
+      });
+    }catch(e){ console.error(e); }
+  }
+
+  // =========== DETALHE / EDITAR ===========
+  async function openDetail(id){
+    try{
+      const res = await fetch('api/pessoas/'+id,{headers:{'Authorization':'Bearer '+token}});
+      if(!res.ok){ alert('Erro ao carregar.'); return; }
+      const p = await res.json();
+      document.getElementById('detNome').textContent = p.nome_completo||'-';
+      document.getElementById('detTelefone').textContent = p.telefone||'-';
+      document.getElementById('detEndereco').textContent = p.endereco||'-';
+      document.getElementById('detPontoRef').textContent = p.ponto_referencia||'-';
+      document.getElementById('detTipo').textContent = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+      document.getElementById('detData').textContent = p.data_cadastro?new Date(p.data_cadastro).toLocaleDateString('pt-BR'):'-';
+      document.getElementById('detNascimento').textContent = p.data_nascimento||'-';
+      const fotoEl = document.getElementById('detFoto');
+      if(p.foto_url){fotoEl.src=p.foto_url;fotoEl.style.display='block';}else{fotoEl.style.display='none';}
+
+      document.getElementById('editId').value=p.id;
+      document.getElementById('editNome').value=p.nome_completo||'';
+      document.getElementById('editTelefone').value=p.telefone||'';
+      document.getElementById('editEndereco').value=p.endereco||'';
+      document.getElementById('editPontoRef').value=p.ponto_referencia||'';
+      document.getElementById('editNascimento').value=p.data_nascimento||'';
+      document.getElementById('editTipo').value=p.tipo_cadastro||'';
+      document.getElementById('editFotoAtual').value=p.foto_url||'';
+      if(p.data_cadastro){
+        const dt=new Date(p.data_cadastro);
+        document.getElementById('editDataCadastro').value=new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+      }
+      const sel=document.getElementById('editAcompanhante');
+      sel.innerHTML='<option value="">Nenhum</option>';
+      try{
+        const ru=await fetch('api/usuarios/list',{headers:{'Authorization':'Bearer '+token}});
+        const ul=await ru.json();
+        ul.forEach(u=>{
+          const o=document.createElement('option'); o.value=u.id; o.textContent=u.nome;
+          if(String(u.id)===String(p.acompanhante)) o.selected=true;
+          sel.appendChild(o);
+        });
+      }catch(e){}
+      new bootstrap.Modal(document.getElementById('modalDetalhe')).show();
+    }catch(e){ console.error(e); }
+  }
+
+  document.getElementById('formEditarAcomp')?.addEventListener('submit', async(e)=>{
+    e.preventDefault();
+    const id=document.getElementById('editId').value;
+    const fd=new FormData();
+    fd.append('nome_completo',document.getElementById('editNome').value);
+    fd.append('telefone',document.getElementById('editTelefone').value);
+    fd.append('endereco',document.getElementById('editEndereco').value);
+    fd.append('ponto_referencia',document.getElementById('editPontoRef').value);
+    fd.append('data_nascimento',document.getElementById('editNascimento').value);
+    fd.append('data_cadastro',document.getElementById('editDataCadastro').value||new Date().toISOString());
+    fd.append('tipo_cadastro',document.getElementById('editTipo').value);
+    fd.append('acompanhante',document.getElementById('editAcompanhante').value||user.id);
+    fd.append('foto_url',document.getElementById('editFotoAtual').value);
+    const nf=document.getElementById('editNovaFoto').files[0];
+    if(nf) fd.append('foto',nf);
+    try{
+      const res=await fetch('api/pessoas/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+token},body:fd});
+      const data=await res.json();
+      if(res.ok){ alert('Atualizado!'); bootstrap.Modal.getInstance(document.getElementById('modalDetalhe')).hide(); loadAcomp(); }
+      else alert(data.error||'Erro ao salvar.');
+    }catch(err){ alert('Erro de conexao.'); }
+  });
+
+  // =========== INIT ===========
+  loadStats();
+  loadRecent();
+  loadAcomp();
+})();
+</script>
 </body>
 </html>
