@@ -515,7 +515,7 @@ app.get('/api/ultimos-cadastros', authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/export/csv', authMiddleware, adminMiddleware, async (req, res) => {
+app.get('/api/export/csv', authMiddleware, async (req, res) => {
   const { tipo, search, ids } = req.query;
   let whereClause = '';
   const params = [];
@@ -540,10 +540,17 @@ app.get('/api/export/csv', authMiddleware, adminMiddleware, async (req, res) => 
     }
   }
 
-  const query = 'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  // Non-admin users only see their accompanied people
+  if (!req.user || req.user.perfil?.toLowerCase() !== 'admin') {
+    whereClause += ' AND p.acompanhante = $' + paramIndex;
+    params.push(req.user.id);
+    paramIndex++;
+  }
+
+  const csvQuery = 'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
-    const result = await pool.query(query, params);
+    const result = await pool.query(csvQuery, params);
     const pessoas = result.rows;
     const BOM = '\uFEFF';
     const header = 'ID,Nome Completo,Data Nascimento,Endereco,Ponto Referencia,Telefone,Tipo,Acompanhamento,Cadastrado Por,Data Cadastro\n';
@@ -559,7 +566,7 @@ app.get('/api/export/csv', authMiddleware, adminMiddleware, async (req, res) => 
     res.status(500).json({ error: 'Erro ao exportar.' });
   }
 });
-app.get('/api/export/pdf', authMiddleware, adminMiddleware, async (req, res) => {
+app.get('/api/export/pdf', authMiddleware, async (req, res) => {
   const { tipo, search, ids } = req.query;
   let whereClause = '';
   const params = [];
@@ -582,6 +589,13 @@ app.get('/api/export/pdf', authMiddleware, adminMiddleware, async (req, res) => 
       params.push('%' + search + '%');
       paramIndex += 2;
     }
+  }
+
+  // Non-admin users only see their accompanied people
+  if (!req.user || req.user.perfil?.toLowerCase() !== 'admin') {
+    whereClause += ' AND p.acompanhante = $' + paramIndex;
+    params.push(req.user.id);
+    paramIndex++;
   }
 
   const query = 'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
