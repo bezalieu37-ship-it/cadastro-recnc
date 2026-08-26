@@ -414,16 +414,17 @@
       const res = await fetch('api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=');
       if (!res.ok) throw new Error('Erro ' + res.status);
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      const fileName = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
+      const file = new File([blob], fileName, { type: 'text/csv' });
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+        await window.Capacitor.Plugins.Share.share({ title: fileName, files: [file] });
+      } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+      } else {
+        alert('Arquivo CSV pronto. Total de dados baixados.');
+      }
     } catch (e) {
-      alert('Erro ao baixar CSV: ' + e.message);
+      if (e.name !== 'AbortError') alert('Erro ao exportar CSV: ' + e.message);
     }
   };
 
@@ -434,17 +435,17 @@
       if (!res.ok) throw new Error('Erro ' + res.status);
       const html = await res.text();
       const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-      alert('Relatorio baixado! Abra o arquivo e escolha "Imprimir" ou "Abrir com..." no seu celular.');
+      const fileName = 'relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html';
+      const file = new File([blob], fileName, { type: 'text/html' });
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+        await window.Capacitor.Plugins.Share.share({ title: fileName, files: [file] });
+      } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+      } else {
+        alert('Relatorio pronto. Total de registros baixados.');
+      }
     } catch (e) {
-      alert('Erro ao gerar PDF: ' + e.message);
+      if (e.name !== 'AbortError') alert('Erro ao exportar PDF: ' + e.message);
     }
   };
 
