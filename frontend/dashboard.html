@@ -412,42 +412,22 @@
     input.value = '';
   };
 
-  // Exportar CSV - usa fetch + Blob (funciona na WebView do Capacitor)
-  window.__exportarCSV = async function() {
+  // Exportar CSV - abre em nova aba (funciona na WebView do Capacitor)
+  window.__exportarCSV = function() {
     try {
-      const url = 'api/export/csv?tipo=&search=';
-      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (!res.ok) throw new Error('Erro ao baixar CSV');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      const url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=';
+      window.open(url, '_blank');
     } catch (e) {
       console.error('Erro exportar CSV:', e);
       alert('Erro ao exportar CSV. Tente novamente.');
     }
   };
 
-  // Exportar PDF - usa fetch + Blob (funciona na WebView do Capacitor)
-  window.__exportarPDF = async function() {
+  // Exportar PDF - abre em nova aba (funciona na WebView do Capacitor)
+  window.__exportarPDF = function() {
     try {
-      const url = 'api/export/pdf?tipo=&search=';
-      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (!res.ok) throw new Error('Erro ao baixar PDF');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      const url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=';
+      window.open(url, '_blank');
     } catch (e) {
       console.error('Erro exportar PDF:', e);
       alert('Erro ao exportar relatório. Tente novamente.');
