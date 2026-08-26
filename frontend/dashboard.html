@@ -323,7 +323,7 @@
     exportar('api/export/csv?tipo=&search=', 'cadastro_recnc_'+new Date().toISOString().slice(0,10)+'.csv');
   });
   document.getElementById('btnPDF')?.addEventListener('click', ()=>{
-    exportar('api/export/pdf?tipo=&search=', 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.html');
+    exportar('api/export/pdf?tipo=&search=', 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.pdf');
   });
 
   // =========== BACKUP ===========

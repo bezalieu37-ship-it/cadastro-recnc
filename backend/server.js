@@ -603,17 +603,90 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(query, params);
     const pessoas = result.rows;
-    const rows = pessoas.map(p => {
-      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
-      return '<tr>\n        <td>' + p.id + '</td>\n        <td>' + (p.nome_completo || '') + '</td>\n        <td>' + (p.data_nascimento || '-') + '</td>\n        <td>' + (p.endereco || '') + '</td>\n        <td>' + (p.ponto_referencia || '') + '</td>\n        <td>' + (p.telefone || '') + '</td>\n        <td>' + tipoLabel + '</td>\n        <td>' + (p.acompanhante || '-') + '</td>\n        <td>' + (p.admin_nome || '') + '</td>\n        <td>' + new Date(p.data_cadastro).toLocaleDateString('pt-BR') + '</td>\n      </tr>';
-    }).join('');
 
-    const baseUrl = req.protocol + '://' + req.get('host');
-    const html = '<!DOCTYPE html>\n<html lang="pt-BR"><head><meta charset="UTF-8">\n<title>Cadastro RECNC - Relatorio</title>\n<style>\n  body{font-family:Arial,sans-serif;margin:20px;color:#333}\n  h1{color:#0d6efd;font-size:20px;border-bottom:2px solid #0d6efd;padding-bottom:8px}\n  .info{margin:10px 0;font-size:13px;color:#666}\n  table{width:100%;border-collapse:collapse;margin-top:15px;font-size:11px}\n  th{background:#0d6efd;color:white;padding:8px 6px;text-align:left;border:1px solid #0d6efd}\n  td{padding:6px;border:1px solid #dee2e6}\n  tr:nth-child(even){background:#f8f9fa}\n  @media print{body{margin:10px}.btn-voltar{display:none}}\n  .btn-voltar{display:inline-block;margin-top:20px;padding:10px 24px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:6px;font-size:14px}\n  .btn-voltar:hover{background:#0b5ed7}\n</style></head><body>\n<h1>Cadastro RECNC - Relatorio de Cadastros</h1>\n<div class="info">Gerado em: ' + new Date().toLocaleString('pt-BR') + ' | Total: ' + pessoas.length + ' registro(s)</div>\n<table><thead><tr>\n  <th>ID</th><th>Nome</th><th>Data Nasc.</th><th>Endereco</th><th>Ref.</th><th>Telefone</th><th>Tipo</th><th>Acompanhamento</th><th>Cadastrado por</th><th>Data</th>\n</tr></thead><tbody>' + rows + '</tbody></table>\n<a href="' + baseUrl + '" class="btn-voltar">&#8592; Voltar para o Cadastro</a>\n</body></html>';
+    // Gerar PDF real com PDFKit
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html');
-    res.send(html);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.pdf');
+    doc.pipe(res);
+
+    // --- CABEÇALHO ---
+    doc.fontSize(20).font('Helvetica-Bold').fillColor('#0d6efd').text('CADASTRO RECNC', 40, 40);
+    doc.fontSize(12).font('Helvetica').fillColor('#333').text('Relatorio de Cadastros', 40, 65);
+    doc.moveDown(0.3);
+    doc.fontSize(9).fillColor('#666')
+      .text('Gerado em: ' + new Date().toLocaleString('pt-BR') + '  |  Total: ' + pessoas.length + ' registro(s)', 40, 82);
+    doc.moveTo(40, 100).lineTo(812, 100).lineWidth(1).strokeColor('#0d6efd').stroke();
+
+    // --- TABELA ---
+    const startY = 115;
+    const colX = [40, 85, 240, 320, 440, 570, 660, 750];
+    const colW = [45, 155, 80, 120, 130, 90, 90, 60];
+    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereco', 'Ponto Ref.', 'Telefone', 'Tipo', 'Data'];
+
+    // Header row
+    doc.rect(40, startY, 772, 20).fill('#0d6efd');
+    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(8);
+    headers.forEach((h, i) => doc.text(h, colX[i] + 4, startY + 6, { width: colW[i] }));
+
+    // Data rows
+    let y = startY + 22;
+    doc.font('Helvetica').fontSize(7.5).fillColor('#333');
+
+    function tipoLabel(t) {
+      if (t === 'novo_nascimento') return 'Novo Nascimento';
+      if (t === 'reconciliacao') return 'Reconciliacao';
+      return 'Novo Congregado';
+    }
+
+    pessoas.forEach((p, idx) => {
+      // Quebra de página
+      if (y > 560) {
+        doc.addPage();
+        y = 40;
+        // Re-render header on new page
+        doc.rect(40, y, 772, 20).fill('#0d6efd');
+        doc.fillColor('#fff').font('Helvetica-Bold').fontSize(8);
+        headers.forEach((h, i) => doc.text(h, colX[i] + 4, y + 6, { width: colW[i] }));
+        y += 22;
+        doc.font('Helvetica').fontSize(7.5).fillColor('#333');
+      }
+
+      // Alternating row bg
+      if (idx % 2 === 0) {
+        doc.rect(40, y, 772, 16).fill('#f8f9fa');
+      }
+
+      const rowY = y + 3;
+      const nome = (p.nome_completo || '').substring(0, 28);
+      const ender = (p.endereco || '').substring(0, 22);
+      const ref = (p.ponto_referencia || '').substring(0, 22);
+      const tel = (p.telefone || '-');
+      const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+
+      doc.fillColor('#333');
+      doc.text(String(p.id), colX[0] + 4, rowY, { width: colW[0] });
+      doc.text(nome, colX[1] + 4, rowY, { width: colW[1] });
+      doc.text(p.data_nascimento || '-', colX[2] + 4, rowY, { width: colW[2] });
+      doc.text(ender, colX[3] + 4, rowY, { width: colW[3] });
+      doc.text(ref, colX[4] + 4, rowY, { width: colW[4] });
+      doc.text(tel, colX[5] + 4, rowY, { width: colW[5] });
+      doc.text(tipoLabel(p.tipo_cadastro), colX[6] + 4, rowY, { width: colW[6] });
+      doc.text(data, colX[7] + 4, rowY, { width: colW[7] });
+
+      y += 16;
+    });
+
+    // --- RODAPÉ ---
+    doc.moveTo(40, 570).lineTo(812, 570).lineWidth(0.5).strokeColor('#ccc').stroke();
+    doc.fontSize(7).fillColor('#999').text(
+      'Cadastro RECNC - Relatorio gerado automaticamente  |  ' + new Date().toLocaleString('pt-BR'),
+      40, 575, { align: 'center', width: 772 }
+    );
+
+    doc.end();
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
     res.status(500).json({ error: 'Erro ao gerar PDF.' });
