@@ -413,15 +413,43 @@
     try {
       const res = await fetch('api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=');
       if (!res.ok) throw new Error('Erro ' + res.status);
-      const blob = await res.blob();
+      const text = await res.text();
       const fileName = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
+      
+      // Gravar no filesystem do dispositivo
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+        const { Filesystem, Directory, Encoding } = window.Capacitor.Plugins;
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: text,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8
+        });
+        // Compartilhar usando o URI real do arquivo
+        if (window.Capacitor.Plugins.Share) {
+          await window.Capacitor.Plugins.Share.share({
+            title: fileName,
+            url: result.uri,
+            dialogTitle: 'Compartilhar CSV'
+          });
+          return;
+        }
+      }
+      // Fallback: Web Share API
+      const blob = new Blob([text], { type: 'text/csv' });
       const file = new File([blob], fileName, { type: 'text/csv' });
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
-        await window.Capacitor.Plugins.Share.share({ title: fileName, files: [file] });
-      } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: fileName });
       } else {
-        alert('Arquivo CSV pronto. Total de dados baixados.');
+        // Último fallback: download via blob
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
     } catch (e) {
       if (e.name !== 'AbortError') alert('Erro ao exportar CSV: ' + e.message);
@@ -434,15 +462,42 @@
       const res = await fetch('api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=');
       if (!res.ok) throw new Error('Erro ' + res.status);
       const html = await res.text();
-      const blob = new Blob([html], { type: 'text/html' });
       const fileName = 'relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html';
+      
+      // Gravar no filesystem do dispositivo
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+        const { Filesystem, Directory, Encoding } = window.Capacitor.Plugins;
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: html,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8
+        });
+        // Compartilhar usando o URI real do arquivo
+        if (window.Capacitor.Plugins.Share) {
+          await window.Capacitor.Plugins.Share.share({
+            title: fileName,
+            url: result.uri,
+            dialogTitle: 'Compartilhar Relatório'
+          });
+          return;
+        }
+      }
+      // Fallback: Web Share API
+      const blob = new Blob([html], { type: 'text/html' });
       const file = new File([blob], fileName, { type: 'text/html' });
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
-        await window.Capacitor.Plugins.Share.share({ title: fileName, files: [file] });
-      } else if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: fileName });
       } else {
-        alert('Relatorio pronto. Total de registros baixados.');
+        // Último fallback: download via blob
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
     } catch (e) {
       if (e.name !== 'AbortError') alert('Erro ao exportar PDF: ' + e.message);
