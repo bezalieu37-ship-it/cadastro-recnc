@@ -35,10 +35,10 @@ const pool = new Pool({
     : false
 });
 
-// Supabase Storage
+// Supabase Storage (service_role para uploads)
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_KEY || ''
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || ''
 );
 
 // Multer config - armazenar em memoria (buffer)
@@ -745,15 +745,6 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-});
-
-app.get('/api/health', async (req, res) => {
-  try {
-    await pool.query('SELECT 1');
-    res.json({ status: 'ok', db: 'connected' });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message, code: err.code });
-  }
 });
 
 app.listen(PORT, () => {
