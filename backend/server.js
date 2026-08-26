@@ -689,6 +689,15 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
   }
 });
 
+app.get('/api/health', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW() as time');
+    res.json({ status: 'ok', db: 'connected', time: result.rows[0].time, dbUrl: process.env.DATABASE_URL ? 'set' : 'missing' });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message, code: error.code });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
