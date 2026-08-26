@@ -338,7 +338,7 @@ app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) =>
   }
 });
 
-app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, async (req, res) => {
+app.get('/api/pessoas/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.id = $1',
@@ -347,17 +347,31 @@ app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, async (req, res) =>
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
     }
-    res.json(result.rows[0]);
+    const pessoa = result.rows[0];
+    // Admin pode ver tudo; usuario so ve se for o acompanhante
+    if (req.user.perfil !== 'admin' && String(pessoa.acompanhante) !== String(req.user.id)) {
+      return res.status(403).json({ error: 'Acesso negado.' });
+    }
+    res.json(pessoa);
   } catch (error) {
     console.error('Erro ao buscar pessoa:', error);
     res.status(500).json({ error: 'Erro ao buscar pessoa.' });
   }
 });
-app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, upload.single('foto'), async (req, res) => {
+app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, res) => {
   const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
   let fotoUrl = foto_url || '';
 
   try {
+    // Verificar permissao: admin ou acompanhante
+    if (req.user.perfil !== 'admin') {
+      const check = await pool.query('SELECT acompanhante FROM pessoas WHERE id = $1', [req.params.id]);
+      if (check.rows.length === 0) return res.status(404).json({ error: 'Pessoa nao encontrada.' });
+      if (String(check.rows[0].acompanhante) !== String(req.user.id)) {
+        return res.status(403).json({ error: 'Acesso negado.' });
+      }
+    }
+
     // Se enviou nova foto, fazer upload
     if (req.file) {
       const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
@@ -412,8 +426,10 @@ app.delete('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res
       if (adminCount <= 1) {
         return res.status(400).json({ error: 'Nao e possivel excluir o ultimo administrador.' });
       }
-    }
-    await pool.query('DELETE FROM usuarios WHERE id = $1', [req.params.id]);
+      }
+      // Desvincular cadastros antes de excluir (setar cadastrado_por como NULL)
+      await pool.query('UPDATE pessoas SET cadastrado_por = NULL WHERE cadastrado_por = $1', [req.params.id]);
+      await pool.query('DELETE FROM usuarios WHERE id = $1', [req.params.id]);
     res.json({ message: 'Usuario excluido com sucesso.' });
   } catch (error) {
     console.error('Erro ao excluir usuario:', error);

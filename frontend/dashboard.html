@@ -527,11 +527,152 @@
           </div>
           <div class="recent-date"><i class="fas fa-calendar me-1"></i>${date}</div>
         `;
+        item.style.cursor = 'pointer';
+        item.dataset.id = p.id;
+        item.addEventListener('click', () => abrirDetalheAcomp(p.id));
         container.appendChild(item);
       });
     } catch (e) { console.error('Erro acompanhamentos:', e); }
   }
+
+  // Abrir detalhe da pessoa (acompanhamento)
+  async function abrirDetalheAcomp(id) {
+    try {
+      const res = await fetch('api/pessoas/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) { alert('Erro ao carregar dados.'); return; }
+      const p = await res.json();
+      const modal = document.getElementById('modalDetalheAcomp');
+      document.getElementById('detNome').textContent = p.nome_completo || '-';
+      document.getElementById('detTelefone').textContent = p.telefone || '-';
+      document.getElementById('detEndereco').textContent = p.endereco || '-';
+      document.getElementById('detPontoRef').textContent = p.ponto_referencia || '-';
+      document.getElementById('detTipo').textContent = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'novo_congregado' ? 'Novo Congregado' : 'Reconciliacao';
+      document.getElementById('detData').textContent = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+      document.getElementById('detNascimento').textContent = p.data_nascimento || '-';
+      const fotoEl = document.getElementById('detFoto');
+      if (p.foto_url) { fotoEl.src = p.foto_url; fotoEl.style.display = 'block'; } else { fotoEl.style.display = 'none'; }
+      // Preencher campos do form de edicao
+      document.getElementById('editId').value = p.id;
+      document.getElementById('editNome').value = p.nome_completo || '';
+      document.getElementById('editTelefone').value = p.telefone || '';
+      document.getElementById('editEndereco').value = p.endereco || '';
+      document.getElementById('editPontoRef').value = p.ponto_referencia || '';
+      document.getElementById('editNascimento').value = p.data_nascimento || '';
+      document.getElementById('editTipo').value = p.tipo_cadastro || '';
+      document.getElementById('editFotoAtual').value = p.foto_url || '';
+      // Esconder detalhes, mostrar modal
+      new bootstrap.Modal(modal).show();
+    } catch (e) { console.error('Erro ao abrir detalhe:', e); }
+  }
+
+  // Salvar edicao
+  document.getElementById('formEditarAcomp')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const formData = new FormData();
+    formData.append('nome_completo', document.getElementById('editNome').value);
+    formData.append('telefone', document.getElementById('editTelefone').value);
+    formData.append('endereco', document.getElementById('editEndereco').value);
+    formData.append('ponto_referencia', document.getElementById('editPontoRef').value);
+    formData.append('data_nascimento', document.getElementById('editNascimento').value);
+    formData.append('tipo_cadastro', document.getElementById('editTipo').value);
+    formData.append('acompanhante', user.id);
+    formData.append('foto_url', document.getElementById('editFotoAtual').value);
+    const novaFoto = document.getElementById('editNovaFoto').files[0];
+    if (novaFoto) formData.append('foto', novaFoto);
+    try {
+      const res = await fetch('api/pessoas/' + id, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Cadastro atualizado!');
+        bootstrap.Modal.getInstance(document.getElementById('modalDetalheAcomp')).hide();
+        carregarMeusAcompanhamentos();
+      } else {
+        alert(data.error || 'Erro ao salvar.');
+      }
+    } catch (err) { alert('Erro de conexao.'); }
+  });
 })();
 </script>
+
+<!-- Modal Detalhe Pessoa (Acompanhamento) -->
+<div class="modal fade" id="modalDetalheAcomp" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-user me-2"></i>Detalhes do Cadastro</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Visualizar -->
+        <div id="detalheView">
+          <div class="text-center mb-3">
+            <img id="detFoto" src="" alt="Foto" class="rounded-circle" style="width:100px;height:100px;object-fit:cover;display:none;">
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><strong>Nome:</strong> <span id="detNome">-</span></div>
+            <div class="col-md-6"><strong>Telefone:</strong> <span id="detTelefone">-</span></div>
+            <div class="col-md-6"><strong>Data Nasc:</strong> <span id="detNascimento">-</span></div>
+            <div class="col-md-6"><strong>Tipo:</strong> <span id="detTipo" class="badge bg-primary">-</span></div>
+            <div class="col-12"><strong>Endereco:</strong> <span id="detEndereco">-</span></div>
+            <div class="col-12"><strong>Ponto Referencia:</strong> <span id="detPontoRef">-</span></div>
+            <div class="col-12"><strong>Data Cadastro:</strong> <span id="detData">-</span></div>
+          </div>
+        </div>
+        <hr>
+        <!-- Editar -->
+        <h6 class="mt-3"><i class="fas fa-pen me-1"></i>Editar Cadastro</h6>
+        <form id="formEditarAcomp">
+          <input type="hidden" id="editId">
+          <input type="hidden" id="editFotoAtual">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small">Nome Completo</label>
+              <input type="text" class="form-control form-control-sm" id="editNome" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Telefone</label>
+              <input type="text" class="form-control form-control-sm" id="editTelefone" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Data Nascimento</label>
+              <input type="date" class="form-control form-control-sm" id="editNascimento">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Tipo</label>
+              <select class="form-select form-select-sm" id="editTipo">
+                <option value="novo_nascimento">Novo Nascimento</option>
+                <option value="reconciliacao">Reconciliacao</option>
+                <option value="novo_congregado">Novo Congregado</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Endereco</label>
+              <input type="text" class="form-control form-control-sm" id="editEndereco" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Ponto de Referencia</label>
+              <input type="text" class="form-control form-control-sm" id="editPontoRef" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Nova Foto (opcional)</label>
+              <input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*">
+            </div>
+          </div>
+          <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Salvar Alteracoes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
