@@ -212,11 +212,11 @@
         <i class="fas fa-user-gear text-info"></i>
         <span>Gerenciar Usuarios</span>
       </a>
-      <a href="lista.html" class="action-item" id="actionCSV">
+      <a href="#" class="action-item" id="actionCSV" onclick="window.__exportarCSV(); return false;">
         <i class="fas fa-file-csv text-success"></i>
         <span>Exportar CSV</span>
       </a>
-      <a href="lista.html" class="action-item" id="actionPDF">
+      <a href="#" class="action-item" id="actionPDF" onclick="window.__exportarPDF(); return false;">
         <i class="fas fa-file-pdf text-danger"></i>
         <span>Exportar PDF</span>
       </a>
@@ -406,6 +406,43 @@
     }
     
     input.value = '';
+  };
+
+  // Exportar CSV
+  window.__exportarCSV = async function() {
+    try {
+      const res = await fetch('api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=');
+      if (!res.ok) throw new Error('Erro ' + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      alert('Erro ao baixar CSV: ' + e.message);
+    }
+  };
+
+  // Exportar PDF
+  window.__exportarPDF = async function() {
+    try {
+      const res = await fetch('api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=');
+      if (!res.ok) throw new Error('Erro ' + res.status);
+      const html = await res.text();
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      } else {
+        alert('Permita pop-ups para gerar o PDF.');
+      }
+    } catch (e) {
+      alert('Erro ao gerar PDF: ' + e.message);
+    }
   };
 
   // Logout
