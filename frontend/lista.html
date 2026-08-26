@@ -526,6 +526,7 @@
       const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+      const isSelected = selectedIds.has(p.id);
 
       const card = document.createElement('div');
       card.className = 'person-card' + (isSelected ? ' selected' : '');
@@ -735,49 +736,24 @@
     }
   }
 
-  // Export CSV
+  // Export CSV - works in Capacitor WebView
   window.exportarCSV = async function() {
     const tipo = $filtroTipo.value;
     const search = $pesquisaNome.value.trim();
     let url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
     if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro ' + res.status);
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-    } catch (e) {
-      alert('Erro ao baixar CSV: ' + e.message);
-    }
+    // window.location.href forces download in Capacitor WebView
+    window.location.href = url;
   }
 
-  // Export PDF
+  // Export PDF - works in Capacitor WebView
   window.exportarPDF = async function() {
     const tipo = $filtroTipo.value;
     const search = $pesquisaNome.value.trim();
     let url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
     if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro ' + res.status);
-      const html = await res.text();
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(html);
-        win.document.close();
-      } else {
-        alert('Permita pop-ups para gerar o PDF.');
-      }
-    } catch (e) {
-      alert('Erro ao gerar PDF: ' + e.message);
-    }
+    // window.location.href forces download in Capacitor WebView
+    window.location.href = url;
   }
 
   // Report modal

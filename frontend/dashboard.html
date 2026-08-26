@@ -67,8 +67,6 @@
     .stat-card.yellow .stat-number { color: #d4a017; }
     .stat-card.cyan .stat-icon { background: rgba(13,202,240,0.1); color: #0dcaf0; }
     .stat-card.cyan .stat-number { color: #0dcaf0; }
-    .stat-card.purple .stat-icon { background: rgba(111,66,193,0.1); color: #6f42c1; }
-    .stat-card.purple .stat-number { color: #6f42c1; }
 
     /* Quick Actions */
     .quick-actions {
@@ -189,11 +187,6 @@
       <div class="stat-number" id="totalNcgr">0</div>
       <div class="stat-label"><i class="fas fa-users"></i> Novos Congregados</div>
     </div>
-    <div class="stat-card purple">
-      <div class="stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
-      <div class="stat-number" id="ultimosCadastros">0</div>
-      <div class="stat-label"><i class="fas fa-calendar-check"></i> Ultimos 5</div>
-    </div>
   </div>
 
   <!-- Quick Actions -->
@@ -272,7 +265,7 @@
   // Admin-only items
   const isAdmin = user.perfil && user.perfil.toLowerCase() === 'admin';
   if (!isAdmin) {
-    // Hide all admin elements
+    // Hide admin-only elements
     const navU = document.getElementById('navUsuarios');
     const navL = document.getElementById('navLista');
     const actU = document.getElementById('actionUsuarios');
@@ -281,9 +274,6 @@
     const actCSV = document.getElementById('actionCSV');
     const actPDF = document.getElementById('actionPDF');
     const btnLista = document.getElementById('btnVerLista');
-    const statsGrid = document.querySelector('.stats-grid');
-    const quickActions = document.querySelector('.quick-actions');
-    const recentSection = document.getElementById('recentSection');
     
     if (navU) navU.style.display = 'none';
     if (navL) navL.style.display = 'none';
@@ -293,9 +283,6 @@
     if (actCSV) actCSV.style.display = 'none';
     if (actPDF) actPDF.style.display = 'none';
     if (btnLista) btnLista.style.display = 'none';
-    if (statsGrid) statsGrid.style.display = 'none';
-    if (quickActions) quickActions.style.display = 'none';
-    if (recentSection) recentSection.style.display = 'none';
     
     // Show message for regular users
     const banner = document.querySelector('.welcome-banner');
@@ -425,30 +412,16 @@
     input.value = '';
   };
 
-  // Exportar CSV
+  // Exportar CSV - funciona na WebView do Capacitor
   window.__exportarCSV = function() {
     const url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=';
-    // Abre no navegador do sistema (fora da WebView)
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.location.href = url;
   };
 
-  // Exportar PDF
+  // Exportar PDF - funciona na WebView do Capacitor
   window.__exportarPDF = function() {
     const url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=';
-    // Abre no navegador do sistema (fora da WebView)
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.location.href = url;
   };
 
   // Logout
@@ -468,7 +441,6 @@
         animateNumber('totalNascimento', data.totalNascimento || 0);
         animateNumber('totalReconciliacao', data.totalReconciliacao || 0);
         animateNumber('totalNcgr', data.totalNcgr || 0);
-        animateNumber('ultimosCadastros', data.ultimosCadastros || 0);
       }
     } catch (e) { console.error('Erro stats:', e); }
   }

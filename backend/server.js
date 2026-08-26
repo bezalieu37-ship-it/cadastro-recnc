@@ -277,11 +277,18 @@ app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res)
   }
 });
 
-app.get('/api/pessoas', authMiddleware, adminMiddleware, async (req, res) => {
+app.get('/api/pessoas', authMiddleware, async (req, res) => {
   const { tipo, search, page = 1, limit = 10 } = req.query;
   let whereClause = '';
   const params = [];
   let paramIndex = 1;
+
+  // Usuarios nao-admin so veem pessoas onde sao acompanhante
+  if (req.user.perfil !== 'admin') {
+    whereClause += ' AND p.acompanhante = $' + paramIndex;
+    params.push(req.user.id.toString());
+    paramIndex++;
+  }
 
   if (tipo && tipo !== 'all') {
     whereClause += ' AND p.tipo_cadastro = $' + paramIndex;
@@ -465,25 +472,46 @@ app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res) =
     res.status(500).json({ error: 'Erro ao atualizar usuario. Nome ja existe?' });
   }
 });
-app.get('/api/estatisticas', authMiddleware, adminMiddleware, async (req, res) => {
+app.get('/api/estatisticas', authMiddleware, async (req, res) => {
   try {
-    const [totalResult, nascResult, reconcResult, ncgrResult, recentResult] = await Promise.all([
-      pool.query('SELECT COUNT(*) as total FROM pessoas'),
-      pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_nascimento'"),
-      pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'reconciliacao'"),
-      pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_congregado'"),
-      pool.query('SELECT * FROM pessoas ORDER BY data_cadastro DESC LIMIT 5')
+    const isAdmin = req.user.perfil === 'admin';
+    const [totalResult, nascResult, reconcResult, ncgrResult] = await Promise.all([
+      isAdmin
+        ? pool.query('SELECT COUNT(*) as total FROM pessoas')
+        : pool.query('SELECT COUNT(*) as total FROM pessoas WHERE acompanhante = $1', [req.user.id.toString()]),
+      isAdmin
+        ? pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_nascimento'")
+        : pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_nascimento' AND acompanhante = $1", [req.user.id.toString()]),
+      isAdmin
+        ? pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'reconciliacao'")
+        : pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'reconciliacao' AND acompanhante = $1", [req.user.id.toString()]),
+      isAdmin
+        ? pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_congregado'")
+        : pool.query("SELECT COUNT(*) as total FROM pessoas WHERE tipo_cadastro = 'novo_congregado' AND acompanhante = $1", [req.user.id.toString()])
     ]);
     res.json({
       totalPessoas: parseInt(totalResult.rows[0].total),
       totalNascimento: parseInt(nascResult.rows[0].total),
       totalReconciliacao: parseInt(reconcResult.rows[0].total),
-      totalNcgr: parseInt(ncgrResult.rows[0].total),
-      ultimosCadastros: recentResult.rows.length
+      totalNcgr: parseInt(ncgrResult.rows[0].total)
     });
   } catch (error) {
     console.error('Erro ao buscar estatisticas:', error);
     res.status(500).json({ error: 'Erro ao buscar estatisticas.' });
+  }
+});
+
+// Endpoint para ultimos cadastros (usado no dashboard)
+app.get('/api/ultimos-cadastros', authMiddleware, async (req, res) => {
+  try {
+    const isAdmin = req.user.perfil === 'admin';
+    const result = isAdmin
+      ? await pool.query('SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id ORDER BY p.data_cadastro DESC LIMIT 5')
+      : await pool.query('SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.acompanhante = $1 ORDER BY p.data_cadastro DESC LIMIT 5', [req.user.id.toString()]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar ultimos cadastros:', error);
+    res.status(500).json({ error: 'Erro ao buscar ultimos cadastros.' });
   }
 });
 
