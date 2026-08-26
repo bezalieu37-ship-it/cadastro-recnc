@@ -254,13 +254,13 @@ app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res)
       const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
       const fileName = `fotos/${crypto.randomUUID()}.${ext}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('cadastro-fotos')
+        .from('Cadastro-Fotos')
         .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
 
       if (uploadError) {
         console.error('Erro ao upload foto:', uploadError);
       } else {
-        const { data: urlData } = supabase.storage.from('cadastro-fotos').getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('Cadastro-Fotos').getPublicUrl(fileName);
         fotoUrl = urlData.publicUrl;
       }
     }
@@ -363,11 +363,11 @@ app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, upload.single('foto
       const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
       const fileName = `fotos/${crypto.randomUUID()}.${ext}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('cadastro-fotos')
+        .from('Cadastro-Fotos')
         .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
 
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('cadastro-fotos').getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('Cadastro-Fotos').getPublicUrl(fileName);
         fotoUrl = urlData.publicUrl;
       }
     }
