@@ -279,6 +279,7 @@
   }
 
   // Image preview
+  let selectedFile = null;
   if (fileUploadLabel) {
     fileUploadLabel.addEventListener('click', () => fotoUpload.click());
   }
@@ -287,7 +288,8 @@
       const file = this.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')) { alert('Selecione uma imagem valida.'); this.value = ''; return; }
-      if (file.size > 4 * 1024 * 1024) { alert('Maximo 4MB.'); this.value = ''; return; }
+      if (file.size > 5 * 1024 * 1024) { alert('Maximo 5MB.'); this.value = ''; return; }
+      selectedFile = file;
       const reader = new FileReader();
       reader.onload = (e) => { previewImage.src = e.target.result; previewImage.classList.remove('d-none'); };
       reader.readAsDataURL(file);
@@ -323,11 +325,6 @@
     const tipoCadastro = document.querySelector('input[name="tipoCadastro"]:checked')?.value;
     const acompanhante = document.getElementById('acompanhante').value;
 
-    let fotoUrl = '';
-    if (previewImage && !previewImage.classList.contains('d-none')) {
-      fotoUrl = previewImage.src;
-    }
-
     // Validacoes
     if (!nomeCompleto) { alert('Preencha o Nome Completo.'); return; }
     if (!telefone) { alert('Preencha o Telefone.'); return; }
@@ -340,20 +337,23 @@
     btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
 
     try {
+      // Usar FormData para enviar foto como arquivo
+      const formData = new FormData();
+      formData.append('nome_completo', nomeCompleto);
+      formData.append('data_nascimento', dataNascimento || '');
+      formData.append('endereco', endereco);
+      formData.append('ponto_referencia', pontoReferencia);
+      formData.append('telefone', telefone);
+      formData.append('tipo_cadastro', tipoCadastro);
+      formData.append('acompanhante', acompanhante);
+      if (selectedFile) {
+        formData.append('foto', selectedFile);
+      }
+
       const res = await fetch('api/pessoas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-          nome_completo: nomeCompleto,
-          data_nascimento: dataNascimento || null,
-          endereco,
-          ponto_referencia: pontoReferencia,
-          telefone,
-          tipo_cadastro: tipoCadastro,
-          acompanhante,
-          foto_url: fotoUrl,
-          cadastrado_por: user.id
-        })
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
       });
 
       const data = await res.json();

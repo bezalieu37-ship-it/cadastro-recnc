@@ -4,9 +4,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +33,23 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase')
     ? { rejectUnauthorized: false }
     : false
+});
+
+// Supabase Storage
+const supabase = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_KEY || ''
+);
+
+// Multer config - armazenar em memoria (buffer)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Tipo de arquivo nao permitido.'), false);
+  }
 });
 
 function buildPlaceholders(values, startIndex = 1) {
@@ -220,17 +240,35 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Erro ao criar usuario. Nome ja existe?' });
   }
 });
-app.post('/api/pessoas', authMiddleware, async (req, res) => {
-  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
+app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res) => {
+  const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante } = req.body;
   if (!nome_completo || !endereco || !ponto_referencia || !telefone || !tipo_cadastro) {
     return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos.' });
   }
   const cadastrado_por = req.user.id;
+  let fotoUrl = '';
+
   try {
+    // Upload da foto para Supabase Storage
+    if (req.file) {
+      const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `fotos/${crypto.randomUUID()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('cadastro-fotos')
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (uploadError) {
+        console.error('Erro ao upload foto:', uploadError);
+      } else {
+        const { data: urlData } = supabase.storage.from('cadastro-fotos').getPublicUrl(fileName);
+        fotoUrl = urlData.publicUrl;
+      }
+    }
+
     const result = await pool.query(
       `INSERT INTO pessoas (nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id`,
-      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url || '', cadastrado_por]
+      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, cadastrado_por]
     );
     res.json({ message: 'Pessoa cadastrada com sucesso.', pessoaId: result.rows[0].id });
   } catch (error) {
@@ -315,12 +353,28 @@ app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) =>
     res.status(500).json({ error: 'Erro ao buscar acompanhamentos.' });
   }
 });
-app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, async (req, res) => {
+app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, upload.single('foto'), async (req, res) => {
   const { nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
+  let fotoUrl = foto_url || '';
+
   try {
+    // Se enviou nova foto, fazer upload
+    if (req.file) {
+      const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `fotos/${crypto.randomUUID()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('cadastro-fotos')
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('cadastro-fotos').getPublicUrl(fileName);
+        fotoUrl = urlData.publicUrl;
+      }
+    }
+
     const result = await pool.query(
       'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, endereco = $3, ponto_referencia = $4, telefone = $5, tipo_cadastro = $6, acompanhante = $7, foto_url = $8 WHERE id = $9',
-      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', foto_url || '', req.params.id]
+      [nome_completo, data_nascimento || null, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, req.params.id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
