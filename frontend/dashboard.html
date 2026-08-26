@@ -426,26 +426,29 @@
   };
 
   // Exportar CSV
-  window.__exportarCSV = async function() {
-    try {
-      const url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=';
-      // No Android WebView (Capacitor), abrir a URL diretamente faz o download nativo
-      // porque o backend envia Content-Disposition: attachment
-      window.open(url, '_blank');
-    } catch (e) {
-      alert('Erro ao exportar CSV: ' + e.message);
-    }
+  window.__exportarCSV = function() {
+    const url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=&search=';
+    // Abre no navegador do sistema (fora da WebView)
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Exportar PDF
-  window.__exportarPDF = async function() {
-    try {
-      const url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=';
-      // Mesma abordagem: abre no navegador do sistema -> download nativo + opções de compartilhar
-      window.open(url, '_blank');
-    } catch (e) {
-      alert('Erro ao exportar PDF: ' + e.message);
-    }
+  window.__exportarPDF = function() {
+    const url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=';
+    // Abre no navegador do sistema (fora da WebView)
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Logout
