@@ -313,22 +313,6 @@ app.get('/api/pessoas', authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.id = $1',
-      [req.params.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Pessoa nao encontrada.' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Erro ao buscar pessoa:', error);
-    res.status(500).json({ error: 'Erro ao buscar pessoa.' });
-  }
-});
-
 app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { page = 1, limit = 10 } = req.query;
@@ -351,6 +335,22 @@ app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) =>
   } catch (error) {
     console.error('Erro ao buscar acompanhamentos:', error);
     res.status(500).json({ error: 'Erro ao buscar acompanhamentos.' });
+  }
+});
+
+app.get('/api/pessoas/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.id = $1',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pessoa nao encontrada.' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar pessoa:', error);
+    res.status(500).json({ error: 'Erro ao buscar pessoa.' });
   }
 });
 app.put('/api/pessoas/:id', authMiddleware, adminMiddleware, upload.single('foto'), async (req, res) => {
