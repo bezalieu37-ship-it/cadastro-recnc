@@ -433,13 +433,16 @@
       const res = await fetch('api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=&search=');
       if (!res.ok) throw new Error('Erro ' + res.status);
       const html = await res.text();
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(html);
-        win.document.close();
-      } else {
-        alert('Permita pop-ups para gerar o PDF.');
-      }
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      alert('Relatorio baixado! Abra o arquivo e escolha "Imprimir" ou "Abrir com..." no seu celular.');
     } catch (e) {
       alert('Erro ao gerar PDF: ' + e.message);
     }
