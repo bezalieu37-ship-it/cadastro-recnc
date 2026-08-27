@@ -184,21 +184,40 @@
     </div>
   </div>
 
-  <!-- ULTIMOS CADASTROS -->
+  <!-- ULTIMOS 5 CADASTROS -->
   <div class="section" id="secRecentes">
     <div class="section-hdr">
-      <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos Cadastros</h6>
-      <a href="lista.html" class="text-primary text-decoration-none"><i class="fas fa-arrow-right me-1"></i>Ver todos</a>
+      <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos 5 Cadastros</h6>
+      <a href="lista.html" class="text-primary text-decoration-none" style="cursor:pointer" id="linkVerTodos"><i class="fas fa-arrow-right me-1"></i>Ver todos</a>
     </div>
     <div id="listaRecentes"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhum cadastro</p></div></div>
   </div>
 
-  <!-- ACOMPANHAMENTOS -->
+  <!-- LISTA GERAL (ADMIN) - toque abre lista.html -->
+  <div class="section" id="secListaGeral" style="display:none">
+    <div class="section-hdr">
+      <h6><i class="fas fa-database text-success"></i> Lista Geral</h6>
+    </div>
+    <div style="padding:14px 18px;">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+          <span class="fw-bold" style="font-size:1.5rem;color:#198754;" id="totalGeralNum">0</span>
+          <span class="text-muted ms-2" style="font-size:.82rem;">pessoas cadastradas</span>
+        </div>
+        <a href="lista.html" class="btn btn-success btn-sm fw-semibold" style="border-radius:10px;padding:6px 16px;">
+          <i class="fas fa-list-check me-1"></i>Abrir Lista
+        </a>
+      </div>
+      <div id="listaGeralPreview"></div>
+    </div>
+  </div>
+
+  <!-- MEUS ACOMPANHAMENTOS -->
   <div class="section" id="secAcomp">
     <div class="section-hdr">
-      <h6><i class="fas fa-user-friends text-primary"></i> Acompanhamentos <span class="badge bg-primary ms-1" id="badgeAcomp">0</span></h6>
+      <h6><i class="fas fa-user-friends text-primary"></i> Meus Acompanhamentos <span class="badge bg-primary ms-1" id="badgeAcomp">0</span></h6>
     </div>
-    <div id="listaAcomp"><div class="empty"><i class="fas fa-inbox"></i><p>Carregando...</p></div></div>
+    <div id="listaAcomp"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida a voce</p></div></div>
   </div>
 
 </div>
@@ -273,6 +292,8 @@
   if(!isAdmin){
     ['navUsuarios','navLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
     ['btnVerLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+    // Esconder secao lista geral (admin only)
+    const secGeral=document.getElementById('secListaGeral'); if(secGeral) secGeral.style.display='none';
     // Dentro das acoes rapidas: esconder itens admin
     document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario').forEach(e=>e.style.display='none');
     // Re-welcome banner
@@ -290,6 +311,8 @@
   document.getElementById('statTotalPessoas')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('navLista')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('navUsuarios')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='usuarios.html'; });
+  document.getElementById('linkVerTodos')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
+  document.getElementById('btnAbrirListaGeral')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
 
   // Logout
   document.getElementById('btnLogout').addEventListener('click', ()=>{
@@ -554,15 +577,56 @@
     try{
       const res=await fetch('api/pessoas/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+token},body:fd});
       const data=await res.json();
-      if(res.ok){ alert('Atualizado!'); bootstrap.Modal.getInstance(document.getElementById('modalDetalhe')).hide(); loadAcomp(); }
+      if(res.ok){ alert('Atualizado!'); bootstrap.Modal.getInstance(document.getElementById('modalDetalhe')).hide(); loadAcomp(); loadStats(); if(isAdmin) loadListaGeral(); }
       else alert(data.error||'Erro ao salvar.');
     }catch(err){ alert('Erro de conexao.'); }
   });
+
+  // =========== LISTA GERAL (ADMIN) ===========
+  async function loadListaGeral(){
+    if(!isAdmin) return;
+    try{
+      const res = await fetch('api/pessoas?limit=3',{headers:{'Authorization':'Bearer '+token}});
+      const data = await res.json();
+      const section = document.getElementById('secListaGeral');
+      const numEl = document.getElementById('totalGeralNum');
+      const previewEl = document.getElementById('listaGeralPreview');
+      if(!section) return;
+      section.style.display='block';
+      if(numEl) numEl.textContent = data.total||0;
+      if(previewEl && data.pessoas && data.pessoas.length){
+        previewEl.innerHTML='';
+        data.pessoas.slice(0,3).forEach(p=>{
+          const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+          const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
+          const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
+          const el = document.createElement('div'); el.className='r-item';
+          el.style.cursor='pointer';
+          el.innerHTML=`
+            <div class="r-av ${cls}">${initials}</div>
+            <div class="r-info">
+              <div class="r-name">${p.nome_completo||''}</div>
+              <div class="r-meta"><i class="fas fa-phone"></i>${p.telefone||'-'} <span class="badge ${badgeCls}" style="font-size:.62rem;padding:2px 5px;border-radius:8px;">${tipo}</span></div>
+            </div>`;
+          el.addEventListener('click',()=>openDetail(p.id));
+          previewEl.appendChild(el);
+        });
+        if(data.total > 3){
+          const more = document.createElement('div');
+          more.className='text-center py-2';
+          more.innerHTML='<a href="lista.html" class="text-success text-decoration-none" style="font-size:.82rem;font-weight:600;"><i class="fas fa-arrow-right me-1"></i>Ver todas as '+data.total+' pessoas</a>';
+          previewEl.appendChild(more);
+        }
+      }
+    }catch(e){ console.error('loadListaGeral error:', e); }
+  }
 
   // =========== INIT ===========
   loadStats();
   loadRecent();
   loadAcomp();
+  if(isAdmin) loadListaGeral();
 })();
 </script>
 </body>
