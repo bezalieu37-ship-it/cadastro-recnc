@@ -238,6 +238,7 @@
   const btnSalvar = document.getElementById('btnSalvar');
 
   // Load users for Acompanhamento dropdown
+  let dropdownPronto = null; // Promise que resolve quando dropdown carrega
   async function carregarUsuariosDropdown() {
     try {
       const res = await fetch('api/usuarios/list', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -252,7 +253,7 @@
       });
     } catch (e) { console.error('Erro ao carregar usuarios:', e); }
   }
-  carregarUsuariosDropdown();
+  dropdownPronto = carregarUsuariosDropdown();
 
   // =========== MODO EDICAO ===========
   const urlParams = new URLSearchParams(window.location.search);
@@ -330,11 +331,15 @@
         }
       }
 
-      // Acompanhante — aguardar dropdown carregar e selecionar
-      await new Promise(r => setTimeout(r, 500));
+      // Acompanhante — AGUARDAR dropdown carregar completamente antes de selecionar
+      if (dropdownPronto) await dropdownPronto;
       if (p.acompanhante) {
         const sel = document.getElementById('acompanhante');
-        sel.value = p.acompanhante;
+        // Garantir que a opção existe antes de setar
+        const optExists = Array.from(sel.options).some(o => String(o.value) === String(p.acompanhante));
+        if (optExists) {
+          sel.value = String(p.acompanhante);
+        }
       }
 
       // Foto preview
@@ -446,29 +451,41 @@
     btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
 
     try {
-      // Usar FormData para enviar foto como arquivo
-      const formData = new FormData();
-      formData.append('nome_completo', nomeCompleto);
-      formData.append('data_nascimento', dataNascimento || '');
       const dataCadastro = document.getElementById('dataCadastro').value;
-      formData.append('data_cadastro', dataCadastro || new Date().toISOString());
-      formData.append('endereco', endereco);
-      formData.append('ponto_referencia', pontoReferencia);
-      formData.append('telefone', telefone);
-      formData.append('tipo_cadastro', tipoCadastro);
-      formData.append('acompanhante', acompanhante);
-      if (editId && editFotoAtual) {
-        formData.append('foto_url', editFotoAtual);
-      }
-      if (selectedFile) {
-        formData.append('foto', selectedFile);
-      }
+      const payload = {
+        nome_completo: nomeCompleto,
+        data_nascimento: dataNascimento || '',
+        data_cadastro: dataCadastro || new Date().toISOString(),
+        endereco: endereco,
+        ponto_referencia: pontoReferencia,
+        telefone: telefone,
+        tipo_cadastro: tipoCadastro,
+        acompanhante: acompanhante,
+        foto_url: editId ? (editFotoAtual || '') : ''
+      };
 
-      const res = await fetch(editId ? 'api/pessoas/' + editId : 'api/pessoas', {
-        method: editId ? 'PUT' : 'POST',
-        headers: { 'Authorization': 'Bearer ' + token },
-        body: formData
-      });
+      let res;
+      if (selectedFile) {
+        // Tem foto nova: enviar como FormData (multipart)
+        const formData = new FormData();
+        Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
+        formData.append('foto', selectedFile);
+        res = await fetch(editId ? 'api/pessoas/' + editId : 'api/pessoas', {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: formData
+        });
+      } else {
+        // Sem foto: enviar como JSON (evita problemas de boundary no Capacitor WebView)
+        res = await fetch(editId ? 'api/pessoas/' + editId : 'api/pessoas', {
+          method: editId ? 'PUT' : 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+      }
 
       const data = await res.json();
       if (res.ok) {
