@@ -739,32 +739,67 @@
     }
   }
 
-  // Export CSV - abre em nova aba (funciona na WebView do Capacitor)
-  window.exportarCSV = function() {
+  // Export CSV - usa Capacitor Share no Android
+  window.exportarCSV = async function() {
     try {
       const tipo = $filtroTipo.value;
       const search = $pesquisaNome.value.trim();
-      let url = 'api/export/csv?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
+      let url = 'api/export/csv?tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
       if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-      window.open(url, '_blank');
+      await exportarArquivo(url, 'cadastro_recnc_'+new Date().toISOString().slice(0,10)+'.csv', 'text/csv');
     } catch (e) {
       console.error('Erro exportar CSV:', e);
       alert('Erro ao exportar CSV. Tente novamente.');
     }
   }
 
-  // Export PDF - abre em nova aba (funciona na WebView do Capacitor)
-  window.exportarPDF = function() {
+  // Export PDF - usa Capacitor Share no Android
+  window.exportarPDF = async function() {
     try {
       const tipo = $filtroTipo.value;
       const search = $pesquisaNome.value.trim();
-      let url = 'api/export/pdf?token=' + encodeURIComponent(token) + '&tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
+      let url = 'api/export/pdf?tipo=' + encodeURIComponent(tipo) + '&search=' + encodeURIComponent(search);
       if (selectedIds.size > 0) url += '&ids=' + Array.from(selectedIds).join(',');
-      window.open(url, '_blank');
+      await exportarArquivo(url, 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.pdf', 'application/pdf');
     } catch (e) {
       console.error('Erro exportar PDF:', e);
       alert('Erro ao exportar relatório. Tente novamente.');
     }
+  }
+
+  // Funcao generica de exportacao que funciona no WebView
+  async function exportarArquivo(endpoint, filename, mimeType) {
+    const res = await fetch(endpoint, { headers:{'Authorization':'Bearer '+token} });
+    if(!res.ok) throw new Error('Erro ao gerar arquivo ('+res.status+')');
+    const blob = await res.blob();
+
+    // Converte blob para base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    // Tenta Capacitor Share
+    if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
+      const fs = window.Capacitor.Plugins.Filesystem;
+      await fs.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+      if(window.Capacitor.Plugins.Share){
+        try {
+          await window.Capacitor.Plugins.Share.share({ title: filename, files: [{ url: 'cache://'+filename, mimeType: mimeType }] });
+          return;
+        } catch(shareErr){
+          if(shareErr.message && shareErr.message.includes('cancel')) return;
+        }
+      }
+    }
+    // Fallback: <a download>
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
   }
 
   // Report modal

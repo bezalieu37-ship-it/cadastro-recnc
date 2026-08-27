@@ -298,24 +298,50 @@
   });
 
   // =========== EXPORT FUNCTIONS ===========
-  // Gera o arquivo via fetch, depois usa navigator.share (Android share sheet)
-  // Fallback: window.open
+  // Usa Capacitor Share/Filesystem para funcionar no Android WebView
   async function exportar(endpoint, filename){
     try{
+      // Busca o arquivo com auth
       const res = await fetch(endpoint, { headers:{'Authorization':'Bearer '+token} });
-      if(!res.ok) throw new Error('Erro ao gerar arquivo');
+      if(!res.ok) throw new Error('Erro ao gerar arquivo ('+res.status+')');
       const blob = await res.blob();
-      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
 
-      // Tenta navigator.share (abre share sheet do Android)
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({ files:[file], title: filename });
+      // Converte blob para base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Tenta usar Capacitor Share (abre share sheet nativo do Android)
+      if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
+        const fs = window.Capacitor.Plugins.Filesystem;
+        // Salva no cache
+        await fs.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+        // Compartilha via share sheet nativo
+        if(window.Capacitor.Plugins.Share){
+          const share = window.Capacitor.Plugins.Share;
+          const mimeType = filename.endsWith('.csv') ? 'text/csv' : filename.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
+          try {
+            await share.share({ title: filename, files: [{ url: 'cache://'+filename, mimeType: mimeType }] });
+            return;
+          } catch(shareErr){
+            // User cancelou o share - nao e erro
+            if(shareErr.message && shareErr.message.includes('cancel')) return;
+          }
+        }
+        // Fallback: abre no navegador
+        window.open(endpoint + (endpoint.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token), '_blank');
         return;
       }
-      // Fallback: window.open (abre em nova aba)
+
+      // Fallback sem Capacitor: <a download>
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(()=>URL.revokeObjectURL(url), 10000);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
     }catch(e){
       console.error('Erro export:', e);
       if(e.name !== 'AbortError') alert('Erro ao exportar: '+e.message);
@@ -336,16 +362,30 @@
       const res = await fetch('api/backup',{headers:{'Authorization':'Bearer '+token}});
       if(!res.ok) throw new Error('Erro ao gerar backup');
       const data = await res.json();
-      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-      const file = new File([blob],'backup_recnc_'+new Date().toISOString().slice(0,10)+'.json',{type:'application/json'});
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'Backup RECNC'});
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href=url; a.download=file.name;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      const backupJson = JSON.stringify(data,null,2);
+      const backupFilename = 'backup_recnc_'+new Date().toISOString().slice(0,10)+'.json';
+
+      // Usa Capacitor se disponivel
+      if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
+        const base64 = btoa(unescape(encodeURIComponent(backupJson)));
+        const fs = window.Capacitor.Plugins.Filesystem;
+        await fs.writeFile({ path: backupFilename, data: base64, directory: 'CACHE' });
+        if(window.Capacitor.Plugins.Share){
+          try {
+            await window.Capacitor.Plugins.Share.share({ title: backupFilename, files: [{ url: 'cache://'+backupFilename, mimeType: 'application/json' }] });
+            alert('Backup baixado!');
+            return;
+          } catch(shareErr){
+            if(shareErr.message && shareErr.message.includes('cancel')) return;
+          }
+        }
       }
+      // Fallback
+      const blob = new Blob([backupJson],{type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=backupFilename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       alert('Backup baixado!');
     }catch(e){ console.error(e); alert('Erro: '+e.message); }
   });
