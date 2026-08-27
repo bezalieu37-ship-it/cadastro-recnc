@@ -374,9 +374,29 @@ app.get('/api/pessoas/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar pessoa.' });
   }
 });
-app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, res) => {
-  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = req.body;
+app.put('/api/pessoas/:id', authMiddleware, async (req, res) => {
+  // Processar body — pode vir como JSON ou como multipart (com foto)
+  // Se veio multipart, multer não rodou como middleware, então parseamos manualmente
+  let body = req.body || {};
+  let fotoFile = null;
+
+  // Se o Content-Type é multipart, o express.json() não parseou — precisamos do multer
+  if (req.is('multipart/form-data')) {
+    // Usar multer de forma promise-based para este request específico
+    await new Promise((resolve, reject) => {
+      upload.single('foto')(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    body = req.body || {};
+    fotoFile = req.file || null;
+  }
+
+  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = body;
   let fotoUrl = foto_url || '';
+
+  console.log('[PUT /api/pessoas/' + req.params.id + '] body keys:', Object.keys(body), 'nome:', nome_completo);
 
   try {
     // Verificar permissao: admin ou acompanhante
@@ -389,12 +409,12 @@ app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, r
     }
 
     // Se enviou nova foto, fazer upload
-    if (req.file) {
-      const ext = req.file.mimetype === 'image/png' ? 'png' : req.file.mimetype === 'image/webp' ? 'webp' : 'jpg';
+    if (fotoFile) {
+      const ext = fotoFile.mimetype === 'image/png' ? 'png' : fotoFile.mimetype === 'image/webp' ? 'webp' : 'jpg';
       const fileName = `fotos/${crypto.randomUUID()}.${ext}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('Cadastro-Fotos')
-        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+        .upload(fileName, fotoFile.buffer, { contentType: fotoFile.mimetype });
 
       if (!uploadError) {
         const { data: urlData } = supabase.storage.from('Cadastro-Fotos').getPublicUrl(fileName);
@@ -409,6 +429,7 @@ app.put('/api/pessoas/:id', authMiddleware, upload.single('foto'), async (req, r
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
     }
+    console.log('[PUT OK] Pessoa', req.params.id, 'atualizada');
     res.json({ message: 'Pessoa atualizada com sucesso.' });
   } catch (error) {
     console.error('Erro ao atualizar pessoa:', error);
