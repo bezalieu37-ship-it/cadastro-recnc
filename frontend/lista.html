@@ -781,18 +781,21 @@
       reader.readAsDataURL(blob);
     });
 
-    // Tenta Capacitor Share
+    // Tenta Capacitor Share com URIs reais
     if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem){
-      const fs = window.Capacitor.Plugins.Filesystem;
-      await fs.writeFile({ path: filename, data: base64, directory: 'CACHE' });
-      if(window.Capacitor.Plugins.Share){
-        try {
-          await window.Capacitor.Plugins.Share.share({ title: filename, files: [{ url: 'cache://'+filename, mimeType: mimeType }] });
-          return;
-        } catch(shareErr){
-          if(shareErr.message && shareErr.message.includes('cancel')) return;
+      try {
+        const fs = window.Capacitor.Plugins.Filesystem;
+        const writeFileResult = await fs.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+        if(window.Capacitor.Plugins.Share){
+          try {
+            await window.Capacitor.Plugins.Share.share({ title: filename, files: [writeFileResult.uri] });
+            return;
+          } catch(shareErr){
+            if(shareErr.message && shareErr.message.includes('cancel')) return;
+            console.warn('Share error:', shareErr);
+          }
         }
-      }
+      } catch(fsErr) { console.warn('Filesystem error:', fsErr); }
     }
     // Fallback: <a download>
     const url = URL.createObjectURL(blob);
