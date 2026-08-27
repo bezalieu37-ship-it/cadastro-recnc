@@ -77,7 +77,7 @@
             </div>
 
             <!-- Endereco -->
-            <div class="section-title mt-4"><i class="fas fa-map-marker-alt"></i> Endereco</div>
+            <div class="section-title mt-4"><i class="fas fa-map-marker-alt"></i> Endereço</div>
 
             <div class="mb-3">
               <ul class="nav nav-tabs" id="enderecoTabs" role="tablist">
@@ -88,7 +88,7 @@
                 </li>
                 <li class="nav-item" role="presentation">
                   <button class="nav-link" id="tab-rua" data-bs-toggle="tab" data-bs-target="#pane-rua" type="button" role="tab">
-                    <i class="fas fa-road me-1"></i>Rua / Numero
+                    <i class="fas fa-road me-1"></i>Rua / Número
                   </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -118,7 +118,7 @@
                   <div class="row g-2 mt-1">
                     <div class="col-md-12">
                       <label class="form-label-custom small" for="cidade">Cidade</label>
-                      <input type="text" class="form-control form-control-custom" id="cidade" placeholder="Ex: Sao Paulo">
+                      <input type="text" class="form-control form-control-custom" id="cidade" placeholder="Ex: São Paulo">
                     </div>
                   </div>
                   <small class="text-muted d-block mt-2"><i class="fas fa-info-circle me-1"></i>Opcional. Digite o CEP e clique em Buscar para preencher automaticamente.</small>
@@ -131,7 +131,7 @@
                       <input type="text" class="form-control form-control-custom" id="rua" placeholder="Ex: Rua das Flores" required>
                     </div>
                     <div class="col-md-4">
-                      <label class="form-label-custom small" for="numero">Numero <span class="text-danger">*</span></label>
+                      <label class="form-label-custom small" for="numero">Número <span class="text-danger">*</span></label>
                       <input type="text" class="form-control form-control-custom" id="numero" placeholder="123" required>
                     </div>
                   </div>
@@ -150,7 +150,7 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label-custom" for="pontoReferencia">Ponto de Referencia <span class="text-danger">*</span></label>
+              <label class="form-label-custom" for="pontoReferencia">Ponto de Referência <span class="text-danger">*</span></label>
               <input type="text" class="form-control form-control-custom" id="pontoReferencia" placeholder="Ex: Em frente a padaria" required>
             </div>
 
@@ -208,7 +208,7 @@
                 <input type="file" id="fotoUpload" accept="image/jpeg,image/png,image/webp" style="display:none;">
               </div>
               <img id="previewImage" src="#" alt="Preview" class="preview-image mt-2 d-none">
-              <small class="text-muted d-block mt-1"><i class="fas fa-info-circle me-1"></i>JPG, PNG ou WEBP | Maximo 4MB</small>
+              <small class="text-muted d-block mt-1"><i class="fas fa-info-circle me-1"></i>JPG, PNG ou WEBP | Máximo 4MB</small>
             </div>
 
             <!-- Submit -->
@@ -270,7 +270,7 @@
       // Mudar titulo
       document.querySelector('.card-header h5').innerHTML = '<i class="fas fa-user-edit me-2 text-primary"></i>Editar Cadastro';
       document.title = 'Cadastro RECNC - Editar Cadastro';
-      document.getElementById('btnSalvar').innerHTML = '<i class="fas fa-save me-2"></i>Salvar Alteracoes';
+      document.getElementById('btnSalvar').innerHTML = '<i class="fas fa-save me-2"></i>Salvar Alterações';
       document.getElementById('pessoaId').value = p.id;
       editFotoAtual = p.foto_url || '';
 
@@ -344,7 +344,7 @@
       }
     } catch (e) {
       console.error('Erro ao carregar pessoa:', e);
-      alert('Erro ao carregar dados para edicao.');
+      alert('Erro ao carregar dados para edição.');
       window.location.href = 'lista.html';
     }
   }
@@ -357,7 +357,7 @@
 
   async function buscarCep() {
     const cep = cepInput.value.replace(/\D/g, '');
-    if (cep.length !== 8) { alert('Digite um CEP valido com 8 digitos.'); return; }
+    if (cep.length !== 8) { alert('Digite um CEP válido com 8 dígitos.'); return; }
     btnBuscarCep.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Buscando...';
     btnBuscarCep.disabled = true;
     try {
@@ -371,7 +371,7 @@
         const tabRua = document.getElementById('tab-rua');
         if (tabRua) { new bootstrap.Tab(tabRua).show(); setTimeout(() => document.getElementById('numero').focus(), 300); }
       } else {
-        alert('CEP nao encontrado. Preencha manualmente.');
+        alert('CEP não encontrado. Preencha manualmente.');
       }
     } catch (e) { alert('Erro ao consultar CEP.'); }
     finally { btnBuscarCep.innerHTML = '<i class="fas fa-search me-1"></i>Buscar'; btnBuscarCep.disabled = false; }
@@ -396,8 +396,8 @@
     fotoUpload.addEventListener('change', function() {
       const file = this.files[0];
       if (!file) return;
-      if (!file.type.startsWith('image/')) { alert('Selecione uma imagem valida.'); this.value = ''; return; }
-      if (file.size > 5 * 1024 * 1024) { alert('Maximo 5MB.'); this.value = ''; return; }
+      if (!file.type.startsWith('image/')) { alert('Selecione uma imagem válida.'); this.value = ''; return; }
+      if (file.size > 5 * 1024 * 1024) { alert('Máximo 5MB.'); this.value = ''; return; }
       selectedFile = file;
       const reader = new FileReader();
       reader.onload = (e) => { previewImage.src = e.target.result; previewImage.classList.remove('d-none'); };
@@ -437,8 +437,8 @@
     // Validacoes
     if (!nomeCompleto) { alert('Preencha o Nome Completo.'); return; }
     if (!telefone) { alert('Preencha o Telefone.'); return; }
-    if (!endereco) { alert('Preencha o endereco (Rua, Numero e Bairro).'); return; }
-    if (!pontoReferencia) { alert('Preencha o Ponto de Referencia.'); return; }
+    if (!endereco) { alert('Preencha o endereço (Rua, Número e Bairro).'); return; }
+    if (!pontoReferencia) { alert('Preencha o Ponto de Referência.'); return; }
     if (!tipoCadastro) { alert('Selecione o Tipo de Cadastro (NC ou REC).'); return; }
     if (!acompanhante) { alert('Selecione o Acompanhamento.'); return; }
 
@@ -479,11 +479,11 @@
       }
     } catch (err) {
       console.error('Erro:', err);
-      alert('Erro de conexao. Verifique se o backend esta rodando.');
+      alert('Erro de conexão. Verifique se o backend está rodando.');
     }
     btnSalvar.disabled = false;
     btnSalvar.innerHTML = editId
-      ? '<i class="fas fa-save me-2"></i>Salvar Alteracoes'
+      ? '<i class="fas fa-save me-2"></i>Salvar Alterações'
       : '<i class="fas fa-save me-2"></i>Salvar Cadastro';
   });
 })();

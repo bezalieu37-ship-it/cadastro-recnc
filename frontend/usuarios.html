@@ -50,7 +50,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
         <li class="nav-item"><a class="nav-link" href="lista.html">Lista</a></li>
-        <li class="nav-item" id="navUsuarios"><a class="nav-link active" href="usuarios.html">Usuarios</a></li>
+        <li class="nav-item" id="navUsuarios"><a class="nav-link active" href="usuarios.html">Usuários</a></li>
       </ul>
     </div>
   </div>
@@ -65,10 +65,10 @@
             <a href="dashboard.html" class="btn btn-sm btn-outline-secondary" title="Voltar">
               <i class="fas fa-arrow-left"></i>
             </a>
-            <h5 class="mb-0 fw-bold"><i class="fas fa-users-gear me-2 text-primary"></i>Gerenciar Usuarios</h5>
+            <h5 class="mb-0 fw-bold"><i class="fas fa-users-gear me-2 text-primary"></i>Gerenciar Usuários</h5>
           </div>
-          <button class="btn btn-primary btn-sm" id="btnNovoUsuario" title="Adicionar novo usuario">
-            <i class="fas fa-user-plus me-1"></i> Novo Usuario
+          <button class="btn btn-primary btn-sm" id="btnNovoUsuario" title="Adicionar novo usuário">
+            <i class="fas fa-user-plus me-1"></i> Novo Usuário
           </button>
         </div>
         <div class="card-body p-0">
@@ -79,12 +79,12 @@
   </div>
 </div>
 
-<!-- Modal: Novo Usuario -->
+<!-- Modal: Novo Usuário -->
 <div class="modal fade" id="modalNovoUsuario" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px; border:none;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2 text-primary"></i>Novo Usuario</h5>
+        <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2 text-primary"></i>Novo Usuário</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form id="formNovoUsuario">
@@ -101,7 +101,7 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Perfil</label>
             <select class="form-select" id="novoPerfil">
-              <option value="usuario">Usuario</option>
+              <option value="usuario">Usuário</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -115,12 +115,12 @@
   </div>
 </div>
 
-<!-- Modal: Editar Usuario -->
+<!-- Modal: Editar Usuário -->
 <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px; border:none;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i>Editar Usuario</h5>
+        <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i>Editar Usuário</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form id="formEditarUsuario">
@@ -137,7 +137,7 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Perfil</label>
             <select class="form-select" id="editarPerfil">
-              <option value="usuario">Usuario</option>
+              <option value="usuario">Usuário</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -156,11 +156,11 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px; border:none;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Excluir Usuario</h5>
+        <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Excluir Usuário</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p>Tem certeza que deseja excluir este usuario?</p>
+        <p>Tem certeza que deseja excluir este usuário?</p>
         <p class="text-danger fw-bold" id="excluirNome"></p>
       </div>
       <div class="modal-footer border-0 pt-0">
@@ -209,9 +209,9 @@
         renderUsuarios(data);
       }
     } catch (err) {
-      console.error('Erro ao carregar usuarios:', err);
+      console.error('Erro ao carregar usuários:', err);
       document.getElementById('usuariosContainer').innerHTML =
-        '<div class="empty-state"><i class="fas fa-exclamation-circle mb-3"></i><p>Erro ao carregar usuarios.</p></div>';
+        '<div class="empty-state"><i class="fas fa-exclamation-circle mb-3"></i><p>Erro ao carregar usuários.</p></div>';
     }
   }
 
@@ -219,7 +219,7 @@
   function renderUsuarios(list) {
     const container = document.getElementById('usuariosContainer');
     if (!list || list.length === 0) {
-      container.innerHTML = '<div class="empty-state"><i class="fas fa-users mb-3"></i><p>Nenhum usuario encontrado.</p></div>';
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-users mb-3"></i><p>Nenhum usuário encontrado.</p></div>';
       return;
     }
     container.innerHTML = '';
@@ -236,9 +236,9 @@
       card.innerHTML = `
         <div class="user-avatar">${initials}</div>
         <div class="user-info">
-          <div class="user-name">${u.nome}${isMe ? ' <small class="text-muted">(Voce)</small>' : ''}</div>
+          <div class="user-name">${u.nome}${isMe ? ' <small class="text-muted">(Você)</small>' : ''}</div>
         </div>
-        <span class="badge ${badgeClass}">${u.perfil === 'admin' ? 'Admin' : 'Usuario'}</span>
+        <span class="badge ${badgeClass}">${u.perfil === 'admin' ? 'Admin' : 'Usuário'}</span>
         <div class="d-flex gap-1">
           <button class="btn btn-sm btn-outline-primary" onclick="window.__editarUsuario(${u.id})" title="Editar">
             <i class="fas fa-pen"></i>
@@ -278,7 +278,7 @@
         modalNovo.hide();
         carregarUsuarios();
       } else {
-        alert(data.error || 'Erro ao criar usuario.');
+        alert(data.error || 'Erro ao criar usuário.');
       }
     } catch (err) {
       alert('Erro de conexao.');
@@ -336,7 +336,7 @@
   // Excluir usuario
   window.__excluirUsuario = function(id, nome, isSelf) {
     if (isSelf) {
-      alert('Voce nao pode excluir sua propria conta.');
+      alert('Você não pode excluir sua própria conta.');
       return;
     }
     excluirId = id;

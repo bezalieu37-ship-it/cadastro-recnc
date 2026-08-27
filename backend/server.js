@@ -168,12 +168,12 @@ app.post('/api/register', async (req, res) => {
       { expiresIn: '24h' }
     );
     res.status(201).json({
-      message: 'Usuario criado com sucesso.',
+      message: 'Usuário criado com sucesso.',
       token,
       user: { id: userId, nome, perfil }
     });
   } catch (error) {
-    console.error('Erro ao registrar usuario:', error);
+    console.error('Erro ao registrar usuário:', error);
     res.status(500).json({ error: 'Erro no servidor.' });
   }
 });
@@ -218,8 +218,8 @@ app.get('/api/usuarios', authMiddleware, adminMiddleware, async (req, res) => {
     const result = await pool.query('SELECT id, nome, perfil, data_criacao FROM usuarios');
     res.json(result.rows);
   } catch (error) {
-    console.error('Erro ao buscar usuarios:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuarios.' });
+    console.error('Erro ao buscar usuários:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuários.' });
   }
 });
 
@@ -228,8 +228,8 @@ app.get('/api/usuarios/list', authMiddleware, async (req, res) => {
     const result = await pool.query('SELECT id, nome FROM usuarios ORDER BY nome');
     res.json(result.rows);
   } catch (error) {
-    console.error('Erro ao buscar lista de usuarios:', error);
-    res.status(500).json({ error: 'Erro ao buscar lista de usuarios.' });
+    console.error('Erro ao buscar lista de usuários:', error);
+    res.status(500).json({ error: 'Erro ao buscar lista de usuários.' });
   }
 });
 
@@ -244,10 +244,10 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, async (req, res) => {
       'INSERT INTO usuarios (nome, senha, perfil) VALUES ($1, $2, $3) RETURNING id',
       [nome, saltHash, perfil || 'usuario']
     );
-    res.json({ message: 'Usuario criado com sucesso.', userId: result.rows[0].id });
+    res.json({ message: 'Usuário criado com sucesso.', userId: result.rows[0].id });
   } catch (error) {
-    console.error('Erro ao criar usuario:', error);
-    res.status(500).json({ error: 'Erro ao criar usuario. Nome ja existe?' });
+    console.error('Erro ao criar usuário:', error);
+    res.status(500).json({ error: 'Erro ao criar usuário. Nome já existe?' });
   }
 });
 app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res) => {
@@ -434,7 +434,7 @@ app.delete('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res
     const userResult = await pool.query('SELECT perfil FROM usuarios WHERE id = $1', [req.params.id]);
     const user = userResult.rows[0];
     if (!user) {
-      return res.status(404).json({ error: 'Usuario nao encontrado.' });
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
     if (user.perfil === 'admin') {
       const countResult = await pool.query("SELECT COUNT(*) as admin_count FROM usuarios WHERE perfil = 'admin'");
@@ -446,10 +446,10 @@ app.delete('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res
       // Desvincular cadastros antes de excluir (setar cadastrado_por como NULL)
       await pool.query('UPDATE pessoas SET cadastrado_por = NULL WHERE cadastrado_por = $1', [req.params.id]);
       await pool.query('DELETE FROM usuarios WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Usuario excluido com sucesso.' });
+    res.json({ message: 'Usuário excluído com sucesso.' });
   } catch (error) {
-    console.error('Erro ao excluir usuario:', error);
-    res.status(500).json({ error: 'Erro ao excluir usuario.' });
+    console.error('Erro ao excluir usuário:', error);
+    res.status(500).json({ error: 'Erro ao excluir usuário.' });
   }
 });
 
@@ -466,19 +466,19 @@ app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res) =
         'UPDATE usuarios SET nome = $1, senha = $2, perfil = $3 WHERE id = $4',
         [nome, hash, perfil || 'usuario', userId]
       );
-      if (result.rowCount === 0) return res.status(404).json({ error: 'Usuario nao encontrado.' });
-      res.json({ message: 'Usuario atualizado com sucesso.' });
+      if (result.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+      res.json({ message: 'Usuário atualizado com sucesso.' });
     } else {
       const result = await pool.query(
         'UPDATE usuarios SET nome = $1, perfil = $2 WHERE id = $3',
         [nome, perfil || 'usuario', userId]
       );
-      if (result.rowCount === 0) return res.status(404).json({ error: 'Usuario nao encontrado.' });
-      res.json({ message: 'Usuario atualizado com sucesso.' });
+      if (result.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+      res.json({ message: 'Usuário atualizado com sucesso.' });
     }
   } catch (error) {
-    console.error('Erro ao atualizar usuario:', error);
-    res.status(500).json({ error: 'Erro ao atualizar usuario. Nome ja existe?' });
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro ao atualizar usuário. Nome já existe?' });
   }
 });
 app.get('/api/estatisticas', authMiddleware, async (req, res) => {
@@ -556,16 +556,17 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     paramIndex++;
   }
 
-  const csvQuery = 'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  const csvQuery = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
     const result = await pool.query(csvQuery, params);
     const pessoas = result.rows;
     const BOM = '\uFEFF';
-    const header = 'ID,Nome Completo,Data Nascimento,Endereco,Ponto Referencia,Telefone,Tipo,Acompanhamento,Cadastrado Por,Data Cadastro\n';
+    const header = 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro\n';
     const rows = pessoas.map(p => {
-      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(p.acompanhante||'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
+      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
+      const acompName = p.acomp_nome || p.acompanhante || '-';
+      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
     }).join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv');
@@ -607,7 +608,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     paramIndex++;
   }
 
-  const query = 'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
     const result = await pool.query(query, params);
@@ -615,85 +616,96 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
     // Gerar PDF real com PDFKit
     const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=relatorio_recnc_' + new Date().toISOString().slice(0,10) + '.pdf');
     doc.pipe(res);
 
     // --- CABEÇALHO ---
-    doc.fontSize(20).font('Helvetica-Bold').fillColor('#0d6efd').text('CADASTRO RECNC', 40, 40);
-    doc.fontSize(12).font('Helvetica').fillColor('#333').text('Relatorio de Cadastros', 40, 65);
-    doc.moveDown(0.3);
+    doc.fontSize(20).font('Helvetica-Bold').fillColor('#0d6efd').text('CADASTRO RECNC', 30, 30);
+    doc.fontSize(11).font('Helvetica').fillColor('#333').text('Relatório de Cadastros', 30, 55);
+    doc.moveDown(0.2);
     doc.fontSize(9).fillColor('#666')
-      .text('Gerado em: ' + new Date().toLocaleString('pt-BR') + '  |  Total: ' + pessoas.length + ' registro(s)', 40, 82);
-    doc.moveTo(40, 100).lineTo(812, 100).lineWidth(1).strokeColor('#0d6efd').stroke();
+      .text('Gerado em: ' + new Date().toLocaleString('pt-BR') + '  |  Total: ' + pessoas.length + ' registro(s)', 30, 72);
+    doc.moveTo(30, 90).lineTo(822, 90).lineWidth(1).strokeColor('#0d6efd').stroke();
 
     // --- TABELA ---
-    const startY = 115;
-    const colX = [40, 85, 240, 320, 440, 570, 660, 750];
-    const colW = [45, 155, 80, 120, 130, 90, 90, 60];
-    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereco', 'Ponto Ref.', 'Telefone', 'Tipo', 'Data'];
+    const startY = 100;
+    // 9 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acompanhado Por, Tipo, Data Cad
+    const colX = [30, 65, 215, 300, 445, 575, 660, 740, 795];
+    const colW = [35, 150, 85, 145, 130, 85, 80, 55, 27];
+    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data'];
 
     // Header row
-    doc.rect(40, startY, 772, 20).fill('#0d6efd');
-    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(8);
-    headers.forEach((h, i) => doc.text(h, colX[i] + 4, startY + 6, { width: colW[i] }));
+    doc.rect(30, startY, 792, 18).fill('#0d6efd');
+    doc.fillColor('#fff').font('Helvetica-Bold').fontSize(7);
+    headers.forEach((h, i) => doc.text(h, colX[i] + 3, startY + 5, { width: colW[i] }));
 
     // Data rows
-    let y = startY + 22;
-    doc.font('Helvetica').fontSize(7.5).fillColor('#333');
+    let y = startY + 20;
+    doc.font('Helvetica').fontSize(7).fillColor('#333');
 
     function tipoLabel(t) {
-      if (t === 'novo_nascimento') return 'Novo Nascimento';
-      if (t === 'reconciliacao') return 'Reconciliacao';
-      return 'Novo Congregado';
+      if (t === 'novo_nascimento') return 'Novo Nas.';
+      if (t === 'reconciliacao') return 'Reconcil.';
+      return 'Novo Cong.';
     }
+
+    // Resolver nome do acompanhante
+    const userMap = {};
+    pessoas.forEach(p => {
+      if (p.acompanhante && !userMap[p.acompanhante]) userMap[p.acompanhante] = String(p.acompanhante);
+    });
 
     pessoas.forEach((p, idx) => {
       // Quebra de página
-      if (y > 560) {
+      if (y > 570) {
         doc.addPage();
-        y = 40;
-        // Re-render header on new page
-        doc.rect(40, y, 772, 20).fill('#0d6efd');
-        doc.fillColor('#fff').font('Helvetica-Bold').fontSize(8);
-        headers.forEach((h, i) => doc.text(h, colX[i] + 4, y + 6, { width: colW[i] }));
-        y += 22;
-        doc.font('Helvetica').fontSize(7.5).fillColor('#333');
+        y = 30;
+        doc.rect(30, y, 792, 18).fill('#0d6efd');
+        doc.fillColor('#fff').font('Helvetica-Bold').fontSize(7);
+        headers.forEach((h, i) => doc.text(h, colX[i] + 3, y + 5, { width: colW[i] }));
+        y += 20;
+        doc.font('Helvetica').fontSize(7).fillColor('#333');
       }
 
       // Alternating row bg
       if (idx % 2 === 0) {
-        doc.rect(40, y, 772, 16).fill('#f8f9fa');
+        doc.rect(30, y, 792, 14).fill('#f8f9fa');
       }
 
-      const rowY = y + 3;
-      const nome = (p.nome_completo || '').substring(0, 28);
-      const ender = (p.endereco || '').substring(0, 22);
-      const ref = (p.ponto_referencia || '').substring(0, 22);
+      const rowY = y + 2;
+      const nome = (p.nome_completo || '-');
+      const ender = (p.endereco || '-');
+      const ref = (p.ponto_referencia || '-');
       const tel = (p.telefone || '-');
       const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+      const acomp = p.acomp_nome || String(p.acompanhante || '-');
 
       doc.fillColor('#333');
-      doc.text(String(p.id), colX[0] + 4, rowY, { width: colW[0] });
-      doc.text(nome, colX[1] + 4, rowY, { width: colW[1] });
-      doc.text(p.data_nascimento || '-', colX[2] + 4, rowY, { width: colW[2] });
-      doc.text(ender, colX[3] + 4, rowY, { width: colW[3] });
-      doc.text(ref, colX[4] + 4, rowY, { width: colW[4] });
-      doc.text(tel, colX[5] + 4, rowY, { width: colW[5] });
-      doc.text(tipoLabel(p.tipo_cadastro), colX[6] + 4, rowY, { width: colW[6] });
-      doc.text(data, colX[7] + 4, rowY, { width: colW[7] });
+      doc.text(String(p.id), colX[0] + 3, rowY, { width: colW[0], ellipsis: true });
+      doc.text(nome, colX[1] + 3, rowY, { width: colW[1], ellipsis: true });
+      doc.text(p.data_nascimento || '-', colX[2] + 3, rowY, { width: colW[2], ellipsis: true });
+      doc.text(ender, colX[3] + 3, rowY, { width: colW[3], ellipsis: true });
+      doc.text(ref, colX[4] + 3, rowY, { width: colW[4], ellipsis: true });
+      doc.text(tel, colX[5] + 3, rowY, { width: colW[5], ellipsis: true });
+      doc.text(acomp, colX[6] + 3, rowY, { width: colW[6], ellipsis: true });
+      doc.text(tipoLabel(p.tipo_cadastro), colX[7] + 3, rowY, { width: colW[7], ellipsis: true });
+      doc.text(data, colX[8] + 3, rowY, { width: colW[8], ellipsis: true });
 
-      y += 16;
+      y += 14;
     });
 
     // --- RODAPÉ ---
-    doc.moveTo(40, 570).lineTo(812, 570).lineWidth(0.5).strokeColor('#ccc').stroke();
-    doc.fontSize(7).fillColor('#999').text(
-      'Cadastro RECNC - Relatorio gerado automaticamente  |  ' + new Date().toLocaleString('pt-BR'),
-      40, 575, { align: 'center', width: 772 }
-    );
+    const lastPage = doc.page;
+    if (lastPage) {
+      doc.moveTo(30, 575).lineTo(822, 575).lineWidth(0.5).strokeColor('#ccc').stroke();
+      doc.fontSize(7).fillColor('#999').text(
+        'Cadastro RECNC - Relatório gerado automaticamente  |  ' + new Date().toLocaleString('pt-BR'),
+        30, 578, { align: 'center', width: 792 }
+      );
+    }
 
     doc.end();
   } catch (error) {
@@ -736,7 +748,7 @@ app.post('/api/reports/send', authMiddleware, adminMiddleware, async (req, res) 
     const pessoas = result.rows;
 
     const rows = pessoas.map(p => {
-      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliacao' : 'Novo Congregado';
+      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
       return '<tr>\n        <td style="padding:6px;border:1px solid #dee2e6">' + p.id + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + (p.nome_completo || '') + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + (p.endereco || '') + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + (p.telefone || '') + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + tipoLabel + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + (p.acompanhante || '-') + '</td>\n        <td style="padding:6px;border:1px solid #dee2e6">' + new Date(p.data_cadastro).toLocaleDateString('pt-BR') + '</td>\n      </tr>';
     }).join('');
 
@@ -813,7 +825,7 @@ app.get('/api/backup', authMiddleware, adminMiddleware, async (req, res) => {
 app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res) => {
   const { backup } = req.body;
   if (!backup || !backup.tables) {
-    return res.status(400).json({ error: 'Arquivo de backup invalido.' });
+    return res.status(400).json({ error: 'Arquivo de backup inválido.' });
   }
 
   const client = await pool.connect();
@@ -834,7 +846,7 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
             [u.id, u.nome, u.senha, u.perfil || 'usuario', u.data_criacao || new Date().toISOString()]
           );
         } catch (err) {
-          errors.push('Erro ao restaurar usuario ' + u.nome + ': ' + err.message);
+          errors.push('Erro ao restaurar usuário ' + u.nome + ': ' + err.message);
         }
       }
     }

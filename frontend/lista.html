@@ -269,8 +269,8 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
         <li class="nav-item"><a class="nav-link active" href="lista.html">Lista</a></li>
-        <li class="nav-item"><a class="nav-link" href="usuarios.html" id="navUsuarios">Usuarios</a></li>
-        <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatorios</a></li>
+        <li class="nav-item"><a class="nav-link" href="usuarios.html" id="navUsuarios">Usuários</a></li>
+        <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatórios</a></li>
       </ul>
     </div>
   </div>
@@ -296,7 +296,7 @@
         <select class="form-select" id="filtroTipo">
           <option value="all">Todos os tipos</option>
           <option value="novo_nascimento">Novo Nascimento</option>
-          <option value="reconciliacao">Reconciliacao</option>
+          <option value="reconciliacao">Reconciliação</option>
           <option value="novo_congregado">Novo Congregado</option>
         </select>
       </div>
@@ -315,8 +315,8 @@
           <button class="btn btn-outline-secondary btn-export" onclick="exportarPDF()" title="Exportar PDF">
             <i class="fas fa-file-pdf me-1"></i>PDF
           </button>
-          <button class="btn btn-relatorio btn-outline-primary d-none" id="btnRelatorio" onclick="abrirModalRelatorio()" title="Relatorio">
-            <i class="fas fa-chart-bar me-1"></i>Relatorio
+          <button class="btn btn-relatorio btn-outline-primary d-none" id="btnRelatorio" onclick="abrirModalRelatorio()" title="Relatório">
+            <i class="fas fa-chart-bar me-1"></i>Relatório
           </button>
           <button class="btn btn-primary" onclick="novoCadastro()">
             <i class="fas fa-plus me-1"></i>Novo Cadastro
@@ -342,12 +342,12 @@
   </nav>
 </div>
 
-<!-- Modal: Confirmar Exclusao -->
+<!-- Modal: Confirmar Exclusão -->
 <div class="modal fade" id="modalExcluir" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px;border:none;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold" id="modalExcluirLabel"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmar Exclusao</h5>
+        <h5 class="modal-title fw-bold" id="modalExcluirLabel"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmar Exclusão</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
@@ -388,13 +388,13 @@
   <div class="modal-dialog modal-dialog-centered modal-lg report-modal">
     <div class="modal-content" style="border-radius:14px;border:none;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold" id="modalRelatorioLabel"><i class="fas fa-chart-bar me-2 text-primary"></i>Gerar Relatorio</h5>
+        <h5 class="modal-title fw-bold" id="modalRelatorioLabel"><i class="fas fa-chart-bar me-2 text-primary"></i>Gerar Relatório</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Email do destinatario</label>
+            <label class="form-label small fw-semibold">Email do destinatário</label>
             <input type="email" class="form-control" id="reportEmail" placeholder="email@exemplo.com">
           </div>
           <div class="col-md-6">
@@ -402,17 +402,17 @@
             <select class="form-select" id="reportTipo">
               <option value="all">Todos os tipos</option>
               <option value="novo_nascimento">Novo Nascimento</option>
-              <option value="reconciliacao">Reconciliacao</option>
+              <option value="reconciliacao">Reconciliação</option>
               <option value="novo_congregado">Novo Congregado</option>
             </select>
           </div>
           <div class="col-12">
-            <label class="form-label small fw-semibold">Titulo do Relatorio</label>
-            <input type="text" class="form-control" id="reportTitulo" placeholder="Ex: Relatorio Mensal de Cadastros">
+            <label class="form-label small fw-semibold">Título do Relatório</label>
+            <input type="text" class="form-control" id="reportTitulo" placeholder="Ex: Relatório Mensal de Cadastros">
           </div>
           <div class="col-12">
-            <label class="form-label small fw-semibold">Mensagem / Observacoes</label>
-            <textarea class="form-control" id="reportMensagem" rows="3" placeholder="Descricao ou observacoes sobre o relatorio..."></textarea>
+            <label class="form-label small fw-semibold">Mensagem / Observações</label>
+            <textarea class="form-control" id="reportMensagem" rows="3" placeholder="Descrição ou observações sobre o relatório..."></textarea>
           </div>
           <div class="col-12">
             <div class="form-check">
@@ -425,13 +425,13 @@
         </div>
         <!-- Preview area -->
         <div class="mt-3" id="reportPreviewArea" style="display:none;">
-          <label class="form-label small fw-semibold"><i class="fas fa-eye me-1"></i>Preview do Relatorio</label>
+          <label class="form-label small fw-semibold"><i class="fas fa-eye me-1"></i>Preview do Relatório</label>
           <div class="report-preview" id="reportPreviewContent"></div>
         </div>
       </div>
       <div class="modal-footer border-0">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-outline-primary" id="btnPreviaRelatorio"><i class="fas fa-eye me-1"></i>Previa</button>
+        <button type="button" class="btn btn-outline-primary" id="btnPreviaRelatorio"><i class="fas fa-eye me-1"></i>Prévia</button>
         <button type="button" class="btn btn-primary" id="btnGerarRelatorio"><i class="fas fa-file-export me-1"></i>Gerar</button>
       </div>
     </div>
@@ -525,7 +525,7 @@
     pessoas.forEach(p => {
       const isNasc = p.tipo_cadastro === 'novo_nascimento';
       const isNcgr = p.tipo_cadastro === 'novo_congregado';
-      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
+      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliação';
       const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
@@ -668,7 +668,7 @@
       }
     } catch (err) {
       console.error('Erro:', err);
-      alert('Erro de conexao ao excluir.');
+      alert('Erro de conexão ao excluir.');
     }
     pessoaIdExcluir = null;
   });
@@ -692,7 +692,7 @@
 
       const isNasc = p.tipo_cadastro === 'novo_nascimento';
       const isNcgr = p.tipo_cadastro === 'novo_congregado';
-      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliacao';
+      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliação';
       const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleString('pt-BR') : '-';
@@ -706,7 +706,7 @@
         <div class="px-2">
           <div class="detail-row"><span class="detail-label"><i class="fas fa-phone me-1 text-muted"></i>Telefone</span><span class="detail-value">${p.telefone || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-birthday-cake me-1 text-muted"></i>Data Nasc.</span><span class="detail-value">${p.data_nascimento || '-'}</span></div>
-          <div class="detail-row"><span class="detail-label"><i class="fas fa-home me-1 text-muted"></i>Endereco</span><span class="detail-value">${p.endereco || '-'}</span></div>
+          <div class="detail-row"><span class="detail-label"><i class="fas fa-home me-1 text-muted"></i>Endereço</span><span class="detail-value">${p.endereco || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Ref.</span><span class="detail-value">${p.ponto_referencia || '-'}</span></div>
           ${p.acompanhante ? '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-friends me-1 text-muted"></i>Acompanhamento</span><span class="detail-value">' + p.acompanhante + '</span></div>' : ''}
           <div class="detail-row"><span class="detail-label"><i class="fas fa-user-check me-1 text-muted"></i>Cadastrado por</span><span class="detail-value">${p.admin_nome || '-'}</span></div>
@@ -715,7 +715,7 @@
       `;
     } catch (err) {
       console.error('Erro detalhe:', err);
-      $body.innerHTML = '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Nao foi possivel carregar os detalhes.</p><p class="small">' + (err.message || err) + '</p></div>';
+      $body.innerHTML = '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Não foi possível carregar os detalhes.</p><p class="small">' + (err.message || err) + '</p></div>';
     }
   }
 
@@ -767,7 +767,7 @@
     }
   }
 
-  // Funcao generica de exportacao que funciona no WebView
+  // Função genérica de exportação que funciona no WebView
   async function exportarArquivo(endpoint, filename, mimeType) {
     const res = await fetch(endpoint, { headers:{'Authorization':'Bearer '+token} });
     if(!res.ok) throw new Error('Erro ao gerar arquivo ('+res.status+')');
@@ -841,10 +841,10 @@
         document.getElementById('reportPreviewContent').innerHTML = data.html_content;
         document.getElementById('reportPreviewArea').style.display = '';
       } else {
-        alert(data.error || 'Erro ao gerar previa.');
+        alert(data.error || 'Erro ao gerar prévia.');
       }
     } catch (err) {
-      alert('Erro de conexao ao gerar previa.');
+      alert('Erro de conexão ao gerar prévia.');
     }
   });
 
@@ -863,10 +863,10 @@
         win.document.close();
         bootstrap.Modal.getInstance(document.getElementById('modalRelatorio')).hide();
       } else {
-        alert(data.error || 'Erro ao gerar relatorio.');
+        alert(data.error || 'Erro ao gerar relatório.');
       }
     } catch (err) {
-      alert('Erro de conexao ao gerar relatorio.');
+      alert('Erro de conexão ao gerar relatório.');
     }
   });
 

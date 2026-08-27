@@ -122,7 +122,7 @@
     <div class="nav-links">
       <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i>Painel</a>
       <a href="lista.html" class="hide-m" id="navLista"><i class="fas fa-list me-1"></i>Lista</a>
-      <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuarios</a>
+      <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuários</a>
       <button class="btn-sair" id="btnLogout"><i class="fas fa-right-from-bracket"></i>Sair</button>
     </div>
   </div>
@@ -133,7 +133,7 @@
   <!-- BEM-VINDO -->
   <div class="welcome">
     <div class="welcome-text">
-      <h5><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span id="userName">Usuario</span>!</h5>
+      <h5><i class="fas fa-hand-wave text-warning me-2"></i>Olá, <span id="userName">Usuário</span>!</h5>
       <p><i class="fas fa-calendar-day me-1"></i> <span id="dataAtual"></span></p>
     </div>
     <div class="welcome-btns">
@@ -152,12 +152,12 @@
     <div class="s-card c2">
       <div class="ico"><i class="fas fa-baby"></i></div>
       <div class="num" id="totalNascimento">0</div>
-      <div class="lbl"><i class="fas fa-heart"></i> Nascimentos</div>
+      <div class="lbl"><i class="fas fa-heart"></i> Novos Nascimentos</div>
     </div>
     <div class="s-card c3">
       <div class="ico"><i class="fas fa-handshake"></i></div>
       <div class="num" id="totalReconciliacao">0</div>
-      <div class="lbl"><i class="fas fa-people-arrows"></i> Reconciliacoes</div>
+      <div class="lbl"><i class="fas fa-people-arrows"></i> Reconciliações</div>
     </div>
     <div class="s-card c4">
       <div class="ico"><i class="fas fa-church"></i></div>
@@ -169,13 +169,13 @@
   <!-- ACOES RAPIDAS (ADMIN) -->
   <div class="section" id="secAcoes">
     <div class="section-hdr">
-      <h6><i class="fas fa-bolt text-warning"></i> Acoes Rapidas</h6>
+      <h6><i class="fas fa-bolt text-warning"></i> Ações Rápidas</h6>
     </div>
     <div class="actions" id="actionsGrid">
       <a href="formulario.html" class="act-item"><i class="fas fa-user-plus text-primary"></i>Novo Cadastro</a>
       <a href="lista.html" class="act-item actLista"><i class="fas fa-list-check text-success"></i>Ver Lista</a>
-      <a href="usuarios.html" class="act-item actUsuarios"><i class="fas fa-user-gear text-info"></i>Usuarios</a>
-      <a href="usuarios.html" class="act-item actNovoUsuario"><i class="fas fa-user-plus text-warning"></i>Novo Usuario</a>
+      <a href="usuarios.html" class="act-item actUsuarios"><i class="fas fa-user-gear text-info"></i>Usuários</a>
+      <a href="usuarios.html" class="act-item actNovoUsuario"><i class="fas fa-user-plus text-warning"></i>Novo Usuário</a>
       <button class="act-item" id="btnCSV"><i class="fas fa-file-csv text-success"></i>Exportar CSV</button>
       <button class="act-item" id="btnPDF"><i class="fas fa-file-pdf text-danger"></i>Exportar PDF</button>
       <button class="act-item" id="btnBackup"><i class="fas fa-download text-primary"></i>Backup</button>
@@ -187,7 +187,7 @@
   <!-- ULTIMOS 5 CADASTROS -->
   <div class="section" id="secRecentes">
     <div class="section-hdr">
-      <h6><i class="fas fa-clock-rotate-left text-primary"></i> Ultimos 5 Cadastros</h6>
+      <h6><i class="fas fa-clock-rotate-left text-primary"></i> Últimos 5 Cadastros</h6>
       <a href="lista.html" class="text-primary text-decoration-none" style="cursor:pointer" id="linkVerTodos"><i class="fas fa-arrow-right me-1"></i>Ver todos</a>
     </div>
     <div id="listaRecentes"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhum cadastro</p></div></div>
@@ -217,7 +217,7 @@
     <div class="section-hdr">
       <h6><i class="fas fa-user-friends text-primary"></i> Meus Acompanhamentos <span class="badge bg-primary ms-1" id="badgeAcomp">0</span></h6>
     </div>
-    <div id="listaAcomp"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida a voce</p></div></div>
+    <div id="listaAcomp"><div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuída a você</p></div></div>
   </div>
 
 </div>
@@ -240,7 +240,7 @@
             <div class="col-md-6"><strong>Telefone:</strong> <span id="detTelefone">-</span></div>
             <div class="col-md-6"><strong>Data Nasc:</strong> <span id="detNascimento">-</span></div>
             <div class="col-md-6"><strong>Tipo:</strong> <span id="detTipo" class="badge bg-primary">-</span></div>
-            <div class="col-12"><strong>Endereco:</strong> <span id="detEndereco">-</span></div>
+            <div class="col-12"><strong>Endereço:</strong> <span id="detEndereco">-</span></div>
             <div class="col-12"><strong>Ponto Ref:</strong> <span id="detPontoRef">-</span></div>
             <div class="col-12"><strong>Data Cadastro:</strong> <span id="detData">-</span></div>
           </div>
@@ -258,13 +258,13 @@
             <div class="col-md-6"><label class="form-label small">Tipo</label>
               <select class="form-select form-select-sm" id="editTipo">
                 <option value="novo_nascimento">Novo Nascimento</option>
-                <option value="reconciliacao">Reconciliacao</option>
+                <option value="reconciliacao">Reconciliação</option>
                 <option value="novo_congregado">Novo Congregado</option>
               </select>
             </div>
-            <div class="col-12"><label class="form-label small">Endereco</label><input type="text" class="form-control form-control-sm" id="editEndereco" required></div>
-            <div class="col-12"><label class="form-label small">Ponto Referencia</label><input type="text" class="form-control form-control-sm" id="editPontoRef" required></div>
-            <div class="col-md-6"><label class="form-label small">Acompanhante</label><select class="form-select form-select-sm" id="editAcompanhante"><option value="">Nenhum</option></select></div>
+            <div class="col-12"><label class="form-label small">Endereço</label><input type="text" class="form-control form-control-sm" id="editEndereco" required></div>
+            <div class="col-12"><label class="form-label small">Ponto Referência</label><input type="text" class="form-control form-control-sm" id="editPontoRef" required></div>
+            <div class="col-md-6"><label class="form-label small">Acompanhado por</label><select class="form-select form-select-sm" id="editAcompanhante"><option value="">Nenhum</option></select></div>
             <div class="col-md-6"><label class="form-label small">Nova Foto</label><input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*"></div>
           </div>
           <div class="mt-3 text-end"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Salvar</button></div>
@@ -284,7 +284,7 @@
   const isAdmin = (user.perfil||'').toLowerCase() === 'admin';
 
   // UI base
-  document.getElementById('userName').textContent = user.nome || 'Usuario';
+  document.getElementById('userName').textContent = user.nome || 'Usuário';
   const d = new Date();
   document.getElementById('dataAtual').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
@@ -299,7 +299,7 @@
     // Re-welcome banner
     document.querySelector('.welcome').innerHTML = `
       <div class="welcome-text">
-        <h5><i class="fas fa-hand-wave text-warning me-2"></i>Ola, <span>${user.nome||'Usuario'}</span>!</h5>
+        <h5><i class="fas fa-hand-wave text-warning me-2"></i>Olá, <span>${user.nome||'Usuário'}</span>!</h5>
         <p><i class="fas fa-calendar-day me-1"></i> ${d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
       <div class="welcome-btns"><a href="formulario.html" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i>Novo Cadastro</a></div>
@@ -419,11 +419,11 @@
 
   document.getElementById('backupFileInput')?.addEventListener('change', async function(){
     const file = this.files[0]; if(!file) return;
-    if(!confirm('ATENCAO: Isto SUBSTITUIRÁ todos os dados. Continuar?')){ this.value=''; return; }
+    if(!confirm('ATENÇÃO: Isto SUBSTITUIRÁ todos os dados. Continuar?')){ this.value=''; return; }
     try{
       const text = await file.text();
       const backup = JSON.parse(text);
-      if(!backup.tables){ alert('Arquivo invalido.'); this.value=''; return; }
+      if(!backup.tables){ alert('Arquivo inválido.'); this.value=''; return; }
       const res = await fetch('api/backup/restore',{
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
         body:JSON.stringify({backup})
@@ -464,7 +464,7 @@
       box.innerHTML='';
       data.slice(0,5).forEach(p=>{
         const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
         const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
         const badge = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
         const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
@@ -490,14 +490,14 @@
       const badge = document.getElementById('badgeAcomp');
       if(!res.ok||!data.pessoas||!data.pessoas.length){
         if(badge) badge.textContent='0';
-        box.innerHTML='<div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuida</p></div>';
+        box.innerHTML='<div class="empty"><i class="fas fa-inbox"></i><p>Nenhuma pessoa atribuída</p></div>';
         return;
       }
       if(badge) badge.textContent=data.total||data.pessoas.length;
       box.innerHTML='';
       data.pessoas.forEach(p=>{
         const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
         const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
         const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
         const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
@@ -526,7 +526,7 @@
       document.getElementById('detTelefone').textContent = p.telefone||'-';
       document.getElementById('detEndereco').textContent = p.endereco||'-';
       document.getElementById('detPontoRef').textContent = p.ponto_referencia||'-';
-      document.getElementById('detTipo').textContent = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+      document.getElementById('detTipo').textContent = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
       document.getElementById('detData').textContent = p.data_cadastro?new Date(p.data_cadastro).toLocaleDateString('pt-BR'):'-';
       document.getElementById('detNascimento').textContent = p.data_nascimento||'-';
       const fotoEl = document.getElementById('detFoto');
@@ -579,7 +579,7 @@
       const data=await res.json();
       if(res.ok){ alert('Atualizado!'); bootstrap.Modal.getInstance(document.getElementById('modalDetalhe')).hide(); loadAcomp(); loadStats(); if(isAdmin) loadListaGeral(); }
       else alert(data.error||'Erro ao salvar.');
-    }catch(err){ alert('Erro de conexao.'); }
+    }catch(err){ alert('Erro de conexão.'); }
   });
 
   // =========== LISTA GERAL (ADMIN) ===========
@@ -598,7 +598,7 @@
         previewEl.innerHTML='';
         data.pessoas.slice(0,3).forEach(p=>{
           const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-          const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliacao';
+          const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
           const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
           const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
           const el = document.createElement('div'); el.className='r-item';
