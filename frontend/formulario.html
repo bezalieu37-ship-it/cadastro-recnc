@@ -254,6 +254,103 @@
   }
   carregarUsuariosDropdown();
 
+  // =========== MODO EDICAO ===========
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('id');
+  let editFotoAtual = '';
+
+  async function carregarParaEdicao(id) {
+    try {
+      const res = await fetch('api/pessoas/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) throw new Error('Pessoa nao encontrada');
+      const p = await res.json();
+
+      // Mudar titulo
+      document.querySelector('.card-header h5').innerHTML = '<i class="fas fa-user-edit me-2 text-primary"></i>Editar Cadastro';
+      document.title = 'Cadastro RECNC - Editar Cadastro';
+      document.getElementById('btnSalvar').innerHTML = '<i class="fas fa-save me-2"></i>Salvar Alteracoes';
+      document.getElementById('pessoaId').value = p.id;
+      editFotoAtual = p.foto_url || '';
+
+      // Preencher campos
+      document.getElementById('nomeCompleto').value = p.nome_completo || '';
+      document.getElementById('dataNascimento').value = p.data_nascimento || '';
+      document.getElementById('telefone').value = p.telefone || '';
+      document.getElementById('pontoReferencia').value = p.ponto_referencia || '';
+
+      // Tipo cadastro (radio)
+      if (p.tipo_cadastro) {
+        const radio = document.querySelector('input[name="tipoCadastro"][value="' + p.tipo_cadastro + '"]');
+        if (radio) radio.checked = true;
+      }
+
+      // Data cadastro
+      if (p.data_cadastro) {
+        const dt = new Date(p.data_cadastro);
+        document.getElementById('dataCadastro').value = dt.toISOString().slice(0, 10);
+      }
+
+      // Endereco — preencher campos individuais se possivel
+      if (p.endereco) {
+        // Tentar parsear: "Rua X, 123 - Bairro - Cidade - UF - CEP: 00000-000"
+        const partes = p.endereco.split(' - ');
+        if (partes.length >= 4) {
+          // Ultimo pode ser CEP
+          const lastPart = partes[partes.length - 1];
+          if (lastPart.startsWith('CEP:')) {
+            document.getElementById('cep').value = lastPart.replace('CEP:', '').trim();
+            partes.pop();
+          }
+          if (partes.length >= 3) {
+            document.getElementById('estado').value = partes.pop().trim();
+            document.getElementById('cidade').value = partes.pop().trim();
+            document.getElementById('bairro').value = partes.pop().trim();
+          }
+          if (partes.length >= 1) {
+            const ruaNum = partes.join(' - ').trim();
+            const commaIdx = ruaNum.lastIndexOf(',');
+            if (commaIdx > -1) {
+              document.getElementById('rua').value = ruaNum.substring(0, commaIdx).trim();
+              document.getElementById('numero').value = ruaNum.substring(commaIdx + 1).trim();
+            } else {
+              document.getElementById('rua').value = ruaNum;
+            }
+          }
+          // Ativar aba de rua
+          const tabRua = document.getElementById('tab-rua');
+          if (tabRua) new bootstrap.Tab(tabRua).show();
+        } else {
+          // Fallback: colocar endereco completo na aba rua
+          document.getElementById('rua').value = p.endereco;
+          document.getElementById('numero').value = '';
+          const tabRua = document.getElementById('tab-rua');
+          if (tabRua) new bootstrap.Tab(tabRua).show();
+        }
+      }
+
+      // Acompanhante — aguardar dropdown carregar e selecionar
+      await new Promise(r => setTimeout(r, 500));
+      if (p.acompanhante) {
+        const sel = document.getElementById('acompanhante');
+        sel.value = p.acompanhante;
+      }
+
+      // Foto preview
+      if (p.foto_url) {
+        previewImage.src = p.foto_url;
+        previewImage.classList.remove('d-none');
+      }
+    } catch (e) {
+      console.error('Erro ao carregar pessoa:', e);
+      alert('Erro ao carregar dados para edicao.');
+      window.location.href = 'lista.html';
+    }
+  }
+
+  if (editId) carregarParaEdicao(editId);
+
   // CEP auto-fill
   const cepInput = document.getElementById('cep');
   const btnBuscarCep = document.getElementById('btnBuscarCep');
@@ -360,19 +457,22 @@
       formData.append('telefone', telefone);
       formData.append('tipo_cadastro', tipoCadastro);
       formData.append('acompanhante', acompanhante);
+      if (editId && editFotoAtual) {
+        formData.append('foto_url', editFotoAtual);
+      }
       if (selectedFile) {
         formData.append('foto', selectedFile);
       }
 
-      const res = await fetch('api/pessoas', {
-        method: 'POST',
+      const res = await fetch(editId ? 'api/pessoas/' + editId : 'api/pessoas', {
+        method: editId ? 'PUT' : 'POST',
         headers: { 'Authorization': 'Bearer ' + token },
         body: formData
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || 'Cadastro salvo com sucesso!');
+        alert(data.message || (editId ? 'Cadastro atualizado com sucesso!' : 'Cadastro salvo com sucesso!'));
         window.location.href = 'lista.html';
       } else {
         alert(data.error || 'Erro ao salvar cadastro.');
@@ -382,7 +482,9 @@
       alert('Erro de conexao. Verifique se o backend esta rodando.');
     }
     btnSalvar.disabled = false;
-    btnSalvar.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Cadastro';
+    btnSalvar.innerHTML = editId
+      ? '<i class="fas fa-save me-2"></i>Salvar Alteracoes'
+      : '<i class="fas fa-save me-2"></i>Salvar Cadastro';
   });
 })();
 </script>
