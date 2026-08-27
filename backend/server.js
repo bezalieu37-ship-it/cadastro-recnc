@@ -332,20 +332,27 @@ app.get('/api/pessoas', authMiddleware, async (req, res) => {
 
 app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) => {
   const userId = req.user.id;
+  const isAdmin = req.user.perfil === 'admin';
   const { page = 1, limit = 10 } = req.query;
   const limitNum = parseInt(limit);
   const offset = (parseInt(page) - 1) * limitNum;
-  const params = [userId.toString()];
+  const params = [];
 
   try {
+    let whereClause = '';
+    // Admin vê TODAS as pessoas, nao-admin so ve as atribuidas a ele
+    if (!isAdmin) {
+      whereClause = ' WHERE p.acompanhante = $1';
+      params.push(userId.toString());
+    }
     const countResult = await pool.query(
-      'SELECT COUNT(*) as total FROM pessoas p WHERE p.acompanhante = $1',
+      'SELECT COUNT(*) as total FROM pessoas p' + whereClause,
       params
     );
     const total = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(total / limitNum);
     const dataResult = await pool.query(
-      'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id WHERE p.acompanhante = $1 ORDER BY p.data_cadastro DESC LIMIT $2 OFFSET $3',
+      'SELECT p.*, u.nome as admin_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id' + whereClause + ' ORDER BY p.data_cadastro DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2),
       [...params, limitNum, offset]
     );
     res.json({ pessoas: dataResult.rows, total, totalPages, page: parseInt(page) });
