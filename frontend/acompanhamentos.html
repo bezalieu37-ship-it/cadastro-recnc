@@ -28,28 +28,78 @@
     }
     .user-card .user-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+      gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
       background: #fff;
     }
     .user-card .user-header:hover { background: #f8f9fa; }
-    .user-card .user-body {
-      padding: 0; background: #fff;
+    .user-card .user-header .user-info { min-width: 0; flex: 1; }
+    .user-card .user-header .user-name {
+      font-weight: 700; font-size: 1rem; color: #1e293b;
+      overflow-wrap: break-word; word-break: break-word;
     }
-    .badge-pessoa {
-      background: #eef2ff; color: #4f46e5; border-radius: 20px;
-      padding: 2px 12px; font-size: 0.78rem; font-weight: 600;
+    .user-card .user-body { padding: 0; background: #fff; }
+
+    .badge-admin { background: #dcfce7; color: #15803d; border-radius: 20px; padding: 2px 12px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+    .badge-usuario { background: #fef3c7; color: #b45309; border-radius: 20px; padding: 2px 12px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+
+    /* Card de pessoa (tocavel) */
+    .person-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px; cursor: pointer; background: #fff;
+      border-bottom: 1px solid #f1f5f9; transition: background 0.12s;
     }
-    .badge-admin { background: #dcfce7; color: #15803d; border-radius: 20px; padding: 2px 12px; font-size: 0.78rem; font-weight: 600; }
-    .badge-usuario { background: #fef3c7; color: #b45309; border-radius: 20px; padding: 2px 12px; font-size: 0.78rem; font-weight: 600; }
-    .table-pessoas { margin-bottom: 0; }
-    .table-pessoas th {
-      background: #f8f9fa; font-size: 0.75rem; text-transform: uppercase;
-      letter-spacing: 0.4px; color: #6c757d; border-bottom: 1px solid #dee2e6;
-      padding: 10px 20px;
+    .person-item:last-child { border-bottom: none; }
+    .person-item:hover { background: #f1f5f9; }
+    .person-item:active { background: #e2e8f0; }
+    .person-item .person-main { flex: 1; min-width: 0; }
+    .person-item .person-name {
+      font-weight: 600; font-size: 0.95rem; color: #0f172a;
+      overflow-wrap: break-word; word-break: break-word; line-height: 1.35;
     }
-    .table-pessoas td { padding: 10px 20px; vertical-align: middle; font-size: 0.9rem; }
-    .empty-state {
-      padding: 24px; text-align: center; color: #adb5bd;
+    .person-item .person-meta {
+      font-size: 0.8rem; color: #64748b; margin-top: 3px;
+      overflow-wrap: break-word; word-break: break-word;
+      display: flex; flex-wrap: wrap; gap: 4px 14px;
+    }
+    .person-item .person-chevron { color: #94a3b8; font-size: 0.95rem; flex-shrink: 0; }
+    .person-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: #eef2ff; color: #4f46e5;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+
+    /* Badges de tipo com wrap */
+    .badge-tipo {
+      display: inline-block; border-radius: 20px; padding: 2px 10px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .badge-tipo.nc   { background: #eef2ff; color: #4f46e5; }
+    .badge-tipo.rec  { background: #fef3c7; color: #b45309; }
+    .badge-tipo.ncgr { background: #e0f2fe; color: #0369a1; }
+
+    .empty-state { padding: 24px; text-align: center; color: #adb5bd; }
+
+    /* Modal de detalhes */
+    .modal-content { border: none; border-radius: 16px; overflow: hidden; }
+    .detail-photo {
+      width: 100%; height: 220px; object-fit: cover; background: #eef2ff;
+      display: flex; align-items: center; justify-content: center; color: #4f46e5; font-size: 3rem;
+    }
+    .detail-body { padding: 20px 22px 24px; }
+    .detail-item {
+      display: flex; gap: 12px; padding: 10px 0; align-items: flex-start;
+      border-bottom: 1px solid #f1f5f9; overflow-wrap: break-word; word-break: break-word;
+    }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-item .d-icon {
+      width: 34px; height: 34px; border-radius: 10px; background: #f1f5f9; color: #475569;
+      display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .detail-item .d-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: #94a3b8; margin-bottom: 1px; }
+    .detail-item .d-value { font-size: 0.95rem; color: #0f172a; font-weight: 500; }
+    .detail-title {
+      font-size: 1.05rem; font-weight: 700; color: #0f172a;
+      overflow-wrap: break-word; word-break: break-word; line-height: 1.35;
     }
   </style>
 </head>
@@ -135,6 +185,74 @@
   </div>
 </div>
 
+<!-- Modal de Detalhes da Pessoa -->
+<div class="modal fade" id="modalDetalhe" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="position-relative">
+        <div id="fotoArea" class="detail-photo">
+          <i class="fas fa-user"></i>
+        </div>
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white rounded-circle p-2" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-title mb-1" id="detNome">–</div>
+        <div class="mb-3" id="detTipo"></div>
+
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-calendar-day"></i></div>
+          <div>
+            <div class="d-label">Data de Nascimento</div>
+            <div class="d-value" id="detNascimento">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-phone"></i></div>
+          <div>
+            <div class="d-label">Telefone</div>
+            <div class="d-value" id="detTelefone">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <div>
+            <div class="d-label">Endereço</div>
+            <div class="d-value" id="detEndereco">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-location-dot"></i></div>
+          <div>
+            <div class="d-label">Ponto de Referência</div>
+            <div class="d-value" id="detPontoRef">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-user-check"></i></div>
+          <div>
+            <div class="d-label">Acompanhado por</div>
+            <div class="d-value" id="detAcomp">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-user-plus"></i></div>
+          <div>
+            <div class="d-label">Cadastrado por</div>
+            <div class="d-value" id="detCadastradoPor">–</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="d-icon"><i class="fas fa-clock"></i></div>
+          <div>
+            <div class="d-label">Data do Cadastro</div>
+            <div class="d-value" id="detDataCadastro">–</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (function() {
@@ -148,10 +266,28 @@
   }
 
   const listaUsuarios = document.getElementById('listaUsuarios');
-  const tipoLabel = (t) => {
-    if (t === 'novo_nascimento') return '<span class="badge badge-pessoa">NC</span>';
-    if (t === 'reconciliacao') return '<span class="badge" style="background:#fef3c7;color:#b45309;">REC</span>';
-    return '<span class="badge" style="background:#e0f2fe;color:#0369a1;">NCGR</span>';
+  const modalDetalhe = new bootstrap.Modal(document.getElementById('modalDetalhe'));
+
+  // Mapa de id do usuário -> nome (para "Acompanhado por" no modal)
+  let usuariosMap = {};
+
+  const tipoBadge = (t) => {
+    if (t === 'novo_nascimento') return '<span class="badge-tipo nc">NC</span>';
+    if (t === 'reconciliacao') return '<span class="badge-tipo rec">REC</span>';
+    return '<span class="badge-tipo ncgr">NCGR</span>';
+  };
+
+  const tipoLabelLongo = (t) => {
+    if (t === 'novo_nascimento') return 'Novo Nascimento';
+    if (t === 'reconciliacao') return 'Reconciliação';
+    return 'Novo Congregado';
+  };
+
+  const formatData = (d) => {
+    if (!d) return '–';
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('pt-BR');
   };
 
   async function carregarDados() {
@@ -176,6 +312,10 @@
         return;
       }
 
+      // Montar mapa nome do usuário pelo id (para o modal)
+      usuariosMap = {};
+      data.usuarios.forEach(u => { usuariosMap[u.id] = u.nome; });
+
       let html = '';
       data.usuarios.forEach((u, idx) => {
         const badgePerfil = u.perfil === 'admin'
@@ -187,12 +327,12 @@
         html += `
           <div class="user-card">
             <div class="user-header" data-bs-toggle="collapse" data-bs-target="#collapse-${u.id}" aria-expanded="${idx === 0}">
-              <div class="d-flex align-items-center gap-3">
-                <div class="icon-circle" style="background:${u.perfil === 'admin' ? '#16a34a' : '#4f46e5'}; width:40px; height:40px; font-size:1rem;">
+              <div class="d-flex align-items-center gap-3 user-info">
+                <div class="icon-circle" style="background:${u.perfil === 'admin' ? '#16a34a' : '#4f46e5'}; width:42px; height:42px; font-size:1rem; flex-shrink:0;">
                   <i class="fas ${u.perfil === 'admin' ? 'fa-user-shield' : 'fa-user'}"></i>
                 </div>
-                <div>
-                  <div class="fw-bold">${u.nome} ${badgePerfil}</div>
+                <div class="user-info">
+                  <div class="user-name">${u.nome} <span>${badgePerfil}</span></div>
                   <small class="text-muted">
                     <i class="fas fa-user-check me-1"></i>${u.total_acompanhamentos} acompanhamento(s)
                   </small>
@@ -205,31 +345,25 @@
         `;
 
         if (u.pessoas && u.pessoas.length > 0) {
-          html += `
-            <table class="table table-pessoas">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nome Completo</th>
-                  <th>Telefone</th>
-                  <th>Tipo</th>
-                  <th>Data Cadastro</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
           u.pessoas.forEach(p => {
             html += `
-              <tr>
-                <td class="text-muted">${p.id}</td>
-                <td class="fw-semibold">${p.nome_completo || '-'}</td>
-                <td>${p.telefone || '-'}</td>
-                <td>${tipoLabel(p.tipo_cadastro)}</td>
-                <td>${p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-'}</td>
-              </tr>
+              <div class="person-item" data-id="${p.id}" role="button" tabindex="0" aria-label="Ver detalhes de ${(p.nome_completo || '').replace(/"/g, '&quot;')}">
+                <div class="person-avatar"><i class="fas fa-user"></i></div>
+                <div class="person-main">
+                  <div class="person-name">${p.nome_completo || '-'}</div>
+                  <div class="person-meta">
+                    <span><i class="fas fa-phone me-1"></i>${p.telefone || '-'}</span>
+                    <span><i class="fas fa-map-marker-alt me-1"></i>${p.endereco || '-'}</span>
+                    <span><i class="fas fa-clock me-1"></i>${formatData(p.data_cadastro)}</span>
+                  </div>
+                </div>
+                <div class="d-flex flex-column align-items-end gap-1">
+                  ${tipoBadge(p.tipo_cadastro)}
+                  <i class="fas fa-chevron-right text-muted person-chevron"></i>
+                </div>
+              </div>
             `;
           });
-          html += '</tbody></table>';
         } else {
           html += '<div class="empty-state"><i class="fas fa-user-clock mb-2 d-block"></i>Nenhum acompanhamento atribuído.</div>';
         }
@@ -238,9 +372,55 @@
       });
 
       listaUsuarios.innerHTML = html;
+
+      // Abrir modal ao tocar em qualquer lugar do card da pessoa
+      listaUsuarios.querySelectorAll('.person-item').forEach(el => {
+        const abrir = () => abrirDetalhe(el.dataset.id);
+        el.addEventListener('click', abrir);
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+      });
     } catch (e) {
       console.error('Erro:', e);
       listaUsuarios.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erro de conexão. Verifique sua internet e tente novamente.</div>';
+    }
+  }
+
+  // Busca dados completos da pessoa e abre o modal
+  async function abrirDetalhe(id) {
+    try {
+      const res = await fetch('api/pessoas/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) throw new Error('Erro ao buscar detalhes');
+      const p = await res.json();
+
+      // Foto (se existir)
+      const fotoArea = document.getElementById('fotoArea');
+      fotoArea.innerHTML = '<i class="fas fa-user"></i>';
+      if (p.foto_url) {
+        const img = document.createElement('img');
+        img.src = p.foto_url;
+        img.alt = 'Foto';
+        img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+        img.onerror = () => { fotoArea.innerHTML = '<i class="fas fa-user"></i>'; };
+        fotoArea.innerHTML = '';
+        fotoArea.appendChild(img);
+      }
+
+      document.getElementById('detNome').textContent = p.nome_completo || '–';
+      document.getElementById('detTipo').innerHTML = tipoBadge(p.tipo_cadastro) + ' <span class="text-muted" style="font-size:0.85rem;">' + tipoLabelLongo(p.tipo_cadastro) + '</span>';
+      document.getElementById('detNascimento').textContent = formatData(p.data_nascimento);
+      document.getElementById('detTelefone').textContent = p.telefone || '–';
+      document.getElementById('detEndereco').textContent = p.endereco || '–';
+      document.getElementById('detPontoRef').textContent = p.ponto_referencia || '–';
+      document.getElementById('detAcomp').textContent = usuariosMap[String(p.acompanhante)] || (p.acompanhante ? 'Usuário #' + p.acompanhante : 'Não atribuído');
+      document.getElementById('detCadastradoPor').textContent = p.admin_nome || '–';
+      document.getElementById('detDataCadastro').textContent = formatData(p.data_cadastro);
+
+      modalDetalhe.show();
+    } catch (e) {
+      console.error('Erro ao abrir detalhe:', e);
+      alert('Erro ao carregar os detalhes do cadastro.');
     }
   }
 
