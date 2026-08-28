@@ -122,6 +122,7 @@
     <div class="nav-links">
       <a href="dashboard.html" class="active"><i class="fas fa-home me-1"></i>Painel</a>
       <a href="lista.html" class="hide-m" id="navLista"><i class="fas fa-list me-1"></i>Lista</a>
+      <a href="acompanhamentos.html" class="hide-m" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a>
       <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuários</a>
       <button class="btn-sair" id="btnLogout"><i class="fas fa-right-from-bracket"></i>Sair</button>
     </div>
@@ -174,6 +175,7 @@
     <div class="actions" id="actionsGrid">
       <a href="formulario.html" class="act-item"><i class="fas fa-user-plus text-primary"></i>Novo Cadastro</a>
       <a href="lista.html" class="act-item actLista"><i class="fas fa-list-check text-success"></i>Ver Lista</a>
+      <a href="acompanhamentos.html" class="act-item actAcomp"><i class="fas fa-user-check text-info"></i>Acompanhamentos</a>
       <a href="usuarios.html" class="act-item actUsuarios"><i class="fas fa-user-gear text-info"></i>Usuários</a>
       <a href="usuarios.html" class="act-item actNovoUsuario"><i class="fas fa-user-plus text-warning"></i>Novo Usuário</a>
       <button class="act-item" id="btnCSV"><i class="fas fa-file-csv text-success"></i>Exportar CSV</button>
@@ -290,12 +292,12 @@
 
   // Esconder nav admin se nao for admin
   if(!isAdmin){
-    ['navUsuarios','navLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+    ['navUsuarios','navLista','navAcomp'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
     ['btnVerLista'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
     // Esconder secao lista geral (admin only)
     const secGeral=document.getElementById('secListaGeral'); if(secGeral) secGeral.style.display='none';
     // Dentro das acoes rapidas: esconder itens admin
-    document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario').forEach(e=>e.style.display='none');
+    document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario,.actAcomp').forEach(e=>e.style.display='none');
     // Re-welcome banner
     document.querySelector('.welcome').innerHTML = `
       <div class="welcome-text">
@@ -311,6 +313,7 @@
   document.getElementById('statTotalPessoas')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('navLista')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('navUsuarios')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='usuarios.html'; });
+  document.getElementById('navAcomp')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='acompanhamentos.html'; });
   document.getElementById('linkVerTodos')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('btnAbrirListaGeral')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
 

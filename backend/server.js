@@ -354,6 +354,48 @@ app.get('/api/pessoas/meus-acompanhamentos', authMiddleware, async (req, res) =>
   }
 });
 
+app.get('/api/usuarios/acompanhamentos-por-usuario', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    // Para cada usuário, contar quantos cadastros acompanha e listar os nomes
+    const result = await pool.query(`
+      SELECT
+        u.id,
+        u.nome,
+        u.perfil,
+        COUNT(p.id) as total_acompanhamentos,
+        COALESCE(json_agg(
+          json_build_object(
+            'id', p.id,
+            'nome_completo', p.nome_completo,
+            'telefone', p.telefone,
+            'endereco', p.endereco,
+            'tipo_cadastro', p.tipo_cadastro,
+            'data_cadastro', p.data_cadastro
+          ) ORDER BY p.data_cadastro DESC
+        ) FILTER (WHERE p.id IS NOT NULL), '[]') as pessoas
+      FROM usuarios u
+      LEFT JOIN pessoas p ON CAST(p.acompanhante AS INTEGER) = u.id
+      GROUP BY u.id, u.nome, u.perfil
+      ORDER BY total_acompanhamentos DESC
+    `);
+
+    const usuarios = result.rows.map(u => ({
+      id: u.id,
+      nome: u.nome,
+      perfil: u.perfil,
+      total_acompanhamentos: parseInt(u.total_acompanhamentos),
+      pessoas: u.pessoas
+    }));
+
+    // Também incluir total geral
+    const totalGeral = usuarios.reduce((acc, u) => acc + u.total_acompanhamentos, 0);
+    res.json({ usuarios, total_geral: totalGeral });
+  } catch (error) {
+    console.error('Erro ao buscar acompanhamentos por usuário:', error);
+    res.status(500).json({ error: 'Erro ao buscar acompanhamentos por usuário.' });
+  }
+});
+
 app.get('/api/pessoas/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(

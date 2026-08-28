@@ -269,6 +269,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
         <li class="nav-item"><a class="nav-link active" href="lista.html">Lista</a></li>
+        <li class="nav-item"><a class="nav-link" href="acompanhamentos.html" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a></li>
         <li class="nav-item"><a class="nav-link" href="usuarios.html" id="navUsuarios">Usuários</a></li>
         <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatórios</a></li>
       </ul>
@@ -476,9 +477,11 @@
     const csvBtn = document.querySelector('[onclick="exportarCSV()"]');
     const pdfBtn = document.querySelector('[onclick="exportarPDF()"]');
     const navUsuarios = document.getElementById('navUsuarios');
+    const navAcomp = document.getElementById('navAcomp');
     if (csvBtn) csvBtn.style.display = 'none';
     if (pdfBtn) pdfBtn.style.display = 'none';
     if (navUsuarios) navUsuarios.style.display = 'none';
+    if (navAcomp) navAcomp.style.display = 'none';
   }
 
   // Debounce

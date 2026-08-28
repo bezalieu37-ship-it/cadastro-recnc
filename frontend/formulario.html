@@ -40,6 +40,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
         <li class="nav-item"><a class="nav-link" href="lista.html">Lista</a></li>
+        <li class="nav-item"><a class="nav-link" href="acompanhamentos.html"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a></li>
       </ul>
     </div>
   </div>
@@ -230,6 +231,11 @@
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) { window.location.href = 'index.html'; return; }
+
+  // Esconder link acompanhamentos para não-admin
+  if ((user.perfil || '').toLowerCase() !== 'admin') {
+    document.querySelectorAll('a[href="acompanhamentos.html"]').forEach(a => a.parentElement.style.display = 'none');
+  }
 
   const cadastroForm = document.getElementById('cadastroForm');
   const fotoUpload = document.getElementById('fotoUpload');
