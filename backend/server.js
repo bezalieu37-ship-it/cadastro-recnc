@@ -1025,19 +1025,50 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
     } catch (e) { /* mantém vazio */ }
 
     const BOM = '\uFEFF';
+    const W = 96; // largura total da tabela (linha de texto)
+
+    // Helper: preencher célula com largura fixa, sem quebrar palavra ao meio
+    function cell(str, width) {
+      const s = (str == null ? '' : String(str)).trim();
+      if (s.length <= width) return s.padEnd(width);
+      // trunca na largura, cortando no espaço mais próximo (não corta palavra)
+      let cut = s.slice(0, width);
+      if (s[width] && s[width] !== ' ' && cut.lastIndexOf(' ') > 0) {
+        cut = cut.slice(0, cut.lastIndexOf(' ')).trimEnd();
+      }
+      return cut.padEnd(width);
+    }
+    // Definição das colunas da tabela
+    const cols = [
+      { h: 'ID',    w: 6 },
+      { h: 'Nome',  w: 30 },
+      { h: 'Telefone', w: 18 },
+      { h: 'Tipo',  w: 22 },
+      { h: 'Data',  w: 12 }
+    ];
+    const colWidths = cols.map(c => c.w);
+    // Linha de separação da tabela gerada dinamicamente (bordas + |  +)
+    const sepLine = '+' + colWidths.map(w => '-'.repeat(w + 2)).join('+') + '+';
+    // Linha de separação fina para o topo (traço contínuo)
+    const thinLine = '-'.repeat(W);
+
     const linhas = [];
-    const titulo = (req.query.titulo || (org.nome_org || 'Cadastro RECNC'));
-    linhas.push('='.repeat(70));
-    linhas.push(titulo.toUpperCase());
+    const nomeIgreja = (org.nome_org || 'Cadastro RECNC');
+    const tituloCustom = (req.query.titulo || '').trim();
+
+    // === TOPO: NOME DA IGREJA (do cadastro principal) ===
+    linhas.push('='.repeat(W));
+    linhas.push(nomeIgreja.toUpperCase());
     if (org.endereco) linhas.push(org.endereco);
     if (org.telefone) linhas.push('Telefone: ' + org.telefone);
     if (org.email) linhas.push('E-mail: ' + org.email);
     if (org.responsavel) linhas.push('Responsável: ' + org.responsavel);
-    linhas.push('='.repeat(70));
-    linhas.push('Relatório de Cadastros');
-    if (req.query.titulo) linhas.push((req.query.titulo));
+    linhas.push('='.repeat(W));
+
+    // Subtítulo do relatório (título custom se fornecido, senão genérico)
+    linhas.push(tituloCustom || 'Relatório de Cadastros');
     linhas.push('Gerado em: ' + new Date().toLocaleString('pt-BR') + '  |  Total: ' + pessoas.length + ' registro(s)');
-    linhas.push('-'.repeat(70));
+    linhas.push(thinLine);
 
     if (pessoas.length === 0) {
       linhas.push('Nenhum registro encontrado para os filtros informados.');
@@ -1047,18 +1078,24 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
         if (t === 'reconciliacao') return 'Reconciliação';
         return 'Novo Congregado';
       }
-      linhas.push(String('ID').padEnd(5) + String('Nome').padEnd(38) + String('Telefone').padEnd(20) + String('Tipo').padEnd(20) + String('Data'));
-      linhas.push('-'.repeat(70));
+      // Cabeçalho da tabela
+      const headerRow = '| ' + cols.map(c => cell(c.h, c.w)).join(' | ') + ' |';
+      linhas.push(headerRow);
+      linhas.push(sepLine);
       pessoas.forEach(p => {
         const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
-        const nome = (p.nome_completo || '-').slice(0, 37);
-        const tel = (p.telefone || '-').slice(0, 19);
-        const tipo = tipoLabelTxt(p.tipo_cadastro).slice(0, 19);
-        linhas.push(String(p.id).padEnd(5) + String(nome).padEnd(38) + String(tel).padEnd(20) + String(tipo).padEnd(20) + data);
+        const row = '| ' + cell(String(p.id), cols[0].w) + ' | '
+          + cell(p.nome_completo || '-', cols[1].w) + ' | '
+          + cell(p.telefone || '-', cols[2].w) + ' | '
+          + cell(tipoLabelTxt(p.tipo_cadastro), cols[3].w) + ' | '
+          + cell(data, cols[4].w) + ' |';
+        linhas.push(row);
       });
+      linhas.push(sepLine);
     }
-    linhas.push('-'.repeat(70));
-    linhas.push('Cadastro RECNC - Relatório gerado automaticamente | ' + new Date().toLocaleString('pt-BR'));
+
+    // === RODAPÉ ===
+    linhas.push(nomeIgreja + ' - Relatório gerado automaticamente | ' + new Date().toLocaleString('pt-BR'));
 
     const content = linhas.join('\r\n') + '\r\n';
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
