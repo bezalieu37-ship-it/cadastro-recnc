@@ -41,6 +41,7 @@
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Painel</a></li>
         <li class="nav-item"><a class="nav-link" href="lista.html">Lista</a></li>
         <li class="nav-item"><a class="nav-link" href="acompanhamentos.html"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a></li>
+        <li class="nav-item"><a class="nav-link" href="configuracoes.html"><i class="fas fa-gear me-1"></i>Configurações</a></li>
       </ul>
     </div>
   </div>
@@ -165,19 +166,19 @@
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="tipoCadastro" id="novoNascimento" value="novo_nascimento" required>
                     <label class="form-check-label" for="novoNascimento">
-                      <i class="fas fa-baby me-1 text-success"></i> NC
+                      <i class="fas fa-baby me-1 text-success"></i> <span data-tipo-rotulo="novo_nascimento">Novo Nascimento</span>
                     </label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="tipoCadastro" id="reconciliacao" value="reconciliacao">
                     <label class="form-check-label" for="reconciliacao">
-                      <i class="fas fa-handshake me-1 text-warning"></i> REC
+                      <i class="fas fa-handshake me-1 text-warning"></i> <span data-tipo-rotulo="reconciliacao">Reconciliação</span>
                     </label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="tipoCadastro" id="novoCongregado" value="novo_congregado">
                     <label class="form-check-label" for="novoCongregado">
-                      <i class="fas fa-church me-1 text-info"></i> NCGR
+                      <i class="fas fa-church me-1 text-info"></i> <span data-tipo-rotulo="novo_congregado">Novo Congregado</span>
                     </label>
                   </div>
                 </div>
@@ -260,6 +261,19 @@
     } catch (e) { console.error('Erro ao carregar usuarios:', e); }
   }
   dropdownPronto = carregarUsuariosDropdown();
+
+  // Carregar rótulos personalizados dos tipos
+  (async function carregarRotulosTipos(){
+    try{
+      const res = await fetch('api/config/tipos', { headers: { 'Authorization': 'Bearer ' + token } });
+      if(!res.ok) return;
+      const tipos = await res.json();
+      tipos.forEach(t=>{
+        const span = document.querySelector('[data-tipo-rotulo="'+t.chave+'"]');
+        if(span && t.rotulo) span.textContent = t.rotulo;
+      });
+    }catch(e){ /* fallback silencioso para rótulos padrão */ }
+  })();
 
   // =========== MODO EDICAO ===========
   const urlParams = new URLSearchParams(window.location.search);

@@ -107,6 +107,39 @@ async function initializeDatabase() {
         conteudo_html TEXT
       )
     `);
+    // Configuracoes da organizacao (perfil da congregacao)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS config_org (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        nome_org TEXT DEFAULT '',
+        endereco TEXT DEFAULT '',
+        telefone TEXT DEFAULT '',
+        email TEXT DEFAULT '',
+        responsavel TEXT DEFAULT '',
+        formato_data TEXT DEFAULT 'BR',
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_by INTEGER REFERENCES usuarios(id)
+      )
+    `);
+    await client.query(`
+      INSERT INTO config_org (id) VALUES (1)
+      ON CONFLICT (id) DO NOTHING
+    `);
+    // Rótulos customizados dos tipos de cadastro
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS config_tipos (
+        chave TEXT PRIMARY KEY,
+        rotulo TEXT NOT NULL,
+        cor TEXT DEFAULT ''
+      )
+    `);
+    await client.query(`
+      INSERT INTO config_tipos (chave, rotulo, cor) VALUES
+        ('novo_nascimento', 'Novo Nascimento', '#4f46e5'),
+        ('reconciliacao', 'Reconciliação', '#b45309'),
+        ('novo_congregado', 'Novo Congregado', '#0369a1')
+      ON CONFLICT (chave) DO NOTHING
+    `);
     console.log('Database initialized');
   } finally {
     client.release();
@@ -544,6 +577,139 @@ app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res) =
     res.status(500).json({ error: 'Erro ao atualizar usuário. Nome já existe?' });
   }
 });
+
+// ============ CONFIGURAÇÕES DO APP ============
+
+// GET configuração da organização (perfil da congregação) - autenticado, retorna defaults se vazio
+app.get('/api/config/org', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel, formato_data FROM config_org WHERE id = 1');
+    const row = result.rows[0] || {};
+    res.json({
+      nome_org: row.nome_org || '',
+      endereco: row.endereco || '',
+      telefone: row.telefone || '',
+      email: row.email || '',
+      responsavel: row.responsavel || '',
+      formato_data: row.formato_data || 'BR'
+    });
+  } catch (error) {
+    console.error('Erro ao buscar config:', error);
+    res.status(500).json({ error: 'Erro ao buscar configurações.' });
+  }
+});
+
+// PUT configuração da organização - admin
+app.put('/api/config/org', authMiddleware, adminMiddleware, async (req, res) => {
+  const { nome_org, endereco, telefone, email, responsavel, formato_data } = req.body || {};
+  try {
+    await pool.query(
+      `UPDATE config_org SET
+         nome_org = $1, endereco = $2, telefone = $3, email = $4,
+         responsavel = $5, formato_data = $6, updated_at = NOW(), updated_by = $7
+       WHERE id = 1`,
+      [nome_org || '', endereco || '', telefone || '', email || '', responsavel || '', formato_data || 'BR', req.user.id]
+    );
+    res.json({ message: 'Configurações salvas com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao salvar config:', error);
+    res.status(500).json({ error: 'Erro ao salvar configurações.' });
+  }
+});
+
+// GET rótulos dos tipos de cadastro
+app.get('/api/config/tipos', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT chave, rotulo, cor FROM config_tipos ORDER BY chave');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar tipos:', error);
+    res.status(500).json({ error: 'Erro ao buscar tipos.' });
+  }
+});
+
+// PUT rótulos dos tipos de cadastro - admin
+app.put('/api/config/tipos', authMiddleware, adminMiddleware, async (req, res) => {
+  const items = req.body; // array de { chave, rotulo, cor }
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ error: 'Formato inválido. Envie um array de tipos.' });
+  }
+  try {
+    for (const item of items) {
+      if (!item || !item.chave || !item.rotulo) continue;
+      await pool.query(
+        `UPDATE config_tipos SET rotulo = $1, cor = $2 WHERE chave = $3`,
+        [item.rotulo, item.cor || '', item.chave]
+      );
+    }
+    res.json({ message: 'Tipos atualizados com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao salvar tipos:', error);
+    res.status(500).json({ error: 'Erro ao salvar tipos.' });
+  }
+});
+
+// Rótulo resolvido de um tipo (com fallback) - helper para páginas
+// GET /api/config/tipos/mapa -> retorna map chave->{rotulo,cor} para uso nas telas
+app.get('/api/config/tipos/mapa', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT chave, rotulo, cor FROM config_tipos');
+    const mapa = {};
+    result.rows.forEach(r => { mapa[r.chave] = { rotulo: r.rotulo, cor: r.cor }; });
+    res.json(mapa);
+  } catch (error) {
+    console.error('Erro ao buscar mapa de tipos:', error);
+    res.status(500).json({ error: 'Erro ao buscar tipos.' });
+  }
+});
+
+// ============ PERFIL DO USUÁRIO LOGADO ============
+
+// Alterar nome do usuário logado
+app.put('/api/usuarios/me', authMiddleware, async (req, res) => {
+  const { nome } = req.body || {};
+  if (!nome || !nome.trim()) {
+    return res.status(400).json({ error: 'Nome é obrigatório.' });
+  }
+  const novoNome = nome.trim();
+  try {
+    const exists = await pool.query('SELECT id FROM usuarios WHERE nome = $1 AND id <> $2', [novoNome, req.user.id]);
+    if (exists.rows.length > 0) {
+      return res.status(409).json({ error: 'Este nome já está em uso.' });
+    }
+    const result = await pool.query('UPDATE usuarios SET nome = $1 WHERE id = $2', [novoNome, req.user.id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    res.json({ message: 'Nome atualizado com sucesso.', nome: novoNome });
+  } catch (error) {
+    console.error('Erro ao atualizar nome:', error);
+    res.status(500).json({ error: 'Erro ao atualizar nome.' });
+  }
+});
+
+// Alterar senha do usuário logado (exige senha atual)
+app.put('/api/usuarios/me/senha', authMiddleware, async (req, res) => {
+  const { senha_atual, nova_senha } = req.body || {};
+  if (!senha_atual || !nova_senha) {
+    return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias.' });
+  }
+  if (nova_senha.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+  }
+  try {
+    const result = await pool.query('SELECT senha FROM usuarios WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    const valid = await bcrypt.compare(senha_atual, user.senha);
+    if (!valid) return res.status(401).json({ error: 'Senha atual incorreta.' });
+    const hash = await bcrypt.hash(nova_senha, 10);
+    await pool.query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hash, req.user.id]);
+    res.json({ message: 'Senha alterada com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar senha:', error);
+    res.status(500).json({ error: 'Erro ao alterar senha.' });
+  }
+});
+
 app.get('/api/estatisticas', authMiddleware, async (req, res) => {
   try {
     const isAdmin = req.user.perfil === 'admin';

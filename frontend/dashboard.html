@@ -124,6 +124,7 @@
       <a href="lista.html" class="hide-m" id="navLista"><i class="fas fa-list me-1"></i>Lista</a>
       <a href="acompanhamentos.html" class="hide-m" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a>
       <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuários</a>
+      <a href="configuracoes.html" class="hide-m" id="navConfig"><i class="fas fa-gear me-1"></i>Configurações</a>
       <button class="btn-sair" id="btnLogout"><i class="fas fa-right-from-bracket"></i>Sair</button>
     </div>
   </div>
@@ -178,6 +179,7 @@
       <a href="acompanhamentos.html" class="act-item actAcomp"><i class="fas fa-user-check text-info"></i>Acompanhamentos</a>
       <a href="usuarios.html" class="act-item actUsuarios"><i class="fas fa-user-gear text-info"></i>Usuários</a>
       <a href="usuarios.html" class="act-item actNovoUsuario"><i class="fas fa-user-plus text-warning"></i>Novo Usuário</a>
+      <a href="configuracoes.html" class="act-item actConfig"><i class="fas fa-gear text-secondary"></i>Configurações</a>
       <button class="act-item" id="btnCSV"><i class="fas fa-file-csv text-success"></i>Exportar CSV</button>
       <button class="act-item" id="btnPDF"><i class="fas fa-file-pdf text-danger"></i>Exportar PDF</button>
       <button class="act-item" id="btnBackup"><i class="fas fa-download text-primary"></i>Backup</button>
@@ -285,6 +287,21 @@
 
   const isAdmin = (user.perfil||'').toLowerCase() === 'admin';
 
+  // Mapa de rótulos personalizados dos tipos
+  let tiposMap = {};
+  const tipoRotulo = (chave) => {
+    const def = { novo_nascimento:'Novo Nascimento', novo_congregado:'Novo Congregado', reconciliacao:'Reconciliação' };
+    return (tiposMap[chave] && tiposMap[chave].rotulo) || def[chave] || chave;
+  };
+  (async function carregarTipos(){
+    try{
+      const res = await fetch('api/config/tipos',{headers:{'Authorization':'Bearer '+token}});
+      if(!res.ok) return;
+      const list = await res.json();
+      list.forEach(t=>{ tiposMap[t.chave]={rotulo:t.rotulo, cor:t.cor}; });
+    }catch(e){}
+  })();
+
   // UI base
   document.getElementById('userName').textContent = user.nome || 'Usuário';
   const d = new Date();
@@ -314,6 +331,9 @@
   document.getElementById('navLista')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('navUsuarios')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='usuarios.html'; });
   document.getElementById('navAcomp')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='acompanhamentos.html'; });
+  document.getElementById('navConfig')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='configuracoes.html'; });
+  const actConfig = document.querySelector('.actConfig');
+  if(actConfig) actConfig.addEventListener('click', e=>{ e.preventDefault(); window.location.href='configuracoes.html'; });
   document.getElementById('linkVerTodos')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
   document.getElementById('btnAbrirListaGeral')?.addEventListener('click', e=>{ e.preventDefault(); window.location.href='lista.html'; });
 
@@ -467,7 +487,7 @@
       box.innerHTML='';
       data.slice(0,5).forEach(p=>{
         const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
+        const tipo = tipoRotulo(p.tipo_cadastro);
         const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
         const badge = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
         const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
@@ -499,10 +519,10 @@
       if(badge) badge.textContent=data.total||data.pessoas.length;
       box.innerHTML='';
       data.pessoas.forEach(p=>{
-        const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-        const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
-        const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
-        const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
+          const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          const tipo = tipoRotulo(p.tipo_cadastro);
+          const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
+          const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
         const icon = p.tipo_cadastro==='novo_nascimento'?'fa-baby':p.tipo_cadastro==='novo_congregado'?'fa-church':'fa-handshake';
         const el = document.createElement('div'); el.className='r-item';
         el.dataset.id=p.id;
@@ -529,7 +549,7 @@
       document.getElementById('detTelefone').textContent = p.telefone||'-';
       document.getElementById('detEndereco').textContent = p.endereco||'-';
       document.getElementById('detPontoRef').textContent = p.ponto_referencia||'-';
-      document.getElementById('detTipo').textContent = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
+      document.getElementById('detTipo').textContent = tipoRotulo(p.tipo_cadastro);
       document.getElementById('detData').textContent = p.data_cadastro?new Date(p.data_cadastro).toLocaleDateString('pt-BR'):'-';
       document.getElementById('detNascimento').textContent = p.data_nascimento||'-';
       const fotoEl = document.getElementById('detFoto');
@@ -600,9 +620,9 @@
       if(previewEl && data.pessoas && data.pessoas.length){
         previewEl.innerHTML='';
         data.pessoas.slice(0,3).forEach(p=>{
-          const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-          const tipo = p.tipo_cadastro==='novo_nascimento'?'Novo Nascimento':p.tipo_cadastro==='novo_congregado'?'Novo Congregado':'Reconciliação';
-          const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
+        const initials = (p.nome_completo||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const tipo = tipoRotulo(p.tipo_cadastro);
+        const cls = p.tipo_cadastro==='novo_nascimento'?'nasc':p.tipo_cadastro==='novo_congregado'?'ncgr':'reconc';
           const badgeCls = p.tipo_cadastro==='novo_nascimento'?'bg-success':p.tipo_cadastro==='novo_congregado'?'bg-info':'bg-warning text-dark';
           const el = document.createElement('div'); el.className='r-item';
           el.style.cursor='pointer';

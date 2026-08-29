@@ -271,6 +271,7 @@
         <li class="nav-item"><a class="nav-link active" href="lista.html">Lista</a></li>
         <li class="nav-item"><a class="nav-link" href="acompanhamentos.html" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a></li>
         <li class="nav-item"><a class="nav-link" href="usuarios.html" id="navUsuarios">Usuários</a></li>
+        <li class="nav-item"><a class="nav-link" href="configuracoes.html"><i class="fas fa-gear me-1"></i>Configurações</a></li>
         <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatórios</a></li>
       </ul>
     </div>
@@ -455,6 +456,27 @@
   let pessoaIdExcluir = null;
   let pessoaDetalheId = null;
   let selectedIds = new Set();
+  let tiposMap = {};
+
+  // Helper: rótulo e classe CSS de um tipo de cadastro
+  function rotuloTipo(chave){
+    const map = {
+      novo_nascimento: { r: 'Novo Nascimento', c: 'tipo-nascimento' },
+      novo_congregado: { r: 'Novo Congregado', c: 'tipo-ncgr' },
+      reconciliacao: { r: 'Reconciliação', c: 'tipo-reconciliacao' }
+    };
+    const def = map[chave] || { r: chave, c: 'tipo-reconciliacao' };
+    return { r: (tiposMap[chave] && tiposMap[chave].rotulo) || def.r, c: def.c };
+  }
+  // Carregar rótulos personalizados
+  (async function carregarTipos(){
+    try{
+      const res = await fetch('api/config/tipos', { headers: { 'Authorization': 'Bearer ' + token } });
+      if(!res.ok) return;
+      const list = await res.json();
+      list.forEach(t => { tiposMap[t.chave] = { rotulo: t.rotulo, cor: t.cor }; });
+    }catch(e){}
+  })();
 
   // DOM refs
   const $filtroTipo = document.getElementById('filtroTipo');
@@ -526,10 +548,11 @@
       return;
     }
     pessoas.forEach(p => {
-      const isNasc = p.tipo_cadastro === 'novo_nascimento';
-      const isNcgr = p.tipo_cadastro === 'novo_congregado';
-      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliação';
-      const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
+  const isNasc = p.tipo_cadastro === 'novo_nascimento';
+  const isNcgr = p.tipo_cadastro === 'novo_congregado';
+  const tipoInfo = rotuloTipo(p.tipo_cadastro);
+  const tipoLabel = tipoInfo.r;
+  const tipoClass = tipoInfo.c;
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
       const isSelected = selectedIds.has(p.id);
@@ -693,10 +716,11 @@
       if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + text);
       const p = JSON.parse(text);
 
-      const isNasc = p.tipo_cadastro === 'novo_nascimento';
-      const isNcgr = p.tipo_cadastro === 'novo_congregado';
-      const tipoLabel = isNasc ? 'Novo Nascimento' : isNcgr ? 'Novo Congregado' : 'Reconciliação';
-      const tipoClass = isNasc ? 'tipo-nascimento' : isNcgr ? 'tipo-ncgr' : 'tipo-reconciliacao';
+  const isNasc = p.tipo_cadastro === 'novo_nascimento';
+  const isNcgr = p.tipo_cadastro === 'novo_congregado';
+  const tipoInfo = rotuloTipo(p.tipo_cadastro);
+  const tipoLabel = tipoInfo.r;
+  const tipoClass = tipoInfo.c;
       const foto = p.foto_url || 'images/default-avatar.png';
       const dataFormatada = p.data_cadastro ? new Date(p.data_cadastro).toLocaleString('pt-BR') : '-';
 

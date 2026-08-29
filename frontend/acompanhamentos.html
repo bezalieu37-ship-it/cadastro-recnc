@@ -160,6 +160,7 @@
         <li class="nav-item"><a class="nav-link" href="lista.html">Lista</a></li>
         <li class="nav-item"><a class="nav-link active" href="acompanhamentos.html"><i class="fas fa-users me-1"></i>Acompanhamentos</a></li>
         <li class="nav-item"><a class="nav-link" href="usuarios.html">Usuários</a></li>
+        <li class="nav-item"><a class="nav-link" href="configuracoes.html"><i class="fas fa-gear me-1"></i>Configurações</a></li>
         <li class="nav-item"><a class="nav-link" href="#" id="btnSair"><i class="fas fa-sign-out-alt me-1"></i>Sair</a></li>
       </ul>
     </div>
@@ -313,16 +314,27 @@
   // Mapa de id do usuário -> nome (para "Acompanhado por" no modal)
   let usuariosMap = {};
 
+  // Rótulos personalizados dos tipos de cadastro
+  let tiposMap = {};
+  const tipoLabelLongo = (t) => {
+    if (tiposMap[t] && tiposMap[t].rotulo) return tiposMap[t].rotulo;
+    if (t === 'novo_nascimento') return 'Novo Nascimento';
+    if (t === 'reconciliacao') return 'Reconciliação';
+    return 'Novo Congregado';
+  };
+  (async function carregarTiposConfig(){
+    try{
+      const res = await fetch('api/config/tipos', { headers: { 'Authorization': 'Bearer ' + token } });
+      if(!res.ok) return;
+      const list = await res.json();
+      list.forEach(x => { tiposMap[x.chave] = { rotulo: x.rotulo, cor: x.cor }; });
+    }catch(e){}
+  })();
+
   const tipoBadge = (t) => {
     if (t === 'novo_nascimento') return '<span class="badge-tipo nc">NC</span>';
     if (t === 'reconciliacao') return '<span class="badge-tipo rec">REC</span>';
     return '<span class="badge-tipo ncgr">NCGR</span>';
-  };
-
-  const tipoLabelLongo = (t) => {
-    if (t === 'novo_nascimento') return 'Novo Nascimento';
-    if (t === 'reconciliacao') return 'Reconciliação';
-    return 'Novo Congregado';
   };
 
   const formatData = (d) => {

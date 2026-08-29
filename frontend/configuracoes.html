@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cadastro RECNC - Configurações</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root { --pri: #0d6efd; --pri-dark: #0a58ca; --bg: #f0f2f5; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; min-height: 100vh; }
+    html, body { max-width: 100%; overflow-x: hidden; }
+
+    /* === NAV === */
+    .top-nav {
+      background: linear-gradient(135deg, var(--pri), var(--pri-dark));
+      padding: 10px 0; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,.12);
+    }
+    .top-nav .brand { color: #fff; font-weight: 700; font-size: 1.05rem; text-decoration: none; display:flex; align-items:center; gap:8px; }
+    .top-nav .nav-links { display:flex; gap:4px; align-items:center; flex-wrap:nowrap; }
+    .top-nav .nav-links a {
+      color: rgba(255,255,255,.8); text-decoration:none; padding:6px 10px;
+      border-radius:8px; font-size:.8rem; font-weight:500; transition:.2s; white-space:nowrap;
+    }
+    .top-nav .nav-links a:hover, .top-nav .nav-links a.active { background:rgba(255,255,255,.2); color:#fff; }
+    .btn-sair {
+      color:#fff; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+      padding:5px 12px; border-radius:8px; font-size:.8rem; font-weight:500;
+      cursor:pointer; transition:.2s; display:flex; align-items:center; gap:5px; white-space:nowrap;
+    }
+    .btn-sair:hover { background:rgba(220,53,69,.8); }
+
+    /* === LAYOUT === */
+    .config-wrap { max-width: 860px; margin: 0 auto; padding: 16px 14px 40px; }
+    .page-hdr { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .page-hdr h4 { margin:0; font-weight:700; }
+
+    /* === CARDS DE CONFIG === */
+    .cfg { background:#fff; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.04); overflow:hidden; margin-bottom:18px; }
+    .cfg-hdr {
+      padding:14px 18px; border-bottom:1px solid #f0f0f0;
+      display:flex; align-items:center; gap:10px;
+    }
+    .cfg-hdr .cfg-ico {
+      width:38px; height:38px; border-radius:10px; display:flex;
+      align-items:center; justify-content:center; font-size:1rem; flex-shrink:0;
+    }
+    .cfg-hdr h6 { margin:0; font-weight:700; font-size:.9rem; }
+    .cfg-hdr p { margin:1px 0 0; font-size:.72rem; color:#6c757d; }
+    .cfg-body { padding:16px 18px; }
+
+    /* === TEMPLO (tema) === */
+    .tema-opts { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .tema-btn {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      padding:16px 10px; border:2px solid #e9ecef; border-radius:12px;
+      background:#fff; cursor:pointer; transition:.15s; font-size:.8rem; font-weight:600;
+      color:#495057;
+    }
+    .tema-btn:hover { border-color:var(--pri); }
+    .tema-btn.active { border-color:var(--pri); background:#f0f6ff; color:var(--pri); }
+    .tema-btn .t-preview { width:100%; height:44px; border-radius:8px; overflow:hidden; position:relative; }
+    .tema-btn.claro .t-preview { background:#f0f2f5; border:1px solid #e0e0e0; }
+    .tema-btn.escuro .t-preview { background:#1f2937; }
+    .tema-btn .t-bar { position:absolute; left:0; right:0; height:14px; }
+    .tema-btn.claro .t-bar { top:8px; background:linear-gradient(90deg,#0d6efd 40%,#fff 40%); }
+    .tema-btn.escuro .t-bar { top:8px; background:linear-gradient(90deg,#0d6efd 40%,#111827 40%); border:1px solid #374151; }
+
+    /* === PREFERENCIAS === */
+    @media (max-width:400px){
+      .tema-opts { grid-template-columns:1fr; }
+      .cfg-body { padding:14px 14px; }
+    }
+
+    .form-label { font-weight:600; font-size:.8rem; margin-bottom:3px; }
+    .toast-msg {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#111827; color:#fff; padding:11px 20px; border-radius:10px;
+      font-size:.85rem; z-index:2000; box-shadow:0 6px 20px rgba(0,0,0,.3);
+      opacity:0; transition:opacity .25s; pointer-events:none; max-width:90%; text-align:center;
+    }
+    .toast-msg.show { opacity:1; }
+    .btn-salvar { border-radius:10px; padding:8px 20px; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="top-nav">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a href="dashboard.html" class="brand"><i class="fas fa-user-tie"></i>Cadastro RECNC</a>
+    <div class="nav-links">
+      <a href="dashboard.html"><i class="fas fa-home me-1"></i>Painel</a>
+      <a href="lista.html" class="hide-m" id="navLista"><i class="fas fa-list me-1"></i>Lista</a>
+      <a href="acompanhamentos.html" class="hide-m" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a>
+      <a href="usuarios.html" class="hide-m" id="navUsuarios"><i class="fas fa-users me-1"></i>Usuários</a>
+      <a href="#" class="active" id="navConfig"><i class="fas fa-gear me-1"></i>Configurações</a>
+      <button class="btn-sair" id="btnLogout"><i class="fas fa-right-from-bracket"></i>Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="config-wrap">
+
+  <!-- CABEÇALHO -->
+  <div class="page-hdr">
+    <h4><i class="fas fa-gear text-primary me-2"></i>Configurações</h4>
+    <span class="text-muted" style="font-size:.8rem;">Personalize o aplicativo</span>
+  </div>
+
+  <!-- 1. TEMA E APARÊNCIA -->
+  <div class="cfg">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-palette"></i></div>
+      <div>
+        <h6>Tema e Aparência</h6>
+        <p>Escolha entre tema claro e escuro</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <div class="tema-opts">
+        <button type="button" class="tema-btn claro" id="temaClaro">
+          <div class="t-preview"><div class="t-bar"></div></div>
+          <span><i class="fas fa-sun me-1"></i>Claro</span>
+        </button>
+        <button type="button" class="tema-btn escuro" id="temaEscuro">
+          <div class="t-preview"><div class="t-bar"></div></div>
+          <span><i class="fas fa-moon me-1"></i>Escuro</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PERFIL DA CONGREGAÇÃO (ADMIN) -->
+  <div class="cfg" id="cfgOrg">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#eef2ff;color:#4f46e5;"><i class="fas fa-church"></i></div>
+      <div>
+        <h6>Perfil da Congregação</h6>
+        <p>Usado nos relatórios, PDFs e identificação do app</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Nome da Congregação / Organização</label>
+          <input type="text" class="form-control" id="cfg_nome" placeholder="Ex: Congregação dos Testamentos">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Endereço</label>
+          <input type="text" class="form-control" id="cfg_endereco" placeholder="Endereço da congregação">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Telefone</label>
+          <input type="tel" class="form-control" id="cfg_telefone" placeholder="(00) 0000-0000">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">E-mail</label>
+          <input type="email" class="form-control" id="cfg_email" placeholder="contato@exemplo.com">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Responsável / Líder</label>
+          <input type="text" class="form-control" id="cfg_responsavel" placeholder="Nome do responsável">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Formato de Data</label>
+          <select class="form-select" id="cfg_formato_data">
+            <option value="BR">dd/mm/aaaa (Brasil)</option>
+            <option value="US">mm/dd/aaaa (EUA)</option>
+            <option value="ISO">aaaa-mm-dd (ISO)</option>
+          </select>
+        </div>
+      </div>
+      <div class="text-end mt-3">
+        <button class="btn btn-primary btn-salvar" id="btnSalvarOrg"><i class="fas fa-save me-1"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. TIPOS DE CADASTRO (ADMIN) -->
+  <div class="cfg" id="cfgTipos">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-tags"></i></div>
+      <div>
+        <h6>Tipos de Cadastro</h6>
+        <p>Personalize os nomes exibidos para cada tipo</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <div id="tiposLista"></div>
+      <div class="text-end mt-3">
+        <button class="btn btn-primary btn-salvar" id="btnSalvarTipos"><i class="fas fa-save me-1"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PREFERÊNCIAS DE RELATÓRIO (ADMIN) -->
+  <div class="cfg" id="cfgRelatorio">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#fff7ed;color:#ea580c;"><i class="fas fa-file-lines"></i></div>
+      <div>
+        <h6>Relatórios</h6>
+        <p>Resumo das opções de exportação e backup</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <p class="text-muted" style="font-size:.85rem;margin-bottom:12px;">Acesse os relatórios, exportação e backup pelo Painel principal do aplicativo. Nos relatórios em PDF, o nome e os dados da congregação (acima) são exibidos no cabeçalho.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="dashboard.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-arrow-left me-1"></i>Ir para o Painel</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MEUS DADOS / USUÁRIO -->
+  <div class="cfg">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-user"></i></div>
+      <div>
+        <h6>Meus Dados</h6>
+        <p>Alterar nome de usuário e senha</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <form id="formMeusDados">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Nome de Usuário</label>
+            <input type="text" class="form-control" id="meu_nome" required>
+          </div>
+          <div class="col-12 border-top pt-3">
+            <div class="text-muted mb-2" style="font-size:.8rem;"><i class="fas fa-key me-1"></i>Alterar minha senha</div>
+            <div class="row g-3">
+              <div class="col-md-4"><label class="form-label">Senha Atual</label><input type="password" class="form-control" id="meu_senha_atual" autocomplete="current-password"></div>
+              <div class="col-md-4"><label class="form-label">Nova Senha</label><input type="password" class="form-control" id="meu_nova_senha" autocomplete="new-password" minlength="6"></div>
+              <div class="col-md-4"><label class="form-label">Confirmar</label><input type="password" class="form-control" id="meu_confirmar_senha" autocomplete="new-password"></div>
+            </div>
+          </div>
+        </div>
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-primary btn-salvar"><i class="fas fa-save me-1"></i>Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. SEGURANÇA / PRIVACIDADE / SOBRE -->
+  <div class="cfg">
+    <div class="cfg-hdr">
+      <div class="cfg-ico" style="background:#e0f2fe;color:#0284c7;"><i class="fas fa-shield-halved"></i></div>
+      <div>
+        <h6>Segurança e Privacidade</h6>
+        <p>Informações de proteção e versão</p>
+      </div>
+    </div>
+    <div class="cfg-body">
+      <div class="d-flex align-items-start gap-3 mb-3">
+        <div class="cfg-ico" style="background:#f1f5f9;color:#475569;"><i class="fas fa-lock"></i></div>
+        <div>
+          <div class="fw-semibold" style="font-size:.85rem;">Proteção de Dados</div>
+          <div class="text-muted" style="font-size:.78rem;">Seus dados são armazenados com segurança em servidores criptografados. Apenas usuários autorizados acessam o aplicativo mediante login.</div>
+        </div>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <div class="fw-semibold" style="font-size:.85rem;"><i class="fas fa-info-circle me-1"></i>Sobre o Aplicativo</div>
+          <div class="text-muted" style="font-size:.78rem;">Cadastro RECNC · versão 1.0.0<br>Feito para o gerenciamento de cadastros da congregação.</div>
+        </div>
+        <button class="btn btn-sm btn-outline-danger" id="btnSairSessao"><i class="fas fa-right-from-bracket me-1"></i>Encerrar Sessão</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function(){
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if(!token){ window.location.href='index.html'; return; }
+  const isAdmin = (user.perfil||'').toLowerCase() === 'admin';
+
+  // ========== NAV ==========
+  const navConfig = document.getElementById('navConfig');
+  if(navConfig) navConfig.setAttribute('href','configuracoes.html');
+
+  // Esconder itens admin para não-admin
+  if(!isAdmin){
+    ['navUsuarios','navLista','navAcomp'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+  }
+
+  // Navegação explícita (Capacitor compat)
+  function go(href){ return (e)=>{ e.preventDefault(); window.location.href=href; }; }
+  document.getElementById('navLista')?.addEventListener('click', go('lista.html'));
+  document.getElementById('navAcomp')?.addEventListener('click', go('acompanhamentos.html'));
+  document.getElementById('navUsuarios')?.addEventListener('click', go('usuarios.html'));
+
+  // Logout
+  function logout(){
+    localStorage.removeItem('token'); localStorage.removeItem('user');
+    window.location.href='index.html';
+  }
+  document.getElementById('btnLogout').addEventListener('click', logout);
+  document.getElementById('btnSairSessao').addEventListener('click', logout);
+
+  // ========== TOAST ==========
+  const toastEl = document.getElementById('toastMsg');
+  let toastTimer;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2600);
+  }
+
+  // ========== TEMA ==========
+  function applyTheme(t){
+    const html = document.documentElement;
+    if(t === 'dark'){
+      html.setAttribute('data-bs-theme','dark');
+      // Fundos custom das seções
+      document.body.style.background = '#111827';
+      document.querySelectorAll('.cfg').forEach(c=> c.style.background='#1f2937');
+      document.querySelectorAll('.cfg h6').forEach(h=> h.style.color='#f3f4f6');
+      document.querySelectorAll('.cfg .form-control').forEach(i=>{ });
+      document.getElementById('temaClaro')?.classList.remove('active');
+      document.getElementById('temaEscuro')?.classList.add('active');
+    } else {
+      html.setAttribute('data-bs-theme','light');
+      document.body.style.background = '#f0f2f5';
+      document.querySelectorAll('.cfg').forEach(c=> { c.style.background='#fff'; c.style.color=''; });
+      document.querySelectorAll('.cfg h6').forEach(h=> h.style.color='');
+      document.getElementById('temaEscuro')?.classList.remove('active');
+      document.getElementById('temaClaro')?.classList.add('active');
+    }
+  }
+  const temaSalvo = localStorage.getItem('tema') || 'claro';
+  applyTheme(temaSalvo);
+  document.getElementById('temaClaro').addEventListener('click', ()=>{ localStorage.setItem('tema','claro'); applyTheme('claro'); toast('Tema claro aplicado'); });
+  document.getElementById('temaEscuro').addEventListener('click', ()=>{ localStorage.setItem('tema','escuro'); applyTheme('escuro'); toast('Tema escuro aplicado'); });
+
+  // ========== PERFIL CONGREGAÇÃO ==========
+  const cfgOrg = document.getElementById('cfgOrg');
+  if(!isAdmin && cfgOrg) cfgOrg.style.display='none';
+  if(isAdmin){
+    async function loadOrg(){
+      try{
+        const res = await fetch('api/config/org',{headers:{'Authorization':'Bearer '+token}});
+        const d = await res.json();
+        document.getElementById('cfg_nome').value = d.nome_org||'';
+        document.getElementById('cfg_endereco').value = d.endereco||'';
+        document.getElementById('cfg_telefone').value = d.telefone||'';
+        document.getElementById('cfg_email').value = d.email||'';
+        document.getElementById('cfg_responsavel').value = d.responsavel||'';
+        document.getElementById('cfg_formato_data').value = d.formato_data||'BR';
+      }catch(e){ toast('Erro ao carregar perfil'); }
+    }
+    loadOrg();
+    document.getElementById('btnSalvarOrg').addEventListener('click', async ()=>{
+      try{
+        const body = {
+          nome_org: document.getElementById('cfg_nome').value.trim(),
+          endereco: document.getElementById('cfg_endereco').value.trim(),
+          telefone: document.getElementById('cfg_telefone').value.trim(),
+          email: document.getElementById('cfg_email').value.trim(),
+          responsavel: document.getElementById('cfg_responsavel').value.trim(),
+          formato_data: document.getElementById('cfg_formato_data').value,
+        };
+        const res = await fetch('api/config/org',{
+          method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if(res.ok) toast('Perfil salvo!');
+        else toast(d.error||'Erro ao salvar');
+      }catch(e){ toast('Erro de conexão'); }
+    });
+  }
+
+  // ========== TIPOS ==========
+  const cfgTipos = document.getElementById('cfgTipos');
+  if(!isAdmin && cfgTipos) cfgTipos.style.display='none';
+  const tipoMeta = {
+    novo_nascimento:{ icon:'fa-baby', key:'novo_nascimento', default:'Novo Nascimento' },
+    reconciliacao:{ icon:'fa-handshake', key:'reconciliacao', default:'Reconciliação' },
+    novo_congregado:{ icon:'fa-church', key:'novo_congregado', default:'Novo Congregado' },
+  };
+  async function carregarTipos(){
+    const box = document.getElementById('tiposLista');
+    if(!box) return;
+    try{
+      const res = await fetch('api/config/tipos',{headers:{'Authorization':'Bearer '+token}});
+      const list = await res.json();
+      box.innerHTML = '';
+      list.forEach(t=>{
+        const meta = tipoMeta[t.chave] || { icon:'fa-tag' };
+        const row = document.createElement('div');
+        row.className = 'row g-2 align-items-center mb-2';
+        row.innerHTML = `
+          <div class="col-auto">
+            <div class="d-flex align-items-center justify-content-center" style="width:38px;height:38px;border-radius:10px;background:#f1f5f9;color:#475569;"><i class="fas ${meta.icon}"></i></div>
+          </div>
+          <div class="col-7 col-md-6">
+            <input type="text" class="form-control" data-chave="${t.chave}" data-campo="rotulo" value="${t.rotulo||''}" placeholder="Rótulo">
+          </div>
+          <div class="col-5 col-md-4">
+            <div class="input-group">
+              <input type="color" class="form-control form-control-color" style="width:40px;height:38px;padding:4px;" data-chave="${t.chave}" data-campo="cor" value="${t.cor||'#0d6efd'}">
+              <span class="input-group-text text-muted" style="font-size:.72rem;">Cor</span>
+            </div>
+          </div>
+        `;
+        box.appendChild(row);
+      });
+    }catch(e){ box.innerHTML='<div class="text-muted">Não foi possível carregar os tipos.</div>'; }
+  }
+  if(isAdmin) carregarTipos();
+
+  document.getElementById('btnSalvarTipos').addEventListener('click', async ()=>{
+    const inputs = document.querySelectorAll('#tiposLista [data-chave]');
+    const mapa = {};
+    inputs.forEach(i=>{
+      const chave = i.getAttribute('data-chave');
+      const campo = i.getAttribute('data-campo');
+      if(!mapa[chave]) mapa[chave] = { chave, rotulo:'', cor:'' };
+      mapa[chave][campo] = i.value.trim();
+    });
+    const items = Object.values(mapa);
+    try{
+      const res = await fetch('api/config/tipos',{
+        method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body: JSON.stringify(items)
+      });
+      const d = await res.json();
+      if(res.ok) toast('Tipos atualizados!');
+      else toast(d.error||'Erro ao salvar');
+    }catch(e){ toast('Erro de conexão'); }
+  });
+
+  // ========== MEUS DADOS ==========
+  const meuNomeEl = document.getElementById('meu_nome');
+  if(meuNomeEl) meuNomeEl.value = user.nome||'';
+
+  document.getElementById('formMeusDados').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    let saved = false;
+    // Alterar nome
+    const novoNome = document.getElementById('meu_nome').value.trim();
+    if(novoNome && novoNome !== (user.nome||'')){
+      try{
+        const res = await fetch('api/usuarios/me',{
+          method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify({ nome: novoNome })
+        });
+        const d = await res.json();
+        if(res.ok){
+          user.nome = novoNome;
+          localStorage.setItem('user', JSON.stringify(user));
+          saved = true;
+        } else { toast(d.error||'Erro ao atualizar nome'); }
+      }catch(err){ toast('Erro de conexão'); }
+    }
+    // Alterar senha (se os campos foram preenchidos)
+    const atual = document.getElementById('meu_senha_atual').value;
+    const nova = document.getElementById('meu_nova_senha').value;
+    const conf = document.getElementById('meu_confirmar_senha').value;
+    if(atual || nova || conf){
+      if(!atual){ toast('Informe a senha atual'); return; }
+      if(nova.length < 6){ toast('Nova senha deve ter pelo menos 6 caracteres'); return; }
+      if(nova !== conf){ toast('Confirmação de senha não confere'); return; }
+      try{
+        const res = await fetch('api/usuarios/me/senha',{
+          method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify({ senha_atual: atual, nova_senha: nova })
+        });
+        const d = await res.json();
+        if(res.ok){ saved = true; }
+        else { toast(d.error||'Erro ao alterar senha'); return; }
+      }catch(err){ toast('Erro de conexão'); return; }
+    }
+    if(saved){
+      toast('Dados atualizados!');
+      document.getElementById('meu_senha_atual').value='';
+      document.getElementById('meu_nova_senha').value='';
+      document.getElementById('meu_confirmar_senha').value='';
+    } else if(!atual && !nova && !conf && novoNome === (user.nome||'')){
+      toast('Nenhuma alteração feita');
+    }
+  });
+})();
+</script>
+</body>
+</html>
