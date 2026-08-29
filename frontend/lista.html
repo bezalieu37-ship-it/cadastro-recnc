@@ -274,7 +274,7 @@
         <li class="nav-item"><a class="nav-link" href="acompanhamentos.html" id="navAcomp"><i class="fas fa-user-check me-1"></i>Acompanhamentos</a></li>
         <li class="nav-item"><a class="nav-link" href="usuarios.html" id="navUsuarios">Usuários</a></li>
         <li class="nav-item"><a class="nav-link" href="configuracoes.html"><i class="fas fa-gear me-1"></i>Configurações</a></li>
-        <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatórios</a></li>
+        <li class="nav-item" id="navRelatorios" style="display:none"><a class="nav-link" href="#" onclick="abrirModalRelatorio(); return false;"><i class="fas fa-chart-bar me-1"></i>Relatório Dock</a></li>
       </ul>
     </div>
   </div>
@@ -319,8 +319,8 @@
           <button class="btn btn-outline-secondary btn-export" onclick="exportarPDF()" title="Exportar PDF">
             <i class="fas fa-file-pdf me-1"></i>PDF
           </button>
-          <button class="btn btn-relatorio btn-outline-primary d-none" id="btnRelatorio" onclick="abrirModalRelatorio()" title="Relatório">
-            <i class="fas fa-chart-bar me-1"></i>Relatório
+    <button class="btn btn-relatorio btn-outline-primary d-none" id="btnRelatorio" onclick="abrirModalRelatorio()" title="Relatório Dock">
+    <i class="fas fa-chart-bar me-1"></i>Relatório Dock
           </button>
           <button class="btn btn-primary" onclick="novoCadastro()">
             <i class="fas fa-plus me-1"></i>Novo Cadastro
@@ -880,22 +880,14 @@
   document.getElementById('btnGerarRelatorio').addEventListener('click', async () => {
     const payload = getReportPayload();
     try {
-      const res = await fetch('api/reports/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (res.ok && data.html_content) {
-        const win = window.open('', '_blank');
-        win.document.write(data.html_content);
-        win.document.close();
-        bootstrap.Modal.getInstance(document.getElementById('modalRelatorio')).hide();
-      } else {
-        alert(data.error || 'Erro ao gerar relatório.');
-      }
+      // Baixa o relatório como arquivo .txt (mesmo padrão de download do PDF/CSV)
+      let url = 'api/export/txt?titulo=' + encodeURIComponent(payload.titulo || '') + '&tipo=' + encodeURIComponent(payload.tipo) + '&search=' + encodeURIComponent(payload.search);
+      if (payload.ids && payload.ids.length > 0) url += '&ids=' + payload.ids.join(',');
+      await exportarArquivo(url, 'relatorio_dock_' + new Date().toISOString().slice(0,10) + '.txt', 'text/plain');
+      bootstrap.Modal.getInstance(document.getElementById('modalRelatorio')).hide();
     } catch (err) {
-      alert('Erro de conexão ao gerar relatório.');
+      console.error('Erro gerar relatório TXT:', err);
+      alert('Erro ao gerar relatório. Tente novamente.');
     }
   });
 

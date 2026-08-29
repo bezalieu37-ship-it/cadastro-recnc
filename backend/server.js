@@ -790,8 +790,21 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(csvQuery, params);
     const pessoas = result.rows;
+
+    // Dados da congregação para o cabeçalho do CSV
+    let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
+    try {
+      const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
+      if (orgRes.rows[0]) org = orgRes.rows[0];
+    } catch (e) { /* mantém vazio */ }
+
     const BOM = '\uFEFF';
-    const header = 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro\n';
+    const csvInfo = [];
+    if (org.nome_org) csvInfo.push('Congregação: ' + org.nome_org);
+    if (org.endereco) csvInfo.push('Endereço: ' + org.endereco);
+    if (org.telefone) csvInfo.push('Telefone: ' + org.telefone);
+    if (org.responsavel) csvInfo.push('Responsável: ' + org.responsavel);
+    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro\n';
     const rows = pessoas.map(p => {
       const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
       const acompName = p.acomp_nome || p.acompanhante || '-';
@@ -843,6 +856,13 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     const result = await pool.query(query, params);
     const pessoas = result.rows;
 
+    // Dados da congregação para o cabeçalho do PDF
+    let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
+    try {
+      const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
+      if (orgRes.rows[0]) org = orgRes.rows[0];
+    } catch (e) { /* mantém vazio */ }
+
     // Gerar PDF real com PDFKit
     const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
@@ -852,7 +872,24 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     doc.pipe(res);
 
     // --- CABEÇALHO ---
-    doc.fontSize(20).font('Helvetica-Bold').fillColor('#0d6efd').text('CADASTRO RECNC', 30, 30);
+    const tituloOrg = (org.nome_org || 'CADASTRO RECNC');
+    // Bloco da congregação (se configurado) no canto superior direito
+    let orgInfoLines = [];
+    if (org.endereco) orgInfoLines.push(org.endereco);
+    if (org.telefone) orgInfoLines.push('Tel: ' + org.telefone);
+    if (org.email) orgInfoLines.push(org.email);
+    if (org.responsavel) orgInfoLines.push('Resp.: ' + org.responsavel);
+    if (orgInfoLines.length) {
+      let orgY = 30;
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#0d6efd').text(tituloOrg, 30, orgY, { align: 'left' });
+      doc.font('Helvetica').fillColor('#666');
+      orgInfoLines.forEach(line => {
+        doc.fontSize(8).text(line, 630, orgY, { width: 195, align: 'right' });
+        orgY += 12;
+      });
+    } else {
+      doc.fontSize(20).font('Helvetica-Bold').fillColor('#0d6efd').text('CADASTRO RECNC', 30, 30);
+    }
     doc.fontSize(11).font('Helvetica').fillColor('#333').text('Relatório de Cadastros', 30, 55);
     doc.moveDown(0.2);
     doc.fontSize(9).fillColor('#666')
@@ -940,6 +977,96 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
     res.status(500).json({ error: 'Erro ao gerar PDF.' });
+  }
+});
+app.get('/api/export/txt', authMiddleware, async (req, res) => {
+  const { tipo, search, ids } = req.query;
+  let whereClause = '';
+  const params = [];
+  let paramIndex = 1;
+
+  if (ids) {
+    const idList = ids.split(',').map(Number);
+    whereClause += ' AND p.id IN (' + buildPlaceholders(idList, paramIndex) + ')';
+    params.push(...idList);
+    paramIndex += idList.length;
+  } else {
+    if (tipo && tipo !== 'all') {
+      whereClause += ' AND p.tipo_cadastro = $' + paramIndex;
+      params.push(tipo);
+      paramIndex++;
+    }
+    if (search) {
+      whereClause += ' AND (p.nome_completo ILIKE $' + paramIndex + ' OR p.telefone ILIKE $' + (paramIndex + 1) + ')';
+      params.push('%' + search + '%');
+      params.push('%' + search + '%');
+      paramIndex += 2;
+    }
+  }
+
+  // Non-admin users only see their accompanied people
+  if (!req.user || req.user.perfil?.toLowerCase() !== 'admin') {
+    whereClause += ' AND p.acompanhante = $' + paramIndex;
+    params.push(req.user.id);
+    paramIndex++;
+  }
+
+  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+
+  try {
+    const result = await pool.query(query, params);
+    const pessoas = result.rows;
+
+    // Dados da congregação para o cabeçalho
+    let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
+    try {
+      const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
+      if (orgRes.rows[0]) org = orgRes.rows[0];
+    } catch (e) { /* mantém vazio */ }
+
+    const BOM = '\uFEFF';
+    const linhas = [];
+    const titulo = (req.query.titulo || (org.nome_org || 'Cadastro RECNC'));
+    linhas.push('='.repeat(70));
+    linhas.push(titulo.toUpperCase());
+    if (org.endereco) linhas.push(org.endereco);
+    if (org.telefone) linhas.push('Telefone: ' + org.telefone);
+    if (org.email) linhas.push('E-mail: ' + org.email);
+    if (org.responsavel) linhas.push('Responsável: ' + org.responsavel);
+    linhas.push('='.repeat(70));
+    linhas.push('Relatório de Cadastros');
+    if (req.query.titulo) linhas.push((req.query.titulo));
+    linhas.push('Gerado em: ' + new Date().toLocaleString('pt-BR') + '  |  Total: ' + pessoas.length + ' registro(s)');
+    linhas.push('-'.repeat(70));
+
+    if (pessoas.length === 0) {
+      linhas.push('Nenhum registro encontrado para os filtros informados.');
+    } else {
+      function tipoLabelTxt(t) {
+        if (t === 'novo_nascimento') return 'Novo Nascimento';
+        if (t === 'reconciliacao') return 'Reconciliação';
+        return 'Novo Congregado';
+      }
+      linhas.push(String('ID').padEnd(5) + String('Nome').padEnd(38) + String('Telefone').padEnd(20) + String('Tipo').padEnd(20) + String('Data'));
+      linhas.push('-'.repeat(70));
+      pessoas.forEach(p => {
+        const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+        const nome = (p.nome_completo || '-').slice(0, 37);
+        const tel = (p.telefone || '-').slice(0, 19);
+        const tipo = tipoLabelTxt(p.tipo_cadastro).slice(0, 19);
+        linhas.push(String(p.id).padEnd(5) + String(nome).padEnd(38) + String(tel).padEnd(20) + String(tipo).padEnd(20) + data);
+      });
+    }
+    linhas.push('-'.repeat(70));
+    linhas.push('Cadastro RECNC - Relatório gerado automaticamente | ' + new Date().toLocaleString('pt-BR'));
+
+    const content = linhas.join('\r\n') + '\r\n';
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=relatorio_dock_' + new Date().toISOString().slice(0,10) + '.txt');
+    res.send(BOM + content);
+  } catch (error) {
+    console.error('Erro ao gerar relatório TXT:', error);
+    res.status(500).json({ error: 'Erro ao gerar relatório.' });
   }
 });
 app.post('/api/reports/send', authMiddleware, adminMiddleware, async (req, res) => {
