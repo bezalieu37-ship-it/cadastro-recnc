@@ -10,6 +10,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dark.css">
+  <script src="js/theme.js"></script>
   <style>
     :root { --pri: #0d6efd; --pri-dark: #0a58ca; --bg: #f0f2f5; }
     * { -webkit-tap-highlight-color: transparent; }
@@ -324,30 +326,20 @@
   }
 
   // ========== TEMA ==========
+  // O js/theme.js (no <head>) já aplica o tema salvo ao carregar.
+  // Aqui apenas trocamos o estado ao clicar e re-aplicamos a classe global.
   function applyTheme(t){
-    const html = document.documentElement;
-    if(t === 'dark'){
-      html.setAttribute('data-bs-theme','dark');
-      // Fundos custom das seções
-      document.body.style.background = '#111827';
-      document.querySelectorAll('.cfg').forEach(c=> c.style.background='#1f2937');
-      document.querySelectorAll('.cfg h6').forEach(h=> h.style.color='#f3f4f6');
-      document.querySelectorAll('.cfg .form-control').forEach(i=>{ });
-      document.getElementById('temaClaro')?.classList.remove('active');
-      document.getElementById('temaEscuro')?.classList.add('active');
-    } else {
-      html.setAttribute('data-bs-theme','light');
-      document.body.style.background = '#f0f2f5';
-      document.querySelectorAll('.cfg').forEach(c=> { c.style.background='#fff'; c.style.color=''; });
-      document.querySelectorAll('.cfg h6').forEach(h=> h.style.color='');
-      document.getElementById('temaEscuro')?.classList.remove('active');
-      document.getElementById('temaClaro')?.classList.add('active');
-    }
+    const escuro = (t === 'escuro'); // valores da chave: 'claro' | 'escuro'
+    document.documentElement.setAttribute('data-bs-theme', escuro ? 'dark' : 'light');
+    document.body.classList.toggle('dark-mode', escuro);
+    document.getElementById('temaClaro')?.classList.toggle('active', !escuro);
+    document.getElementById('temaEscuro')?.classList.toggle('active', escuro);
   }
-  const temaSalvo = localStorage.getItem('tema') || 'claro';
+  const clrEl = document.getElementById('temaClaro'), dkEl = document.getElementById('temaEscuro');
+  const temaSalvo = (localStorage.getItem('tema') || 'claro');
   applyTheme(temaSalvo);
-  document.getElementById('temaClaro').addEventListener('click', ()=>{ localStorage.setItem('tema','claro'); applyTheme('claro'); toast('Tema claro aplicado'); });
-  document.getElementById('temaEscuro').addEventListener('click', ()=>{ localStorage.setItem('tema','escuro'); applyTheme('escuro'); toast('Tema escuro aplicado'); });
+  clrEl?.addEventListener('click', ()=>{ localStorage.setItem('tema','claro'); applyTheme('claro'); toast('Tema claro aplicado'); });
+  dkEl?.addEventListener('click', ()=>{ localStorage.setItem('tema','escuro'); applyTheme('escuro'); toast('Tema escuro aplicado'); });
 
   // ========== PERFIL CONGREGAÇÃO ==========
   const cfgOrg = document.getElementById('cfgOrg');

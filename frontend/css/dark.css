@@ -1,0 +1,126 @@
+/* Dark mode overrides for Cadastro RECNC
+   Ativado pela tag <body class="dark-mode"> aplicada por js/theme.js
+   quando localStorage['tema'] === 'escuro'. */
+
+body.dark-mode {
+  background: #0f1117 !important;
+  color: #e5e7eb;
+}
+
+/* === Componentes custom com fundo claro === */
+body.dark-mode .cfg,
+body.dark-mode .s-card,
+body.dark-mode .card,
+body.dark-mode .panel,
+body.dark-mode .list-card,
+body.dark-mode .filter-bar,
+body.dark-mode .user-card,
+body.dark-mode .person-card,
+body.dark-mode .person-item,
+body.dark-mode .report-preview {
+  background: #1a1e27;
+  border-color: #2a2f3a;
+  color: #e5e7eb;
+}
+body.dark-mode .filter-bar { box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+
+/* === Cards de estatística (dashboard) === */
+body.dark-mode .stats-card,
+body.dark-mode .stats { background: transparent; }
+body.dark-mode .stats-card { background:#1a1e27; border:none; box-shadow:0 2px 12px rgba(0,0,0,.4); }
+
+/* === Rows / itens de lista === */
+body.dark-mode .r-item {
+  border-bottom-color: #2a2f3a;
+}
+body.dark-mode .r-item:hover {
+  background: #1f2430;
+}
+body.dark-mode .person-item { border-bottom-color: #2a2f3a; }
+body.dark-mode .person-item:hover { background: #1f2430; }
+body.dark-mode .person-item:active { background: #252b38; }
+
+/* === User cards (acompanhamentos/usuarios) === */
+body.dark-mode .user-card .user-header,
+body.dark-mode .user-card .user-body {
+  background: #1a1e27;
+  border-bottom-color: #2a2f3a;
+}
+body.dark-mode .user-card .user-header:hover { background: #1f2430; }
+body.dark-mode .user-card .user-name { color: #f3f4f6; }
+body.dark-mode .user-name { color: #f3f4f6; }
+body.dark-mode .user-info .user-name { color: #f3f4f6; }
+
+/* === Person cards (lista) === */
+body.dark-mode .person-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  background:#1a1e27;
+}
+body.dark-mode .person-card.selected {
+  background: #1d2938;
+  border-left-color: #0d6efd;
+}
+body.dark-mode .person-card .card-name { color: #f3f4f6; }
+body.dark-mode .person-card .card-meta,
+body.dark-mode .card-meta,
+body.dark-mode .cfg-hdr p,
+body.dark-mode .user-email,
+body.dark-mode .person-item .person-meta { color: #9ca3af; }
+body.dark-mode .person-item .person-name { color: #f3f4f6; }
+
+/* === Textos e divisórias === */
+body.dark-mode .text-muted { color: #9ca3af !important; }
+body.dark-mode .cfg-hdr,
+body.dark-mode .user-header { border-bottom-color: #2a2f3a; }
+body.dark-mode hr { border-color: #2a2f3a; }
+
+/* === Modais (Bootstrap usa data-bs-theme no html, mas reforça janela) === */
+body.dark-mode .modal-content { background: #1a1e27; }
+
+/* === Login / cadastro (telas de entrada) === */
+body.dark-mode .login-page { background: linear-gradient(135deg, #1a1e27 0%, #0f1117 100%); }
+body.dark-mode .login-card { background: #1a1e27; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+body.dark-mode .login-card h2,
+body.dark-mode .login-card .form-label,
+body.dark-mode .logo-text { color: #f3f4f6; }
+
+/* === Navbars (as principais usam gradiente azul e ficam OK; reforça se vazia) === */
+body.dark-mode .navbar-brand,
+body.dark-mode .top-nav .brand { color:#fff; }
+
+/* === Paginação / cards de ação === */
+body.dark-mode .card-actions .btn {
+  background: #1a1e27;
+  border-color: #2a2f3a;
+  color: #9ca3af;
+}
+body.dark-mode .pagination-custom .page-link {
+  background: #1a1e27;
+  border-color: #2a2f3a;
+  color: #cbd5e1;
+}
+body.dark-mode .pagination-custom .page-link:hover { background: #252b38; }
+
+/* === Textos com cores hardcoded (dashboard) === */
+body.dark-mode .welcome-text h5 { color: #f3f4f6; }
+body.dark-mode .welcome-text p { color: #9ca3af; }
+body.dark-mode .s-card .num { color: #f3f4f6; }
+body.dark-mode .s-card .lbl { color: #9ca3af; }
+body.dark-mode .r-name { color: #f3f4f6; }
+body.dark-mode .r-meta { color: #9ca3af; }
+body.dark-mode .quick-link,
+body.dark-mode .section-title { color: #cbd5e1; }
+
+/* === Formulário / detalhes === */
+body.dark-mode .form-label-custom,
+body.dark-mode .detail-label { color: #cbd5e1; }
+body.dark-mode .detail-value,
+body.dark-mode .form-control-custom,
+body.dark-mode .form-select-custom { color: #f3f4f6; }
+body.dark-mode .person-card .card-name { color: #f3f4f6; }
+
+/* === Campos de entrada (Bootstrap já trata via data-bs-theme, reforça) === */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .form-control-color { background-color: #1a1e27; border-color: #2a2f3a; color: #f3f4f6; }
+body.dark-mode .input-group-text { background-color: #1a1e27; border-color: #2a2f3a; color: #9ca3af; }
