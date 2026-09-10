@@ -807,11 +807,14 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     if (org.endereco) csvInfo.push('Endereço: ' + org.endereco);
     if (org.telefone) csvInfo.push('Telefone: ' + org.telefone);
     if (org.responsavel) csvInfo.push('Responsável: ' + org.responsavel);
-    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro,Observação\n';
+    // Célula CSV: aspas duplas + escape de aspas e quebras de linha (texto nunca invade outras colunas)
+    const csvCell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/[\r\n]+/g, ' ') + '"';
+    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID;Nome Completo;Data Nascimento;Endereço;Ponto Referência;Telefone;Tipo;Acompanhado Por;Cadastrado Por;Data Cadastro;Observação\n';
     const rows = pessoas.map(p => {
       const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
       const acompName = p.acomp_nome || p.acompanhante || '-';
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}","${(p.observacao||'').replace(/[\r\n]+/g,' ').replace(/"/g,'""')}"`;
+      const dataCad = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '';
+      return [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, tipoLabel, acompName, p.admin_nome, dataCad, p.observacao].map(csvCell).join(';');
     }).join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv');
@@ -930,8 +933,9 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     pessoas.forEach((p, idx) => {
       // Texto da observação (pré-calculado para saber a altura real antes de desenhar)
       const obs = (p.observacao || '').trim();
-      // Altura das linhas extras da observação (largura 762pt com quebra automática)
-      const obsHeight = obs ? doc.heightOfString('Obs.: ' + obs, { width: 762 }) + 4 : 0;
+      // Altura das linhas extras da observação — MESMA largura usada no desenho (758pt) para o
+      // wrap ser idêntico e o texto nunca invadir a linha de baixo (+8 de folga)
+      const obsHeight = obs ? doc.heightOfString('Obs.: ' + obs, { width: 758 }) + 8 : 0;
       const rowHeight = 14 + obsHeight;
 
       // Quebra de página considerando a altura do registro + observação
