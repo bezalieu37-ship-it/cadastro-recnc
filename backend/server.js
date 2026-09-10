@@ -924,6 +924,18 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       return 'Novo Cong.';
     }
 
+    // Trunca o texto (com "…") para caber na largura da célula — garante UMA única linha,
+    // evitando que o endereço/outros campos quebrem linha e colidam com a observação seguinte
+    function fit(s, maxW) {
+      const txt = (s == null ? '' : String(s)).trim() || '-';
+      if (doc.widthOfString(txt, { font: 'Helvetica', fontSize: 7 }) <= maxW) return txt;
+      let t = txt;
+      while (t.length > 1 && doc.widthOfString(t + '…', { font: 'Helvetica', fontSize: 7 }) > maxW) {
+        t = t.slice(0, -1);
+      }
+      return t + '…';
+    }
+
     // Resolver nome do acompanhante
     const userMap = {};
     pessoas.forEach(p => {
@@ -963,15 +975,15 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       const acomp = p.acomp_nome || String(p.acompanhante || '-');
 
       doc.fillColor('#333');
-      doc.text(String(p.id), colX[0] + 3, rowY, { width: colW[0], ellipsis: true });
-      doc.text(nome, colX[1] + 3, rowY, { width: colW[1], ellipsis: true });
-      doc.text(p.data_nascimento || '-', colX[2] + 3, rowY, { width: colW[2], ellipsis: true });
-      doc.text(ender, colX[3] + 3, rowY, { width: colW[3], ellipsis: true });
-      doc.text(ref, colX[4] + 3, rowY, { width: colW[4], ellipsis: true });
-      doc.text(tel, colX[5] + 3, rowY, { width: colW[5], ellipsis: true });
-      doc.text(acomp, colX[6] + 3, rowY, { width: colW[6], ellipsis: true });
-      doc.text(tipoLabel(p.tipo_cadastro), colX[7] + 3, rowY, { width: colW[7], ellipsis: true });
-      doc.text(data, colX[8] + 3, rowY, { width: colW[8], ellipsis: true });
+      doc.text(fit(p.id, colW[0] - 4), colX[0] + 3, rowY, { width: colW[0], lineBreak: false });
+      doc.text(fit(nome, colW[1] - 4), colX[1] + 3, rowY, { width: colW[1], lineBreak: false });
+      doc.text(fit(p.data_nascimento || '-', colW[2] - 4), colX[2] + 3, rowY, { width: colW[2], lineBreak: false });
+      doc.text(fit(ender, colW[3] - 4), colX[3] + 3, rowY, { width: colW[3], lineBreak: false });
+      doc.text(fit(ref, colW[4] - 4), colX[4] + 3, rowY, { width: colW[4], lineBreak: false });
+      doc.text(fit(tel, colW[5] - 4), colX[5] + 3, rowY, { width: colW[5], lineBreak: false });
+      doc.text(fit(acomp, colW[6] - 4), colX[6] + 3, rowY, { width: colW[6], lineBreak: false });
+      doc.text(fit(tipoLabel(p.tipo_cadastro), colW[7] - 4), colX[7] + 3, rowY, { width: colW[7], lineBreak: false });
+      doc.text(fit(data, colW[8] - 4), colX[8] + 3, rowY, { width: colW[8], lineBreak: false });
 
       // Observação como linha extra abaixo do registro (wrap automático, nunca corta o texto)
       if (obs) {
