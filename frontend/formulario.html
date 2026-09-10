@@ -158,6 +158,14 @@
               <input type="text" class="form-control form-control-custom" id="pontoReferencia" placeholder="Ex: Em frente a padaria" required>
             </div>
 
+            <!-- Observação -->
+            <div class="section-title mt-4"><i class="fas fa-sticky-note"></i> Observação</div>
+            <div class="mb-3">
+              <label class="form-label-custom" for="observacao">Observação <small class="text-muted">(opcional)</small></label>
+              <textarea class="form-control form-control-custom" id="observacao" rows="3" placeholder="Informações extras sobre esta pessoa (ex.: visitas, pedidos, contexto familiar...)"></textarea>
+              <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Essa observação acompanha a ficha e também os arquivos e relatórios exportados (CSV, PDF e TXT).</small>
+            </div>
+
             <!-- Tipo e Acompanhamento -->
             <div class="section-title mt-4"><i class="fas fa-clipboard-check"></i> Tipo e Acompanhamento</div>
 
@@ -302,6 +310,7 @@
       document.getElementById('dataNascimento').value = p.data_nascimento || '';
       document.getElementById('telefone').value = p.telefone || '';
       document.getElementById('pontoReferencia').value = p.ponto_referencia || '';
+      document.getElementById('observacao').value = p.observacao || '';
 
       // Tipo cadastro (radio)
       if (p.tipo_cadastro) {
@@ -458,6 +467,7 @@
     const telefone = document.getElementById('telefone').value.trim();
     const endereco = montarEndereco();
     const pontoReferencia = document.getElementById('pontoReferencia').value.trim();
+    const observacao = document.getElementById('observacao').value.trim();
     const tipoCadastro = document.querySelector('input[name="tipoCadastro"]:checked')?.value;
     const acompanhante = document.getElementById('acompanhante').value;
 
@@ -480,6 +490,7 @@
         data_cadastro: dataCadastro || new Date().toISOString(),
         endereco: endereco,
         ponto_referencia: pontoReferencia,
+        observacao: observacao,
         telefone: telefone,
         tipo_cadastro: tipoCadastro,
         acompanhante: acompanhante,

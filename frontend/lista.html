@@ -740,6 +740,7 @@
           ${p.acompanhante ? '<div class="detail-row"><span class="detail-label"><i class="fas fa-user-friends me-1 text-muted"></i>Acompanhamento</span><span class="detail-value">' + p.acompanhante + '</span></div>' : ''}
           <div class="detail-row"><span class="detail-label"><i class="fas fa-user-check me-1 text-muted"></i>Cadastrado por</span><span class="detail-value">${p.admin_nome || '-'}</span></div>
           <div class="detail-row"><span class="detail-label"><i class="fas fa-clock me-1 text-muted"></i>Data cadastro</span><span class="detail-value">${dataFormatada}</span></div>
+          ${p.observacao ? '<div class="detail-row" style="align-items:flex-start; margin-top:10px;"><span class="detail-label"><i class="fas fa-sticky-note me-1 text-muted"></i>Observação</span><span class="detail-value" style="white-space:pre-wrap; word-break:break-word;">' + p.observacao + '</span></div>' : ''}
         </div>
       `;
     } catch (err) {

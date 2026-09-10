@@ -79,7 +79,7 @@ async function initializeDatabase() {
       )
     `);
     await client.query(`
-      CREATE TABLE IF NOT EXISTS pessoas (
+CREATE TABLE IF NOT EXISTS pessoas (
         id SERIAL PRIMARY KEY,
         nome_completo TEXT NOT NULL,
         data_nascimento TEXT,
@@ -89,10 +89,13 @@ async function initializeDatabase() {
         tipo_cadastro TEXT NOT NULL CHECK (tipo_cadastro IN ('novo_nascimento', 'reconciliacao', 'novo_congregado')),
         acompanhante TEXT,
         foto_url TEXT,
+        observacao TEXT DEFAULT '',
         cadastrado_por INTEGER REFERENCES usuarios(id),
         data_cadastro TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    // Migração segura: garante a coluna observacao em tabelas existentes
+    await client.query('ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS observacao TEXT DEFAULT \'\'');
     await client.query(`
       CREATE TABLE IF NOT EXISTS relatorios (
         id SERIAL PRIMARY KEY,
@@ -284,7 +287,7 @@ app.post('/api/usuarios', authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res) => {
-  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante } = req.body;
+  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, observacao } = req.body;
   if (!nome_completo || !endereco || !ponto_referencia || !telefone || !tipo_cadastro) {
     return res.status(400).json({ error: 'Todos os campos obrigatorios devem ser preenchidos.' });
   }
@@ -309,9 +312,9 @@ app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res)
     }
 
     const result = await pool.query(
-      `INSERT INTO pessoas (nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
-      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, cadastrado_por]
+      `INSERT INTO pessoas (nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, observacao, cadastrado_por)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, observacao || '', cadastrado_por]
     );
     res.json({ message: 'Pessoa cadastrada com sucesso.', pessoaId: result.rows[0].id });
   } catch (error) {
@@ -468,7 +471,7 @@ app.put('/api/pessoas/:id', authMiddleware, async (req, res) => {
     fotoFile = req.file || null;
   }
 
-  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url } = body;
+  const { nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, observacao } = body;
   let fotoUrl = foto_url || '';
 
   console.log('[PUT /api/pessoas/' + req.params.id + '] body keys:', Object.keys(body), 'nome:', nome_completo);
@@ -498,8 +501,8 @@ app.put('/api/pessoas/:id', authMiddleware, async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, data_cadastro = $3, endereco = $4, ponto_referencia = $5, telefone = $6, tipo_cadastro = $7, acompanhante = $8, foto_url = $9 WHERE id = $10',
-      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, req.params.id]
+      'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, data_cadastro = $3, endereco = $4, ponto_referencia = $5, telefone = $6, tipo_cadastro = $7, acompanhante = $8, foto_url = $9, observacao = $10 WHERE id = $11',
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, observacao || '', req.params.id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
@@ -804,11 +807,11 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     if (org.endereco) csvInfo.push('Endereço: ' + org.endereco);
     if (org.telefone) csvInfo.push('Telefone: ' + org.telefone);
     if (org.responsavel) csvInfo.push('Responsável: ' + org.responsavel);
-    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro\n';
+    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID,Nome Completo,Data Nascimento,Endereço,Ponto Referência,Telefone,Tipo,Acompanhado Por,Cadastrado Por,Data Cadastro,Observação\n';
     const rows = pessoas.map(p => {
       const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
       const acompName = p.acomp_nome || p.acompanhante || '-';
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}"`;
+      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}","${(p.observacao||'').replace(/"/g,'""')}"`;
     }).join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv');
@@ -898,10 +901,10 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
     // --- TABELA ---
     const startY = 100;
-    // 9 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acompanhado Por, Tipo, Data Cad
-    const colX = [30, 65, 215, 300, 445, 575, 660, 740, 795];
-    const colW = [35, 150, 85, 145, 130, 85, 80, 55, 27];
-    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data'];
+    // 10 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data, Observacao
+    const colX = [30, 55, 165, 235, 355, 465, 535, 605, 660, 715];
+    const colW = [25, 110, 70, 120, 110, 70, 70, 55, 55, 107];
+    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data', 'Observação'];
 
     // Header row
     doc.rect(30, startY, 792, 18).fill('#0d6efd');
@@ -959,6 +962,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       doc.text(acomp, colX[6] + 3, rowY, { width: colW[6], ellipsis: true });
       doc.text(tipoLabel(p.tipo_cadastro), colX[7] + 3, rowY, { width: colW[7], ellipsis: true });
       doc.text(data, colX[8] + 3, rowY, { width: colW[8], ellipsis: true });
+      doc.text(p.observacao || '-', colX[9] + 3, rowY, { width: colW[9], ellipsis: true });
 
       y += 14;
     });
@@ -1024,8 +1028,8 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
       if (orgRes.rows[0]) org = orgRes.rows[0];
     } catch (e) { /* mantém vazio */ }
 
+    // Definição das colunas da tabela
     const BOM = '\uFEFF';
-    const W = 96; // largura total da tabela (linha de texto)
 
     // Helper: preencher célula com largura fixa, sem quebrar palavra ao meio
     function cell(str, width) {
@@ -1038,17 +1042,20 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
       }
       return cut.padEnd(width);
     }
-    // Definição das colunas da tabela
+
     const cols = [
-      { h: 'ID',    w: 6 },
-      { h: 'Nome',  w: 30 },
-      { h: 'Telefone', w: 18 },
-      { h: 'Tipo',  w: 22 },
-      { h: 'Data',  w: 12 }
+      { h: 'ID',         w: 6 },
+      { h: 'Nome',       w: 30 },
+      { h: 'Telefone',   w: 18 },
+      { h: 'Tipo',       w: 22 },
+      { h: 'Data',       w: 12 },
+      { h: 'Observação', w: 32 }
     ];
     const colWidths = cols.map(c => c.w);
     // Linha de separação da tabela gerada dinamicamente (bordas + |  +)
     const sepLine = '+' + colWidths.map(w => '-'.repeat(w + 2)).join('+') + '+';
+    // Largura total da tabela (linha de texto) = comprimento da linha de separação
+    const W = sepLine.length;
     // Linha de separação fina para o topo (traço contínuo)
     const thinLine = '-'.repeat(W);
 
@@ -1088,7 +1095,8 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
           + cell(p.nome_completo || '-', cols[1].w) + ' | '
           + cell(p.telefone || '-', cols[2].w) + ' | '
           + cell(tipoLabelTxt(p.tipo_cadastro), cols[3].w) + ' | '
-          + cell(data, cols[4].w) + ' |';
+          + cell(data, cols[4].w) + ' | '
+          + cell(p.observacao || '-', cols[5].w) + ' |';
         linhas.push(row);
       });
       linhas.push(sepLine);
