@@ -314,7 +314,7 @@ app.post('/api/pessoas', authMiddleware, upload.single('foto'), async (req, res)
     const result = await pool.query(
       `INSERT INTO pessoas (nome_completo, data_nascimento, data_cadastro, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, observacao, cadastrado_por)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
-      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, observacao || '', cadastrado_por]
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, (acompanhante && String(acompanhante).trim() ? acompanhante : null), fotoUrl, observacao || '', cadastrado_por]
     );
     res.json({ message: 'Pessoa cadastrada com sucesso.', pessoaId: result.rows[0].id });
   } catch (error) {
@@ -410,7 +410,7 @@ app.get('/api/usuarios/acompanhamentos-por-usuario', authMiddleware, adminMiddle
           ) ORDER BY p.data_cadastro DESC
         ) FILTER (WHERE p.id IS NOT NULL), '[]') as pessoas
       FROM usuarios u
-      LEFT JOIN pessoas p ON CAST(p.acompanhante AS INTEGER) = u.id
+      LEFT JOIN pessoas p ON u.id::TEXT = p.acompanhante
       GROUP BY u.id, u.nome, u.perfil
       ORDER BY total_acompanhamentos DESC
     `);
@@ -502,7 +502,7 @@ app.put('/api/pessoas/:id', authMiddleware, async (req, res) => {
 
     const result = await pool.query(
       'UPDATE pessoas SET nome_completo = $1, data_nascimento = $2, data_cadastro = $3, endereco = $4, ponto_referencia = $5, telefone = $6, tipo_cadastro = $7, acompanhante = $8, foto_url = $9, observacao = $10 WHERE id = $11',
-      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante || '', fotoUrl, observacao || '', req.params.id]
+      [nome_completo, data_nascimento || null, data_cadastro || new Date().toISOString(), endereco, ponto_referencia, telefone, tipo_cadastro, (acompanhante && String(acompanhante).trim() ? acompanhante : null), fotoUrl, observacao || '', req.params.id]
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Pessoa nao encontrada.' });
@@ -788,7 +788,7 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     paramIndex++;
   }
 
-  const csvQuery = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  const csvQuery = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON u2.id::TEXT = p.acompanhante WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
     const result = await pool.query(csvQuery, params);
@@ -811,7 +811,7 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     const rows = pessoas.map(p => {
       const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
       const acompName = p.acomp_nome || p.acompanhante || '-';
-      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}","${(p.observacao||'').replace(/"/g,'""')}"`;
+      return `${p.id},"${(p.nome_completo||'').replace(/"/g,'""')}","${p.data_nascimento||''}","${(p.endereco||'').replace(/"/g,'""')}","${(p.ponto_referencia||'').replace(/"/g,'""')}","${(p.telefone||'').replace(/"/g,'""')}","${tipoLabel}","${(acompName+'').replace(/"/g,'""')}","${(p.admin_nome||'').replace(/"/g,'""')}","${p.data_cadastro}","${(p.observacao||'').replace(/[\r\n]+/g,' ').replace(/"/g,'""')}"`;
     }).join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv');
@@ -853,7 +853,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     paramIndex++;
   }
 
-  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON u2.id::TEXT = p.acompanhante WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
     const result = await pool.query(query, params);
@@ -901,10 +901,10 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
     // --- TABELA ---
     const startY = 100;
-    // 10 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data, Observacao
-    const colX = [30, 55, 165, 235, 355, 465, 535, 605, 660, 715];
-    const colW = [25, 110, 70, 120, 110, 70, 70, 55, 55, 107];
-    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data', 'Observação'];
+    // 9 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data
+    const colX = [30, 50, 145, 210, 330, 440, 500, 575, 635];
+    const colW = [20, 95, 65, 120, 110, 60, 75, 60, 175];
+    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data'];
 
     // Header row
     doc.rect(30, startY, 792, 18).fill('#0d6efd');
@@ -928,8 +928,14 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     });
 
     pessoas.forEach((p, idx) => {
-      // Quebra de página
-      if (y > 570) {
+      // Texto da observação (pré-calculado para saber a altura real antes de desenhar)
+      const obs = (p.observacao || '').trim();
+      // Altura das linhas extras da observação (largura 762pt com quebra automática)
+      const obsHeight = obs ? doc.heightOfString('Obs.: ' + obs, { width: 762 }) + 4 : 0;
+      const rowHeight = 14 + obsHeight;
+
+      // Quebra de página considerando a altura do registro + observação
+      if (y + rowHeight > 585) {
         doc.addPage();
         y = 30;
         doc.rect(30, y, 792, 18).fill('#0d6efd');
@@ -941,7 +947,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
       // Alternating row bg
       if (idx % 2 === 0) {
-        doc.rect(30, y, 792, 14).fill('#f8f9fa');
+        doc.rect(30, y, 792, rowHeight).fill('#f8f9fa');
       }
 
       const rowY = y + 2;
@@ -962,9 +968,15 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       doc.text(acomp, colX[6] + 3, rowY, { width: colW[6], ellipsis: true });
       doc.text(tipoLabel(p.tipo_cadastro), colX[7] + 3, rowY, { width: colW[7], ellipsis: true });
       doc.text(data, colX[8] + 3, rowY, { width: colW[8], ellipsis: true });
-      doc.text(p.observacao || '-', colX[9] + 3, rowY, { width: colW[9], ellipsis: true });
 
-      y += 14;
+      // Observação como linha extra abaixo do registro (wrap automático, nunca corta o texto)
+      if (obs) {
+        doc.font('Helvetica-Oblique').fontSize(7).fillColor('#555');
+        doc.text('Obs.: ' + obs, 34, y + 16, { width: 758, align: 'left' });
+        doc.font('Helvetica').fontSize(7).fillColor('#333');
+      }
+
+      y += rowHeight;
     });
 
     // --- RODAPÉ ---
@@ -1015,7 +1027,7 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
     paramIndex++;
   }
 
-  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON CAST(p.acompanhante AS INTEGER) = u2.id WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
+  const query = 'SELECT p.*, u.nome as admin_nome, u2.nome as acomp_nome FROM pessoas p LEFT JOIN usuarios u ON p.cadastrado_por = u.id LEFT JOIN usuarios u2 ON u2.id::TEXT = p.acompanhante WHERE 1=1' + whereClause + ' ORDER BY p.data_cadastro DESC';
 
   try {
     const result = await pool.query(query, params);
@@ -1044,12 +1056,11 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
     }
 
     const cols = [
-      { h: 'ID',         w: 6 },
-      { h: 'Nome',       w: 30 },
-      { h: 'Telefone',   w: 18 },
-      { h: 'Tipo',       w: 22 },
-      { h: 'Data',       w: 12 },
-      { h: 'Observação', w: 32 }
+      { h: 'ID',       w: 6 },
+      { h: 'Nome',     w: 30 },
+      { h: 'Telefone', w: 18 },
+      { h: 'Tipo',     w: 22 },
+      { h: 'Data',     w: 12 }
     ];
     const colWidths = cols.map(c => c.w);
     // Linha de separação da tabela gerada dinamicamente (bordas + |  +)
@@ -1089,15 +1100,45 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
       const headerRow = '| ' + cols.map(c => cell(c.h, c.w)).join(' | ') + ' |';
       linhas.push(headerRow);
       linhas.push(sepLine);
+      // Quebra um texto em várias linhas sem cortar palavras
+      function wrapText(texto, maxWidth) {
+        const palavras = String(texto).split(/\s+/);
+        const linhas = [];
+        let atual = '';
+        palavras.forEach(pal => {
+          const teste = atual ? atual + ' ' + pal : pal;
+          if (teste.length > maxWidth) {
+            if (atual) linhas.push(atual);
+            atual = pal;
+          } else {
+            atual = teste;
+          }
+        });
+        if (atual) linhas.push(atual);
+        return linhas;
+      }
+
       pessoas.forEach(p => {
         const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
         const row = '| ' + cell(String(p.id), cols[0].w) + ' | '
           + cell(p.nome_completo || '-', cols[1].w) + ' | '
           + cell(p.telefone || '-', cols[2].w) + ' | '
           + cell(tipoLabelTxt(p.tipo_cadastro), cols[3].w) + ' | '
-          + cell(data, cols[4].w) + ' | '
-          + cell(p.observacao || '-', cols[5].w) + ' |';
+          + cell(data, cols[4].w) + ' |';
         linhas.push(row);
+
+        // Observação como linhas extras abaixo do registro (wrap sem cortar texto)
+        const obs = (p.observacao || '').trim();
+        if (obs) {
+          const obsLimpa = obs.replace(/\s*\r?\n\s*/g, ' ');
+          const prefixo = '  Obs.: ';
+          const cont = '        '; // indentação de continuação alinhada após "Obs.: "
+          const maxLinha = W - prefixo.length - 2;
+          const wrapped = wrapText(obsLimpa, maxLinha);
+          wrapped.forEach((ln, i) => {
+            linhas.push((i === 0 ? prefixo : cont) + ln);
+          });
+        }
       });
       linhas.push(sepLine);
     }
