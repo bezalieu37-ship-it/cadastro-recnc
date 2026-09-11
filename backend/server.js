@@ -1347,9 +1347,10 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
       }
     }
 
-    await client.query("SELECT setval('usuarios_id_seq', (SELECT COALESCE(MAX(id),1) FROM usuarios))");
-    await client.query("SELECT setval('pessoas_id_seq', (SELECT COALESCE(MAX(id),1) FROM pessoas))");
-    await client.query("SELECT setval('relatorios_id_seq', (SELECT COALESCE(MAX(id),1) FROM relatorios))");
+    // Ajustes de sequência (não críticos): se falharem, NÃO devem abortar o restore
+    try { await client.query("SELECT setval('usuarios_id_seq', (SELECT COALESCE(MAX(id),1) FROM usuarios))"); } catch (e) { console.warn('setval usuarios_id_seq:', e.message); }
+    try { await client.query("SELECT setval('pessoas_id_seq', (SELECT COALESCE(MAX(id),1) FROM pessoas))"); } catch (e) { console.warn('setval pessoas_id_seq:', e.message); }
+    try { await client.query("SELECT setval('relatorios_id_seq', (SELECT COALESCE(MAX(id),1) FROM relatorios))"); } catch (e) { console.warn('setval relatorios_id_seq:', e.message); }
 
     await client.query('COMMIT');
 
@@ -1359,9 +1360,11 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
       res.json({ message: 'Backup restaurado com sucesso!' });
     }
   } catch (error) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     console.error('Erro ao restaurar backup:', error);
-    res.status(500).json({ error: 'Erro ao restaurar backup.' });
+    // Inclui a mensagem REAL do erro na resposta para diagnóstico
+    const detail = (error && (error.message || error.detail)) || 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao restaurar backup: ' + detail });
   } finally {
     client.release();
   }
