@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS pessoas (
         conteudo_html TEXT
       )
     `);
-    // Configuracoes da organizacao (perfil da congregacao)
+    // Configuracoes da organizacao (perfil da igreja)
     await client.query(`
       CREATE TABLE IF NOT EXISTS config_org (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -583,7 +583,7 @@ app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res) =
 
 // ============ CONFIGURAÇÕES DO APP ============
 
-// GET configuração da organização (perfil da congregação) - autenticado, retorna defaults se vazio
+// GET configuração da organização (perfil da igreja) - autenticado, retorna defaults se vazio
 app.get('/api/config/org', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel, formato_data FROM config_org WHERE id = 1');
@@ -794,7 +794,7 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     const result = await pool.query(csvQuery, params);
     const pessoas = result.rows;
 
-    // Dados da congregação para o cabeçalho do CSV
+    // Dados da igreja para o cabeçalho do CSV
     let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
     try {
       const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
@@ -863,7 +863,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     const result = await pool.query(query, params);
     const pessoas = result.rows;
 
-    // Dados da congregação para o cabeçalho do PDF
+    // Dados da igreja para o cabeçalho do PDF
     let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
     try {
       const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
@@ -880,7 +880,7 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
     // --- CABEÇALHO ---
     const tituloOrg = (org.nome_org || 'CADASTRO RECNC');
-    // Bloco da congregação (se configurado) no canto superior direito
+    // Bloco da igreja (se configurado) no canto superior direito
     let orgInfoLines = [];
     if (org.endereco) orgInfoLines.push(org.endereco);
     if (org.telefone) orgInfoLines.push('Tel: ' + org.telefone);
@@ -1024,7 +1024,7 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
     const result = await pool.query(query, params);
     const pessoas = result.rows;
 
-    // Dados da congregação para o cabeçalho
+    // Dados da igreja para o cabeçalho
     let org = { nome_org:'', endereco:'', telefone:'', email:'', responsavel:'' };
     try {
       const orgRes = await pool.query('SELECT nome_org, endereco, telefone, email, responsavel FROM config_org WHERE id = 1');
@@ -1314,7 +1314,7 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
       }
     }
 
-    // Configurações da organização (perfil da congregação)
+    // Configurações da organização (perfil da igreja)
     if (backup.tables.config_org && backup.tables.config_org.length > 0) {
       const cfg = backup.tables.config_org[0] || {};
       // Evita violação de FK: só mantém updated_by se o usuário existir entre os restaurados

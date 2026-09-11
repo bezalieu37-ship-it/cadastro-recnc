@@ -139,24 +139,24 @@
     </div>
   </div>
 
-  <!-- 2. PERFIL DA CONGREGAÇÃO (ADMIN) -->
+  <!-- 2. PERFIL DA IGREJA (ADMIN) -->
   <div class="cfg" id="cfgOrg">
     <div class="cfg-hdr">
       <div class="cfg-ico" style="background:#eef2ff;color:#4f46e5;"><i class="fas fa-church"></i></div>
       <div>
-        <h6>Perfil da Congregação</h6>
+        <h6>Perfil da Igreja</h6>
         <p>Usado nos relatórios, PDFs e identificação do app</p>
       </div>
     </div>
     <div class="cfg-body">
       <div class="row g-3">
         <div class="col-12">
-          <label class="form-label">Nome da Congregação / Organização</label>
-          <input type="text" class="form-control" id="cfg_nome" placeholder="Ex: Congregação dos Testamentos">
+          <label class="form-label">Nome da Igreja / Organização</label>
+          <input type="text" class="form-control" id="cfg_nome" placeholder="Ex: Igreja dos Testamentos">
         </div>
         <div class="col-12">
           <label class="form-label">Endereço</label>
-          <input type="text" class="form-control" id="cfg_endereco" placeholder="Endereço da congregação">
+          <input type="text" class="form-control" id="cfg_endereco" placeholder="Endereço da igreja">
         </div>
         <div class="col-md-6">
           <label class="form-label">Telefone</label>
@@ -212,7 +212,7 @@
       </div>
     </div>
     <div class="cfg-body">
-      <p class="text-muted" style="font-size:.85rem;margin-bottom:12px;">Acesse os relatórios, exportação e backup pelo Painel principal do aplicativo. No Relatório Dock, PDF e CSV, o nome e os dados da congregação (acima) são exibidos no cabeçalho.</p>
+      <p class="text-muted" style="font-size:.85rem;margin-bottom:12px;">Acesse os relatórios, exportação e backup pelo Painel principal do aplicativo. No Relatório Dock, PDF e CSV, o nome e os dados da igreja (acima) são exibidos no cabeçalho.</p>
       <div class="d-flex flex-wrap gap-2">
         <a href="dashboard.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-arrow-left me-1"></i>Ir para o Painel</a>
       </div>
@@ -272,7 +272,7 @@
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
           <div class="fw-semibold" style="font-size:.85rem;"><i class="fas fa-info-circle me-1"></i>Sobre o Aplicativo</div>
-          <div class="text-muted" style="font-size:.78rem;">Cadastro RECNC · versão 1.0.0<br>Feito para o gerenciamento de cadastros da congregação.</div>
+          <div class="text-muted" style="font-size:.78rem;">Cadastro RECNC · versão 1.0.0<br>Feito para o gerenciamento de cadastros da igreja.</div>
         </div>
         <button class="btn btn-sm btn-outline-danger" id="btnSairSessao"><i class="fas fa-right-from-bracket me-1"></i>Encerrar Sessão</button>
       </div>
@@ -341,7 +341,7 @@
   clrEl?.addEventListener('click', ()=>{ localStorage.setItem('tema','claro'); applyTheme('claro'); toast('Tema claro aplicado'); });
   dkEl?.addEventListener('click', ()=>{ localStorage.setItem('tema','escuro'); applyTheme('escuro'); toast('Tema escuro aplicado'); });
 
-  // ========== PERFIL CONGREGAÇÃO ==========
+  // ========== PERFIL IGREJA ==========
   const cfgOrg = document.getElementById('cfgOrg');
   if(!isAdmin && cfgOrg) cfgOrg.style.display='none';
   if(isAdmin){
