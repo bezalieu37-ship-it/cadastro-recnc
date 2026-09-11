@@ -904,10 +904,10 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
 
     // --- TABELA ---
     const startY = 100;
-    // 9 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data
-    const colX = [30, 50, 145, 210, 330, 440, 500, 575, 635];
-    const colW = [20, 95, 65, 120, 110, 60, 75, 60, 175];
-    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data'];
+    // 10 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data, Obs
+    const colX = [30, 50, 145, 205, 315, 410, 465, 530, 585, 640];
+    const colW = [20, 95, 60, 110, 95, 55, 65, 55, 55, 150];
+    const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data', 'Obs'];
 
     // Header row
     doc.rect(30, startY, 792, 18).fill('#0d6efd');
@@ -924,34 +924,28 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       return 'Novo Cong.';
     }
 
-    // Trunca o texto (com "…") para caber na largura da célula — garante UMA única linha,
-    // evitando que o endereço/outros campos quebrem linha e colidam com a observação seguinte
-    function fit(s, maxW) {
-      const txt = (s == null ? '' : String(s)).trim() || '-';
-      if (doc.widthOfString(txt, { font: 'Helvetica', fontSize: 7 }) <= maxW) return txt;
-      let t = txt;
-      while (t.length > 1 && doc.widthOfString(t + '…', { font: 'Helvetica', fontSize: 7 }) > maxW) {
-        t = t.slice(0, -1);
-      }
-      return t + '…';
-    }
-
-    // Resolver nome do acompanhante
-    const userMap = {};
-    pessoas.forEach(p => {
-      if (p.acompanhante && !userMap[p.acompanhante]) userMap[p.acompanhante] = String(p.acompanhante);
-    });
-
     pessoas.forEach((p, idx) => {
-      // Texto da observação (pré-calculado para saber a altura real antes de desenhar)
       const obs = (p.observacao || '').trim();
-      // Altura das linhas extras da observação — MESMA largura usada no desenho (758pt) para o
-      // wrap ser idêntico e o texto nunca invadir a linha de baixo (+8 de folga)
-      const obsHeight = obs ? doc.heightOfString('Obs.: ' + obs, { width: 758 }) + 8 : 0;
-      const rowHeight = 14 + obsHeight;
+      const nome = (p.nome_completo || '-');
+      const ender = (p.endereco || '-');
+      const ref = (p.ponto_referencia || '-');
+      const tel = (p.telefone || '-');
+      const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+      const acomp = p.acomp_nome || String(p.acompanhante || '-');
 
-      // Quebra de página considerando a altura do registro + observação
-      if (y + rowHeight > 585) {
+      // Valores de cada célula (textos quebram linha dentro da largura da coluna)
+      const vals = [String(p.id), nome, p.data_nascimento || '-', ender, ref, tel, acomp, tipoLabel(p.tipo_cadastro), data, obs || '-'];
+
+      // Altura da linha = maior altura entre as células (wrap automático em cada coluna) + folga
+      let rowHeight = 14;
+      vals.forEach((v, i) => {
+        const h = doc.heightOfString(v, { width: colW[i] });
+        if (h > rowHeight) rowHeight = h;
+      });
+      rowHeight += 4;
+
+      // Quebra de página considerando a altura do registro
+      if (y + rowHeight > 545) {
         doc.addPage();
         y = 30;
         doc.rect(30, y, 792, 18).fill('#0d6efd');
@@ -967,30 +961,10 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
       }
 
       const rowY = y + 2;
-      const nome = (p.nome_completo || '-');
-      const ender = (p.endereco || '-');
-      const ref = (p.ponto_referencia || '-');
-      const tel = (p.telefone || '-');
-      const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
-      const acomp = p.acomp_nome || String(p.acompanhante || '-');
-
       doc.fillColor('#333');
-      doc.text(fit(p.id, colW[0] - 4), colX[0] + 3, rowY, { width: colW[0], lineBreak: false });
-      doc.text(fit(nome, colW[1] - 4), colX[1] + 3, rowY, { width: colW[1], lineBreak: false });
-      doc.text(fit(p.data_nascimento || '-', colW[2] - 4), colX[2] + 3, rowY, { width: colW[2], lineBreak: false });
-      doc.text(fit(ender, colW[3] - 4), colX[3] + 3, rowY, { width: colW[3], lineBreak: false });
-      doc.text(fit(ref, colW[4] - 4), colX[4] + 3, rowY, { width: colW[4], lineBreak: false });
-      doc.text(fit(tel, colW[5] - 4), colX[5] + 3, rowY, { width: colW[5], lineBreak: false });
-      doc.text(fit(acomp, colW[6] - 4), colX[6] + 3, rowY, { width: colW[6], lineBreak: false });
-      doc.text(fit(tipoLabel(p.tipo_cadastro), colW[7] - 4), colX[7] + 3, rowY, { width: colW[7], lineBreak: false });
-      doc.text(fit(data, colW[8] - 4), colX[8] + 3, rowY, { width: colW[8], lineBreak: false });
-
-      // Observação como linha extra abaixo do registro (wrap automático, nunca corta o texto)
-      if (obs) {
-        doc.font('Helvetica-Oblique').fontSize(7).fillColor('#555');
-        doc.text('Obs.: ' + obs, 34, y + 16, { width: 758, align: 'left' });
-        doc.font('Helvetica').fontSize(7).fillColor('#333');
-      }
+      vals.forEach((v, i) => {
+        doc.text(v, colX[i] + 3, rowY, { width: colW[i] });
+      });
 
       y += rowHeight;
     });
@@ -998,10 +972,10 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     // --- RODAPÉ ---
     const lastPage = doc.page;
     if (lastPage) {
-      doc.moveTo(30, 575).lineTo(822, 575).lineWidth(0.5).strokeColor('#ccc').stroke();
+      doc.moveTo(30, 549).lineTo(822, 549).lineWidth(0.5).strokeColor('#ccc').stroke();
       doc.fontSize(7).fillColor('#999').text(
         'Cadastro RECNC - Relatório gerado automaticamente  |  ' + new Date().toLocaleString('pt-BR'),
-        30, 578, { align: 'center', width: 792 }
+        30, 552, { align: 'center', width: 792 }
       );
     }
 
