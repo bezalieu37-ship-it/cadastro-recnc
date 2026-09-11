@@ -450,11 +450,10 @@
 
   document.getElementById('backupFileInput')?.addEventListener('change', async function(){
     const file = this.files[0]; if(!file) return;
-    if(!confirm('ATENÇÃO: Isto SUBSTITUIRÁ todos os dados. Continuar?')){ this.value=''; return; }
+    let text;
     try{
       // Workaround WebView Android: arquivos de nuvem (ex.: Google Drive) podem
       // causar NotReadableError no file.text() (bug Blink) — relê e clona em memória
-      let text;
       try {
         text = await file.text();
       } catch (readErr) {
@@ -462,8 +461,16 @@
         const clone = new File([buffer], file.name, { type: file.type || 'application/json' });
         text = await clone.text();
       }
+    }catch(e){ alert('Erro ao ler o arquivo de backup: '+e.message); this.value=''; return; }
+    this.value='';
+    await restaurarBackup(text);
+  });
+
+  async function restaurarBackup(text){
+    if(!confirm('ATENÇÃO: Isto SUBSTITUIRÁ todos os dados. Continuar?')) return;
+    try{
       const backup = JSON.parse(text);
-      if(!backup || !backup.tables){ alert('Arquivo inválido.'); this.value=''; return; }
+      if(!backup || !backup.tables){ alert('Arquivo inválido.'); return; }
       const res = await fetch('api/backup/restore',{
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
         body:JSON.stringify({backup})
@@ -471,8 +478,28 @@
       const data = await res.json();
       if(res.ok){ alert(data.message||'Restaurado!'); window.location.reload(); }
       else alert(data.error||'Erro ao restaurar.');
-    }catch(e){ alert('Erro ao ler o arquivo de backup: '+e.message); }
-    this.value='';
+    }catch(e){ alert('Erro ao restaurar: '+e.message); }
+  }
+
+  // No app Android (Capacitor): usa o seletor de arquivos NATIVO, que lê via
+  // Intent/ContentResolver — imune ao bug "NotReadableError" do WebView
+  document.querySelector('label[for="backupFileInput"]')?.addEventListener('click', async (ev)=>{
+    if(!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
+    if(!window.Capacitor.Plugins || !window.Capacitor.Plugins.FilePicker) return;
+    ev.preventDefault();
+    try{
+      const res = await window.Capacitor.Plugins.FilePicker.pickFiles({ types:['application/json'], readData:true, limit:1 });
+      const picked = res.files && res.files[0];
+      if(!picked || !picked.data) return;
+      const bin = atob(picked.data);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      const text = new TextDecoder('utf-8').decode(bytes);
+      await restaurarBackup(text);
+    }catch(err){
+      if(err && err.message && /cancel/i.test(err.message)) return;
+      alert('Erro ao ler o arquivo de backup: '+((err && err.message) || err));
+    }
   });
 
   // =========== STATS ===========
