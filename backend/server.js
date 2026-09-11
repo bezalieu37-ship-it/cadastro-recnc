@@ -1031,20 +1031,27 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
       if (orgRes.rows[0]) org = orgRes.rows[0];
     } catch (e) { /* mantém vazio */ }
 
-    // Definição das colunas da tabela (mesmas 10 do PDF/CSV, rebalanceadas: ID menor, Telefone/Nome/Acomp. por/Data abertos)
+    // Definição das colunas da tabela
     const BOM = '\uFEFF';
 
+    // Helper: preencher célula com largura fixa, sem quebrar palavra ao meio
+    function cell(str, width) {
+      const s = (str == null ? '' : String(str)).trim();
+      if (s.length <= width) return s.padEnd(width);
+      // trunca na largura, cortando no espaço mais próximo (não corta palavra)
+      let cut = s.slice(0, width);
+      if (s[width] && s[width] !== ' ' && cut.lastIndexOf(' ') > 0) {
+        cut = cut.slice(0, cut.lastIndexOf(' ')).trimEnd();
+      }
+      return cut.padEnd(width);
+    }
+
     const cols = [
-      { h: 'ID',           w: 4  },
-      { h: 'Nome Completo', w: 24 },
-      { h: 'Data Nasc.',   w: 12 },
-      { h: 'Endereço',     w: 30 },
-      { h: 'Ponto Ref.',   w: 18 },
-      { h: 'Telefone',     w: 16 },
-      { h: 'Acomp. por',   w: 22 },
-      { h: 'Tipo',         w: 16 },
-      { h: 'Data',         w: 11 },
-      { h: 'Obs',          w: 28 }
+      { h: 'ID',       w: 6 },
+      { h: 'Nome',     w: 30 },
+      { h: 'Telefone', w: 18 },
+      { h: 'Tipo',     w: 22 },
+      { h: 'Data',     w: 12 }
     ];
     const colWidths = cols.map(c => c.w);
     // Linha de separação da tabela gerada dinamicamente (bordas + |  +)
@@ -1075,9 +1082,13 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
     if (pessoas.length === 0) {
       linhas.push('Nenhum registro encontrado para os filtros informados.');
     } else {
-      const tipoLabelCurto = (t) => t === 'novo_nascimento' ? 'Novo Nas.' : t === 'reconciliacao' ? 'Reconcil.' : 'Novo Cong.';
-      // Cabeçalho da tabela (mesmos nomes do PDF/CSV)
-      const headerRow = '| ' + cols.map(c => c.h.padEnd(c.w)).join(' | ') + ' |';
+      function tipoLabelTxt(t) {
+        if (t === 'novo_nascimento') return 'Novo Nascimento';
+        if (t === 'reconciliacao') return 'Reconciliação';
+        return 'Novo Congregado';
+      }
+      // Cabeçalho da tabela
+      const headerRow = '| ' + cols.map(c => cell(c.h, c.w)).join(' | ') + ' |';
       linhas.push(headerRow);
       linhas.push(sepLine);
       // Quebra um texto em várias linhas sem cortar palavras
@@ -1099,29 +1110,28 @@ app.get('/api/export/txt', authMiddleware, async (req, res) => {
       }
 
       pessoas.forEach(p => {
-        const dataCad = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
-        const acompName = p.acomp_nome || p.acompanhante || '-';
-        const valores = [
-          String(p.id),
-          p.nome_completo || '-',
-          p.data_nascimento || '-',
-          p.endereco || '-',
-          p.ponto_referencia || '-',
-          p.telefone || '-',
-          acompName,
-          tipoLabelCurto(p.tipo_cadastro),
-          dataCad,
-          (p.observacao || '').replace(/\s*\r?\n\s*/g, ' ').trim() || '-'
-        ];
-        // Quebra cada célula na largura da coluna (altura dinâmica, como no PDF)
-        const wrapped = valores.map((v, i) => wrapText(v, cols[i].w));
-        const qtd = Math.max(...wrapped.map(w => w.length));
-        for (let l = 0; l < qtd; l++) {
-          const celulas = wrapped.map((w, i) => (w[l] !== undefined ? w[l] : '').padEnd(cols[i].w));
-          linhas.push('| ' + celulas.join(' | ') + ' |');
+        const data = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '-';
+        const row = '| ' + cell(String(p.id), cols[0].w) + ' | '
+          + cell(p.nome_completo || '-', cols[1].w) + ' | '
+          + cell(p.telefone || '-', cols[2].w) + ' | '
+          + cell(tipoLabelTxt(p.tipo_cadastro), cols[3].w) + ' | '
+          + cell(data, cols[4].w) + ' |';
+        linhas.push(row);
+
+        // Observação como linhas extras abaixo do registro (wrap sem cortar texto)
+        const obs = (p.observacao || '').trim();
+        if (obs) {
+          const obsLimpa = obs.replace(/\s*\r?\n\s*/g, ' ');
+          const prefixo = '  Obs.: ';
+          const cont = '        '; // indentação de continuação alinhada após "Obs.: "
+          const maxLinha = W - prefixo.length - 2;
+          const wrapped = wrapText(obsLimpa, maxLinha);
+          wrapped.forEach((ln, i) => {
+            linhas.push((i === 0 ? prefixo : cont) + ln);
+          });
         }
-        linhas.push(sepLine);
       });
+      linhas.push(sepLine);
     }
 
     // === RODAPÉ ===
