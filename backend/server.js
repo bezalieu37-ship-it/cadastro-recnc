@@ -809,12 +809,13 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
     if (org.responsavel) csvInfo.push('Responsável: ' + org.responsavel);
     // Célula CSV: aspas duplas + escape de aspas e quebras de linha (texto nunca invade outras colunas)
     const csvCell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/[\r\n]+/g, ' ') + '"';
-    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID;Nome Completo;Data Nascimento;Endereço;Ponto Referência;Telefone;Tipo;Acompanhado Por;Cadastrado Por;Data Cadastro;Observação\n';
+    // Mesmas 10 colunas do PDF, na mesma ordem e com os mesmos nomes/rótulos
+    const header = (csvInfo.length ? csvInfo.join(' | ') + '\n' : '') + 'ID;Nome Completo;Data Nasc.;Endereço;Ponto Ref.;Telefone;Acomp. por;Tipo;Data;Obs\n';
     const rows = pessoas.map(p => {
-      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nascimento' : p.tipo_cadastro === 'reconciliacao' ? 'Reconciliação' : 'Novo Congregado';
+      const tipoLabel = p.tipo_cadastro === 'novo_nascimento' ? 'Novo Nas.' : p.tipo_cadastro === 'reconciliacao' ? 'Reconcil.' : 'Novo Cong.';
       const acompName = p.acomp_nome || p.acompanhante || '-';
       const dataCad = p.data_cadastro ? new Date(p.data_cadastro).toLocaleDateString('pt-BR') : '';
-      return [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, tipoLabel, acompName, p.admin_nome, dataCad, p.observacao].map(csvCell).join(';');
+      return [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, acompName, tipoLabel, dataCad, p.observacao].map(csvCell).join(';');
     }).join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=cadastro_recnc_' + new Date().toISOString().slice(0,10) + '.csv');
