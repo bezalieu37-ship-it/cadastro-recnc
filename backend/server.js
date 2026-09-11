@@ -552,6 +552,53 @@ app.delete('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res
   }
 });
 
+// ============ PERFIL DO USUÁRIO LOGADO ============
+
+// Alterar nome do usuário logado
+app.put('/api/usuarios/me', authMiddleware, async (req, res) => {
+  const { nome } = req.body || {};
+  if (!nome || !nome.trim()) {
+    return res.status(400).json({ error: 'Nome é obrigatório.' });
+  }
+  const novoNome = nome.trim();
+  try {
+    const exists = await pool.query('SELECT id FROM usuarios WHERE nome = $1 AND id <> $2', [novoNome, req.user.id]);
+    if (exists.rows.length > 0) {
+      return res.status(409).json({ error: 'Este nome já está em uso.' });
+    }
+    const result = await pool.query('UPDATE usuarios SET nome = $1 WHERE id = $2', [novoNome, req.user.id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    res.json({ message: 'Nome atualizado com sucesso.', nome: novoNome });
+  } catch (error) {
+    console.error('Erro ao atualizar nome:', error);
+    res.status(500).json({ error: 'Erro ao atualizar nome.' });
+  }
+});
+
+// Alterar senha do usuário logado (exige senha atual)
+app.put('/api/usuarios/me/senha', authMiddleware, async (req, res) => {
+  const { senha_atual, nova_senha } = req.body || {};
+  if (!senha_atual || !nova_senha) {
+    return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias.' });
+  }
+  if (nova_senha.length < 6) {
+    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+  }
+  try {
+    const result = await pool.query('SELECT senha FROM usuarios WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    const valid = await bcrypt.compare(senha_atual, user.senha);
+    if (!valid) return res.status(401).json({ error: 'Senha atual incorreta.' });
+    const hash = await bcrypt.hash(nova_senha, 10);
+    await pool.query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hash, req.user.id]);
+    res.json({ message: 'Senha alterada com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao alterar senha:', error);
+    res.status(500).json({ error: 'Erro ao alterar senha.' });
+  }
+});
+
 app.put('/api/usuarios/:id', authMiddleware, adminMiddleware, async (req, res) => {
   const { nome, senha, perfil } = req.body;
   const userId = req.params.id;
@@ -663,53 +710,6 @@ app.get('/api/config/tipos/mapa', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar mapa de tipos:', error);
     res.status(500).json({ error: 'Erro ao buscar tipos.' });
-  }
-});
-
-// ============ PERFIL DO USUÁRIO LOGADO ============
-
-// Alterar nome do usuário logado
-app.put('/api/usuarios/me', authMiddleware, async (req, res) => {
-  const { nome } = req.body || {};
-  if (!nome || !nome.trim()) {
-    return res.status(400).json({ error: 'Nome é obrigatório.' });
-  }
-  const novoNome = nome.trim();
-  try {
-    const exists = await pool.query('SELECT id FROM usuarios WHERE nome = $1 AND id <> $2', [novoNome, req.user.id]);
-    if (exists.rows.length > 0) {
-      return res.status(409).json({ error: 'Este nome já está em uso.' });
-    }
-    const result = await pool.query('UPDATE usuarios SET nome = $1 WHERE id = $2', [novoNome, req.user.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    res.json({ message: 'Nome atualizado com sucesso.', nome: novoNome });
-  } catch (error) {
-    console.error('Erro ao atualizar nome:', error);
-    res.status(500).json({ error: 'Erro ao atualizar nome.' });
-  }
-});
-
-// Alterar senha do usuário logado (exige senha atual)
-app.put('/api/usuarios/me/senha', authMiddleware, async (req, res) => {
-  const { senha_atual, nova_senha } = req.body || {};
-  if (!senha_atual || !nova_senha) {
-    return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias.' });
-  }
-  if (nova_senha.length < 6) {
-    return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
-  }
-  try {
-    const result = await pool.query('SELECT senha FROM usuarios WHERE id = $1', [req.user.id]);
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    const valid = await bcrypt.compare(senha_atual, user.senha);
-    if (!valid) return res.status(401).json({ error: 'Senha atual incorreta.' });
-    const hash = await bcrypt.hash(nova_senha, 10);
-    await pool.query('UPDATE usuarios SET senha = $1 WHERE id = $2', [hash, req.user.id]);
-    res.json({ message: 'Senha alterada com sucesso.' });
-  } catch (error) {
-    console.error('Erro ao alterar senha:', error);
-    res.status(500).json({ error: 'Erro ao alterar senha.' });
   }
 });
 
