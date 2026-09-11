@@ -1232,18 +1232,22 @@ app.get('/api/reports', authMiddleware, adminMiddleware, (req, res) => {
 });
 app.get('/api/backup', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const [usuariosResult, pessoasResult, relatoriosResult] = await Promise.all([
+    const [usuariosResult, pessoasResult, relatoriosResult, configOrgResult, configTiposResult] = await Promise.all([
       pool.query('SELECT * FROM usuarios'),
       pool.query('SELECT * FROM pessoas'),
-      pool.query('SELECT * FROM relatorios')
+      pool.query('SELECT * FROM relatorios'),
+      pool.query('SELECT * FROM config_org'),
+      pool.query('SELECT * FROM config_tipos')
     ]);
     const backup = {
-      version: 1,
+      version: 2,
       createdAt: new Date().toISOString(),
       tables: {
         usuarios: usuariosResult.rows || [],
         pessoas: pessoasResult.rows || [],
-        relatorios: relatoriosResult.rows || []
+        relatorios: relatoriosResult.rows || [],
+        config_org: configOrgResult.rows || [],
+        config_tipos: configTiposResult.rows || []
       }
     };
     res.setHeader('Content-Type', 'application/json');
@@ -1288,8 +1292,8 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
       for (const p of backup.tables.pessoas) {
         try {
           await client.query(
-            'INSERT INTO pessoas (id, nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT (id) DO UPDATE SET nome_completo = EXCLUDED.nome_completo, data_nascimento = EXCLUDED.data_nascimento, endereco = EXCLUDED.endereco, ponto_referencia = EXCLUDED.ponto_referencia, telefone = EXCLUDED.telefone, tipo_cadastro = EXCLUDED.tipo_cadastro, acompanhante = EXCLUDED.acompanhante, foto_url = EXCLUDED.foto_url, cadastrado_por = EXCLUDED.cadastrado_por, data_cadastro = EXCLUDED.data_cadastro',
-            [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, p.tipo_cadastro, p.acompanhante, p.foto_url, p.cadastrado_por, p.data_cadastro]
+            'INSERT INTO pessoas (id, nome_completo, data_nascimento, endereco, ponto_referencia, telefone, tipo_cadastro, acompanhante, foto_url, cadastrado_por, data_cadastro, observacao) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (id) DO UPDATE SET nome_completo = EXCLUDED.nome_completo, data_nascimento = EXCLUDED.data_nascimento, endereco = EXCLUDED.endereco, ponto_referencia = EXCLUDED.ponto_referencia, telefone = EXCLUDED.telefone, tipo_cadastro = EXCLUDED.tipo_cadastro, acompanhante = EXCLUDED.acompanhante, foto_url = EXCLUDED.foto_url, cadastrado_por = EXCLUDED.cadastrado_por, data_cadastro = EXCLUDED.data_cadastro, observacao = EXCLUDED.observacao',
+            [p.id, p.nome_completo, p.data_nascimento, p.endereco, p.ponto_referencia, p.telefone, p.tipo_cadastro, p.acompanhante, p.foto_url, p.cadastrado_por, p.data_cadastro, p.observacao || '']
           );
         } catch (err) {
           errors.push('Erro ao restaurar pessoa ' + p.nome_completo + ': ' + err.message);
@@ -1301,11 +1305,44 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
       for (const r of backup.tables.relatorios) {
         try {
           await client.query(
-            'INSERT INTO relatorios (id, titulo, email_destino, tipo_filtro, filtro_valor, total_registros, data_geracao, criado_por) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, email_destino = EXCLUDED.email_destino, tipo_filtro = EXCLUDED.tipo_filtro, filtro_valor = EXCLUDED.filtro_valor, total_registros = EXCLUDED.total_registros, data_geracao = EXCLUDED.data_geracao, criado_por = EXCLUDED.criado_por',
-            [r.id, r.titulo, r.email_destino, r.tipo_filtro, r.filtro_valor, r.total_registros, r.data_geracao, r.criado_por]
+            'INSERT INTO relatorios (id, titulo, email_destino, mensagem, tipo_filtro, filtro_valor, total_registros, data_geracao, criado_por, conteudo_html) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, email_destino = EXCLUDED.email_destino, mensagem = EXCLUDED.mensagem, tipo_filtro = EXCLUDED.tipo_filtro, filtro_valor = EXCLUDED.filtro_valor, total_registros = EXCLUDED.total_registros, data_geracao = EXCLUDED.data_geracao, criado_por = EXCLUDED.criado_por, conteudo_html = EXCLUDED.conteudo_html',
+            [r.id, r.titulo, r.email_destino, r.mensagem, r.tipo_filtro, r.filtro_valor, r.total_registros, r.data_geracao, r.criado_por, r.conteudo_html]
           );
         } catch (err) {
           errors.push('Erro ao restaurar relatorio ' + r.titulo + ': ' + err.message);
+        }
+      }
+    }
+
+    // Configurações da organização (perfil da congregação)
+    if (backup.tables.config_org && backup.tables.config_org.length > 0) {
+      const cfg = backup.tables.config_org[0] || {};
+      // Evita violação de FK: só mantém updated_by se o usuário existir entre os restaurados
+      let updatedBy = cfg.updated_by;
+      if (updatedBy != null && Array.isArray(backup.tables.usuarios)) {
+        const exists = backup.tables.usuarios.some(u => String(u.id) === String(updatedBy));
+        if (!exists) updatedBy = null;
+      }
+      try {
+        await client.query(
+          'INSERT INTO config_org (id, nome_org, endereco, telefone, email, responsavel, formato_data, updated_at, updated_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO UPDATE SET nome_org = EXCLUDED.nome_org, endereco = EXCLUDED.endereco, telefone = EXCLUDED.telefone, email = EXCLUDED.email, responsavel = EXCLUDED.responsavel, formato_data = EXCLUDED.formato_data, updated_at = EXCLUDED.updated_at, updated_by = EXCLUDED.updated_by',
+          [1, cfg.nome_org || '', cfg.endereco || '', cfg.telefone || '', cfg.email || '', cfg.responsavel || '', cfg.formato_data || 'BR', cfg.updated_at || new Date().toISOString(), updatedBy]
+        );
+      } catch (err) {
+        errors.push('Erro ao restaurar configuração da organização: ' + err.message);
+      }
+    }
+
+    // Rótulos personalizados dos tipos de cadastro
+    if (backup.tables.config_tipos && backup.tables.config_tipos.length > 0) {
+      for (const t of backup.tables.config_tipos) {
+        try {
+          await client.query(
+            'INSERT INTO config_tipos (chave, rotulo, cor) VALUES ($1,$2,$3) ON CONFLICT (chave) DO UPDATE SET rotulo = EXCLUDED.rotulo, cor = EXCLUDED.cor',
+            [t.chave, t.rotulo, t.cor || '']
+          );
+        } catch (err) {
+          errors.push('Erro ao restaurar tipo ' + t.chave + ': ' + err.message);
         }
       }
     }
