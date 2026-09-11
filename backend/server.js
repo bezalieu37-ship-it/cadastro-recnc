@@ -1269,6 +1269,10 @@ app.post('/api/backup/restore', authMiddleware, adminMiddleware, async (req, res
   try {
     await client.query('BEGIN');
 
+    // A config_org.updated_by referencia usuarios(id) — zera ANTES do DELETE
+    // dos usuarios para evitar violação de FK (a config é re-inserida abaixo)
+    await client.query('UPDATE config_org SET updated_by = NULL');
+
     await client.query('DELETE FROM relatorios');
     await client.query('DELETE FROM pessoas');
     await client.query('DELETE FROM usuarios');
