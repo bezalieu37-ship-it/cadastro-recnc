@@ -452,9 +452,18 @@
     const file = this.files[0]; if(!file) return;
     if(!confirm('ATENÇÃO: Isto SUBSTITUIRÁ todos os dados. Continuar?')){ this.value=''; return; }
     try{
-      const text = await file.text();
+      // Workaround WebView Android: arquivos de nuvem (ex.: Google Drive) podem
+      // causar NotReadableError no file.text() (bug Blink) — relê e clona em memória
+      let text;
+      try {
+        text = await file.text();
+      } catch (readErr) {
+        const buffer = await file.arrayBuffer();
+        const clone = new File([buffer], file.name, { type: file.type || 'application/json' });
+        text = await clone.text();
+      }
       const backup = JSON.parse(text);
-      if(!backup.tables){ alert('Arquivo inválido.'); this.value=''; return; }
+      if(!backup || !backup.tables){ alert('Arquivo inválido.'); this.value=''; return; }
       const res = await fetch('api/backup/restore',{
         method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
         body:JSON.stringify({backup})
@@ -462,7 +471,7 @@
       const data = await res.json();
       if(res.ok){ alert(data.message||'Restaurado!'); window.location.reload(); }
       else alert(data.error||'Erro ao restaurar.');
-    }catch(e){ alert('Erro: '+e.message); }
+    }catch(e){ alert('Erro ao ler o arquivo de backup: '+e.message); }
     this.value='';
   });
 
