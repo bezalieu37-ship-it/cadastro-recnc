@@ -249,6 +249,7 @@
             <div class="col-12"><strong>Endereço:</strong> <span id="detEndereco">-</span></div>
             <div class="col-12"><strong>Ponto Ref:</strong> <span id="detPontoRef">-</span></div>
             <div class="col-12"><strong>Data Cadastro:</strong> <span id="detData">-</span></div>
+            <div class="col-12" id="detObsRow" style="display:none;"><strong><i class="fas fa-sticky-note me-1 text-muted"></i>Observação:</strong> <span id="detObservacao" style="white-space:pre-wrap; word-break:break-word;">-</span></div>
           </div>
         </div>
         <hr>
@@ -270,6 +271,7 @@
             </div>
             <div class="col-12"><label class="form-label small">Endereço</label><input type="text" class="form-control form-control-sm" id="editEndereco" required></div>
             <div class="col-12"><label class="form-label small">Ponto Referência</label><input type="text" class="form-control form-control-sm" id="editPontoRef" required></div>
+            <div class="col-12"><label class="form-label small text-muted"><i class="fas fa-sticky-note me-1"></i>Observação</label><textarea class="form-control form-control-sm" id="editObservacao" rows="3" placeholder="Informações extras sobre esta pessoa (ex.: visitas, pedidos, contexto familiar...)"></textarea></div>
             <div class="col-md-6"><label class="form-label small">Acompanhado por</label><select class="form-select form-select-sm" id="editAcompanhante"><option value="">Nenhum</option></select></div>
             <div class="col-md-6"><label class="form-label small">Nova Foto</label><input type="file" class="form-control form-control-sm" id="editNovaFoto" accept="image/*"></div>
           </div>
@@ -554,6 +556,10 @@
       document.getElementById('detTipo').textContent = tipoRotulo(p.tipo_cadastro);
       document.getElementById('detData').textContent = p.data_cadastro?new Date(p.data_cadastro).toLocaleDateString('pt-BR'):'-';
       document.getElementById('detNascimento').textContent = p.data_nascimento||'-';
+      const detObsRow = document.getElementById('detObsRow');
+      if(detObsRow) detObsRow.style.display = p.observacao && String(p.observacao).trim() ? 'block' : 'none';
+      document.getElementById('detObservacao').textContent = p.observacao || '-';
+      document.getElementById('editObservacao').value = p.observacao || '';
       const fotoEl = document.getElementById('detFoto');
       if(p.foto_url){fotoEl.src=p.foto_url;fotoEl.style.display='block';}else{fotoEl.style.display='none';}
 
@@ -596,7 +602,8 @@
     fd.append('data_cadastro',document.getElementById('editDataCadastro').value||new Date().toISOString());
     fd.append('tipo_cadastro',document.getElementById('editTipo').value);
     fd.append('acompanhante',document.getElementById('editAcompanhante').value||user.id);
-    fd.append('foto_url',document.getElementById('editFotoAtual').value);
+    fd.append('foto_url',document.getElementById('editFotoAtual').value.trim()||'');
+    fd.append('observacao',(document.getElementById('editObservacao').value||'').trim());
     const nf=document.getElementById('editNovaFoto').files[0];
     if(nf) fd.append('foto',nf);
     try{
