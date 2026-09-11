@@ -184,8 +184,9 @@
       <a href="configuracoes.html" class="act-item actConfig"><i class="fas fa-gear text-secondary"></i>Configurações</a>
       <button class="act-item" id="btnCSV"><i class="fas fa-file-csv text-success"></i>Exportar CSV</button>
       <button class="act-item" id="btnPDF"><i class="fas fa-file-pdf text-danger"></i>Exportar PDF</button>
-      <button class="act-item" id="btnBackup"><i class="fas fa-download text-primary"></i>Backup</button>
-      <label class="act-item" for="backupFileInput"><i class="fas fa-upload text-warning"></i>Restaurar</label>
+      <button class="act-item" id="btnTXT"><i class="fas fa-file-lines text-secondary"></i>Exportar TXT</button>
+      <button class="act-item actBackup" id="btnBackup"><i class="fas fa-download text-primary"></i>Backup</button>
+      <label class="act-item actRestaurar" for="backupFileInput"><i class="fas fa-upload text-warning"></i>Restaurar</label>
       <input type="file" id="backupFileInput" accept=".json" style="display:none">
     </div>
   </div>
@@ -318,7 +319,7 @@
     // Esconder secao lista geral (admin only)
     const secGeral=document.getElementById('secListaGeral'); if(secGeral) secGeral.style.display='none';
     // Dentro das acoes rapidas: esconder itens admin
-    document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario,.actAcomp').forEach(e=>e.style.display='none');
+    document.querySelectorAll('.actLista,.actUsuarios,.actNovoUsuario,.actAcomp,.actBackup,.actRestaurar').forEach(e=>e.style.display='none');
     // Re-welcome banner
     document.querySelector('.welcome').innerHTML = `
       <div class="welcome-text">
@@ -405,6 +406,9 @@
   });
   document.getElementById('btnPDF')?.addEventListener('click', ()=>{
     exportar('api/export/pdf?tipo=&search=', 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.pdf');
+  });
+  document.getElementById('btnTXT')?.addEventListener('click', ()=>{
+    exportar('api/export/txt', 'relatorio_recnc_'+new Date().toISOString().slice(0,10)+'.txt');
   });
 
   // =========== BACKUP ===========
