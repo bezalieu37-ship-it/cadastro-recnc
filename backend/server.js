@@ -803,7 +803,7 @@ app.get('/api/export/csv', authMiddleware, async (req, res) => {
 
     const BOM = '\uFEFF';
     const csvInfo = [];
-    if (org.nome_org) csvInfo.push('Congregação: ' + org.nome_org);
+    if (org.nome_org) csvInfo.push('Igreja: ' + org.nome_org);
     if (org.endereco) csvInfo.push('Endereço: ' + org.endereco);
     if (org.telefone) csvInfo.push('Telefone: ' + org.telefone);
     if (org.responsavel) csvInfo.push('Responsável: ' + org.responsavel);
@@ -906,8 +906,8 @@ app.get('/api/export/pdf', authMiddleware, async (req, res) => {
     // --- TABELA ---
     const startY = 100;
     // 10 colunas: ID, Nome, Data Nasc, Endereco, Ponto Ref, Telefone, Acomp, Tipo, Data, Obs
-    const colX = [30, 50, 145, 205, 315, 410, 465, 530, 585, 640];
-    const colW = [20, 95, 60, 110, 95, 55, 65, 55, 55, 150];
+    const colX = [30, 46, 154, 212, 320, 400, 472, 562, 617, 675];
+    const colW = [16, 108, 58, 108, 80, 72, 90, 55, 58, 147];
     const headers = ['ID', 'Nome Completo', 'Data Nasc.', 'Endereço', 'Ponto Ref.', 'Telefone', 'Acomp. por', 'Tipo', 'Data', 'Obs'];
 
     // Header row
